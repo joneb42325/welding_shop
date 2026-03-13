@@ -14,8 +14,9 @@ app.listen(3000, () => {
   console.log("Server started on port 3000");
 });
 
-app.get("/products", (req, res) => {
-  db.query("SELECT * FROM products", (err, results) => {
+app.get("/products/special", (req, res) => {
+  const query = "SELECT * FROM products WHERE is_special=1";
+  db.query(query, (err, results) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: "Server error" });
