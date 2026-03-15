@@ -157,6 +157,17 @@ body {
   margin: 0 auto;
 }
 
+#category-products-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  text-align: center;
+  max-width: 800px;
+  justify-content: flex-start;
+  text-align: center;
+  margin: 0 auto;
+}
+
 .special h1 {
   text-align: center;
   font-size: 1.6em;
