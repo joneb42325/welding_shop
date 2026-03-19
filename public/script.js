@@ -1,7 +1,4 @@
 const specialContainer = document.getElementById("special-products-container");
-const categoryContainer = document.getElementById(
-  "category-products-container",
-);
 
 //fetch("http://localhost:3000/products")
 fetch("/products/special")
@@ -14,7 +11,6 @@ fetch("/products/special")
         <img src="images/${product.image}" alt="${product.name}">
         <h3>${product.name}</h3>
         <p>Ціна: ${product.price} грн</p>
-        <button data-id="${product.id}">Додати в корзину</button>
       `;
       specialContainer.appendChild(card);
     });
@@ -23,6 +19,9 @@ fetch("/products/special")
 
 const params = new URLSearchParams(window.location.search);
 const categoryId = params.get("categoryId");
+const categoryContainer = document.getElementById(
+  "category-products-container",
+);
 
 fetch(`/products/category/${categoryId}`)
   .then((response) => response.json())
@@ -31,22 +30,22 @@ fetch(`/products/category/${categoryId}`)
       const card = document.createElement("div");
       card.classList.add("product-card");
       card.innerHTML = `
-      <h3>${product.name}</h3>
+      <img src="images/${product.image}" alt="${product.name}">
+      <a href="product.html?productId=${product.id}">
+          <h3>${product.name}</h3>
+        </a>
         <p>Ціна: ${product.price} грн</p>
-        <button data-id="${product.id}">Додати в корзину</button>
       `;
       categoryContainer.appendChild(card);
     });
   })
   .catch((err) => console.error("Error loading products", err));
 
-const categoryImage = document.getElementById("category-image");
 const categoryTitle = document.getElementById("category-title");
 
 fetch(`/categories/${categoryId}`)
   .then((response) => response.json())
   .then((category) => {
-    categoryImage.src = `images/${category.image}`;
     categoryTitle.textContent = category.name;
   });
 
@@ -78,4 +77,89 @@ fetch("/categories")
         `;
       if (catalogContainer) catalogContainer.appendChild(card);
     });
+  });
+
+// product page
+const productId = params.get("productId");
+
+fetch(`/product-options/${productId}`)
+  .then((res) => res.json())
+  .then((data) => renderTables(data))
+  .catch((err) => console.error(err));
+
+function renderTables(data) {
+  const container = document.getElementById("manufacturer-tables");
+  container.innerHTML = "";
+
+  const grouped = {};
+
+  data.forEach((item) => {
+    if (!grouped[item.manufacturer]) {
+      grouped[item.manufacturer] = [];
+    }
+    grouped[item.manufacturer].push(item);
+  });
+
+  for (const manufacturer in grouped) {
+    const section = document.createElement("div");
+    section.classList.add("manufacturer-block");
+
+    section.innerHTML = `
+    <h3>${manufacturer}</h3>
+    <table>
+    <thead>
+    <tr>
+       <th>Діаметр</th>
+            <th>Вага</th>
+            <th>ЧП</th>
+            <th>ТОВ</th>
+            <th>Опт</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+    </table>
+    `;
+
+    const tbody = section.querySelector("tbody");
+
+    grouped[manufacturer].forEach((item) => {
+      let selectedType = "retail";
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${item.diameter}</td>
+        <td>${item.weight} кг</td>
+        <td class="price-cell active" data-type="retail">${item.price_retail}</td>
+        <td class="price-cell" data-type="company">${item.price_company}</td>
+        <td class="price-cell" data-type="wholesale">${item.price_wholesale}</td>
+        <td>
+        <button class="add-to-cart">В кошик</button>
+        </td>
+      `;
+
+      row.querySelectorAll(".price-cell").forEach((cell) => {
+        cell.addEventListener("click", () => {
+          selectedType = cell.dataset.type;
+          row
+            .querySelectorAll(".price-cell")
+            .forEach((c) => c.classList.remove("active"));
+          cell.classList.add("active");
+        });
+      });
+      row.querySelector(".add-to-cart").addEventListener("click", () => {
+        const price = item[`price_${selectedType}`];
+      });
+      tbody.appendChild(row);
+    });
+    container.appendChild(section);
+  }
+}
+
+fetch(`/product/${productId}`)
+  .then((res) => res.json())
+  .then((product) => {
+    document.getElementById("product-name").textContent = product.name;
+    document.getElementById("product-description").textContent =
+      product.description;
+    document.getElementById("product-image").src = "images/" + product.image;
   });
