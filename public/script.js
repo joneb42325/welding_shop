@@ -1,165 +1,129 @@
-const specialContainer = document.getElementById("special-products-container");
+import { updateCartUI } from "./cart.js";
 
-//fetch("http://localhost:3000/products")
-fetch("/products/special")
-  .then((response) => response.json())
-  .then((products) => {
+async function loadSpecialProducts() {
+  const specialContainer = document.getElementById(
+    "special-products-container",
+  );
+  if (!specialContainer) return;
+
+  try {
+    const res = await fetch("/products/special");
+    const products = await res.json();
+
     products.forEach((product) => {
-      const card = document.createElement("div");
-      card.classList.add("product-card");
-      card.innerHTML = `
-        <img src="images/${product.image}" alt="${product.name}">
-        <h3>${product.name}</h3>
-        <p>Ціна: ${product.price} грн</p>
-      `;
-      specialContainer.appendChild(card);
+      specialContainer.appendChild(createProductCard(product));
     });
-  })
-  .catch((err) => console.error("Error loading products", err));
+  } catch (err) {
+    console.error("Error loading products", err);
+  }
+}
 
-const params = new URLSearchParams(window.location.search);
-const categoryId = params.get("categoryId");
-const categoryContainer = document.getElementById(
-  "category-products-container",
-);
+async function loadCategoryProducts() {
+  const params = new URLSearchParams(window.location.search);
+  const categoryId = params.get("categoryId");
+  const categoryContainer = document.getElementById(
+    "category-products-container",
+  );
 
-fetch(`/products/category/${categoryId}`)
-  .then((response) => response.json())
-  .then((products) => {
+  if (!categoryId || !categoryContainer) return;
+
+  try {
+    const res = await fetch(`/products/category/${categoryId}`);
+    const products = await res.json();
+
+    categoryContainer.innerHTML = "";
+
     products.forEach((product) => {
-      const card = document.createElement("div");
-      card.classList.add("product-card");
-      card.innerHTML = `
-      <img src="images/${product.image}" alt="${product.name}">
-      <a href="product.html?productId=${product.id}">
-          <h3>${product.name}</h3>
-        </a>
-        <p>Ціна: ${product.price} грн</p>
-      `;
-      categoryContainer.appendChild(card);
+      categoryContainer.appendChild(createProductCard(product));
     });
-  })
-  .catch((err) => console.error("Error loading products", err));
+  } catch (err) {
+    console.error("Error loading products", err);
+  }
+}
 
-const categoryTitle = document.getElementById("category-title");
+async function loadCategoryTitle() {
+  const params = new URLSearchParams(window.location.search);
+  const categoryId = params.get("categoryId");
 
-fetch(`/categories/${categoryId}`)
-  .then((response) => response.json())
-  .then((category) => {
+  const categoryTitle = document.getElementById("category-title");
+  if (!categoryTitle || !categoryId) return;
+
+  try {
+    const res = await fetch(`/categories/${categoryId}/info`);
+    const category = await res.json();
+
     categoryTitle.textContent = category.name;
-  });
+  } catch (err) {
+    console.error(err);
+  }
+}
 
-const catalogList = document.getElementById("catalog-list");
+function createProductCard(product) {
+  const isAvailable = product.total_stock > 0;
 
-const catalogContainer = document.getElementById("catalog-container");
+  const card = document.createElement("div");
+  card.classList.add("product-card");
 
-fetch("/categories")
-  .then((res) => res.json())
-  .then((categories) => {
+  card.innerHTML = `
+    <img src="images/${product.image}" alt="${product.name}">
+    
+    <a href="product.html?productId=${product.id}">
+      <h3>${product.name}</h3>
+    </a>
+
+    ${
+      !isAvailable
+        ? `<p class="out-of-stock">Немає в наявності</p>`
+        : `<p><span class="available">В наявності</span></p>`
+    }
+  `;
+
+  return card;
+}
+
+async function loadCategories() {
+  const catalogList = document.getElementById("catalog-list");
+  const catalogContainer = document.getElementById("catalog-container");
+
+  if (!catalogList && !catalogContainer) return;
+
+  try {
+    const res = await fetch("/categories");
+    const categories = await res.json();
+
     categories.forEach((category) => {
-      //sidebar
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <a href="category.html?categoryId=${category.id}">
-          ${category.name}
-        </a>
-      `;
-      if (catalogList) catalogList.appendChild(li);
+      if (catalogList) {
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <a href="category.html?categoryId=${category.id}">
+            ${category.name}
+          </a>
+        `;
+        catalogList.appendChild(li);
+      }
 
-      //grid catalog
-      const card = document.createElement("div");
-      card.classList.add("catalog-item");
-      card.innerHTML = `
+      if (catalogContainer) {
+        const card = document.createElement("div");
+        card.classList.add("catalog-item");
+
+        card.innerHTML = `
           <img src="images/${category.image}" alt="${category.name}">
           <a href="category.html?categoryId=${category.id}">
             ${category.name}
           </a>
         `;
-      if (catalogContainer) catalogContainer.appendChild(card);
+
+        catalogContainer.appendChild(card);
+      }
     });
-  });
-
-// product page
-const productId = params.get("productId");
-
-fetch(`/product-options/${productId}`)
-  .then((res) => res.json())
-  .then((data) => renderTables(data))
-  .catch((err) => console.error(err));
-
-function renderTables(data) {
-  const container = document.getElementById("manufacturer-tables");
-  container.innerHTML = "";
-
-  const grouped = {};
-
-  data.forEach((item) => {
-    if (!grouped[item.manufacturer]) {
-      grouped[item.manufacturer] = [];
-    }
-    grouped[item.manufacturer].push(item);
-  });
-
-  for (const manufacturer in grouped) {
-    const section = document.createElement("div");
-    section.classList.add("manufacturer-block");
-
-    section.innerHTML = `
-    <h3>${manufacturer}</h3>
-    <table>
-    <thead>
-    <tr>
-       <th>Діаметр</th>
-            <th>Вага</th>
-            <th>ЧП</th>
-            <th>ТОВ</th>
-            <th>Опт</th>
-    </tr>
-    </thead>
-    <tbody></tbody>
-    </table>
-    `;
-
-    const tbody = section.querySelector("tbody");
-
-    grouped[manufacturer].forEach((item) => {
-      let selectedType = "retail";
-      const row = document.createElement("tr");
-
-      row.innerHTML = `
-        <td>${item.diameter}</td>
-        <td>${item.weight} кг</td>
-        <td class="price-cell active" data-type="retail">${item.price_retail}</td>
-        <td class="price-cell" data-type="company">${item.price_company}</td>
-        <td class="price-cell" data-type="wholesale">${item.price_wholesale}</td>
-        <td>
-        <button class="add-to-cart">В кошик</button>
-        </td>
-      `;
-
-      row.querySelectorAll(".price-cell").forEach((cell) => {
-        cell.addEventListener("click", () => {
-          selectedType = cell.dataset.type;
-          row
-            .querySelectorAll(".price-cell")
-            .forEach((c) => c.classList.remove("active"));
-          cell.classList.add("active");
-        });
-      });
-      row.querySelector(".add-to-cart").addEventListener("click", () => {
-        const price = item[`price_${selectedType}`];
-      });
-      tbody.appendChild(row);
-    });
-    container.appendChild(section);
+  } catch (err) {
+    console.error(err);
   }
 }
 
-fetch(`/product/${productId}`)
-  .then((res) => res.json())
-  .then((product) => {
-    document.getElementById("product-name").textContent = product.name;
-    document.getElementById("product-description").textContent =
-      product.description;
-    document.getElementById("product-image").src = "images/" + product.image;
-  });
+loadSpecialProducts();
+loadCategoryProducts();
+loadCategoryTitle();
+loadCategories();
+
+updateCartUI();
