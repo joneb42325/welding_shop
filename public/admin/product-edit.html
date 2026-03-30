@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Редагувати товар</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Редагування товару</h2>
+
+      <div class="current-info">
+        <h3>Поточні дані:</h3>
+        <p><strong>Назва:</strong> <span id="current-name">Завантаження...</span></p>
+        <p><strong>Категорія:</strong> <span id="current-category">Завантаження...</span></p>
+        <p><strong>Опис:</strong></p>
+        <p id="current-description">Завантаження...</p>
+        <div class="current-image-wrapper">
+          <strong>Поточне зображення:</strong><br />
+          <img id="current-image" class="hidden" alt="Поточне зображення" />
+        </div>
+      </div>
+
+      <form id="edit-product-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Назва товару</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Категорія</label>
+          <select id="category-select" name="category_id" required>
+            <option value="">Завантаження категорій...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Опис</label>
+          <textarea id="description" name="description" rows="5"></textarea>
+        </div>
+
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="is_special" name="is_special" value="1" />
+            Спеціальна пропозиція (на головну)
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>Зображення (залиште порожнім, щоб не змінювати)</label>
+          <input type="file" id="image-input" name="image" />
+          <img id="preview" class="hidden" />
+        </div>
+
+        <div class="form-buttons">
+          <button type="submit" class="save-btn">Зберегти зміни</button>
+          <a href="products.html">
+            <button type="button" class="cancel-btn">Скасувати</button>
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <script src="product-edit.js"></script>
+  </body>
+</html>

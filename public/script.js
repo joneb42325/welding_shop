@@ -1,29 +1,25 @@
-import { updateCartUI } from "./cart.js";
+import { updateCartUI } from './cart.js';
 
 async function loadSpecialProducts() {
-  const specialContainer = document.getElementById(
-    "special-products-container",
-  );
+  const specialContainer = document.getElementById('special-products-container');
   if (!specialContainer) return;
 
   try {
-    const res = await fetch("/products/special");
+    const res = await fetch('/products/special');
     const products = await res.json();
 
     products.forEach((product) => {
       specialContainer.appendChild(createProductCard(product));
     });
   } catch (err) {
-    console.error("Error loading products", err);
+    console.error('Error loading products', err);
   }
 }
 
 async function loadCategoryProducts() {
   const params = new URLSearchParams(window.location.search);
-  const categoryId = params.get("categoryId");
-  const categoryContainer = document.getElementById(
-    "category-products-container",
-  );
+  const categoryId = params.get('categoryId');
+  const categoryContainer = document.getElementById('category-products-container');
 
   if (!categoryId || !categoryContainer) return;
 
@@ -31,21 +27,21 @@ async function loadCategoryProducts() {
     const res = await fetch(`/products/category/${categoryId}`);
     const products = await res.json();
 
-    categoryContainer.innerHTML = "";
+    categoryContainer.innerHTML = '';
 
     products.forEach((product) => {
       categoryContainer.appendChild(createProductCard(product));
     });
   } catch (err) {
-    console.error("Error loading products", err);
+    console.error('Error loading products', err);
   }
 }
 
 async function loadCategoryTitle() {
   const params = new URLSearchParams(window.location.search);
-  const categoryId = params.get("categoryId");
+  const categoryId = params.get('categoryId');
 
-  const categoryTitle = document.getElementById("category-title");
+  const categoryTitle = document.getElementById('category-title');
   if (!categoryTitle || !categoryId) return;
 
   try {
@@ -61,8 +57,8 @@ async function loadCategoryTitle() {
 function createProductCard(product) {
   const isAvailable = product.total_stock > 0;
 
-  const card = document.createElement("div");
-  card.classList.add("product-card");
+  const card = document.createElement('div');
+  card.classList.add('product-card');
 
   card.innerHTML = `
     <img src="images/${product.image}" alt="${product.name}">
@@ -82,18 +78,18 @@ function createProductCard(product) {
 }
 
 async function loadCategories() {
-  const catalogList = document.getElementById("catalog-list");
-  const catalogContainer = document.getElementById("catalog-container");
+  const catalogList = document.getElementById('catalog-list');
+  const catalogContainer = document.getElementById('catalog-container');
 
   if (!catalogList && !catalogContainer) return;
 
   try {
-    const res = await fetch("/categories");
+    const res = await fetch('/categories');
     const categories = await res.json();
 
     categories.forEach((category) => {
       if (catalogList) {
-        const li = document.createElement("li");
+        const li = document.createElement('li');
         li.innerHTML = `
           <a href="category.html?categoryId=${category.id}">
             ${category.name}
@@ -103,8 +99,8 @@ async function loadCategories() {
       }
 
       if (catalogContainer) {
-        const card = document.createElement("div");
-        card.classList.add("catalog-item");
+        const card = document.createElement('div');
+        card.classList.add('catalog-item');
 
         card.innerHTML = `
           <img src="images/${category.image}" alt="${category.name}">

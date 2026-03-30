@@ -1,17 +1,11 @@
-import {
-  getCart,
-  getCartTotal,
-  removeFromCart,
-  changeQuantity,
-  updateCartUI,
-} from "./cart.js";
+import { getCart, getCartTotal, removeFromCart, changeQuantity, updateCartUI } from './cart.js';
 
 refreshCart();
 
 function renderCartPage() {
-  const cartTableBody = document.querySelector("#cart-table tbody");
-  const cartContainer = document.querySelector(".cart-section");
-  const sidebar = document.querySelector(".sidebar");
+  const cartTableBody = document.querySelector('#cart-table tbody');
+  const cartContainer = document.querySelector('.cart-section');
+  const sidebar = document.querySelector('.sidebar');
   if (!cartTableBody) return;
 
   const cart = getCart();
@@ -26,10 +20,10 @@ function renderCartPage() {
     `;
     return;
   }
-  cartTableBody.innerHTML = "";
+  cartTableBody.innerHTML = '';
 
   cart.forEach((item, index) => {
-    const row = document.createElement("tr");
+    const row = document.createElement('tr');
 
     row.innerHTML = `
       <td>${item.name}</td>
@@ -50,39 +44,39 @@ function renderCartPage() {
         <button class="delete-btn">❌</button>
       </td>
     `;
-    const minusBtn = row.querySelector(".qty-btn.minus");
-    const plusBtn = row.querySelector(".qty-btn.plus");
-    const deleteBtn = row.querySelector(".delete-btn");
+    const minusBtn = row.querySelector('.qty-btn.minus');
+    const plusBtn = row.querySelector('.qty-btn.plus');
+    const deleteBtn = row.querySelector('.delete-btn');
 
-    minusBtn.addEventListener("click", () => {
+    minusBtn.addEventListener('click', () => {
       changeQuantity(index, -1);
       refreshCart();
     });
 
-    plusBtn.addEventListener("click", () => {
+    plusBtn.addEventListener('click', () => {
       changeQuantity(index, 1);
       refreshCart();
     });
 
-    deleteBtn.addEventListener("click", () => {
-      if (confirm("Видалити товар?")) {
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('Видалити товар?')) {
         removeFromCart(index);
         refreshCart();
       }
     });
     cartTableBody.appendChild(row);
   });
-  document.getElementById("cart-page-total").textContent = getCartTotal();
+  document.getElementById('cart-page-total').textContent = getCartTotal();
 }
 
 function formatType(type) {
   switch (type) {
-    case "retail":
-      return "ЧП";
-    case "company":
-      return "ТОВ";
-    case "wholesale":
-      return "Опт";
+    case 'retail':
+      return 'ЧП';
+    case 'company':
+      return 'ТОВ';
+    case 'wholesale':
+      return 'Опт';
     default:
       return type;
   }

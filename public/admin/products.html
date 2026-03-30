@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin — Товари</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Товари</h2>
+
+      <div class="admin-actions">
+        <a href="product-add.html"><button>Додати товар</button></a>
+        <a href="categories.html"><button class="secondary-btn">Керувати категоріями</button></a>
+      </div>
+
+      <table id="products-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Фото</th>
+            <th>Категорія</th>
+            <th>Опис</th>
+            <th>Акція</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script type="module" src="products.js"></script>
+  </body>
+</html>

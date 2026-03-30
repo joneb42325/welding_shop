@@ -1,8 +1,8 @@
-import { addToCart, updateCartUI } from "./cart.js";
+import { addToCart, updateCartUI } from './cart.js';
 
 const params = new URLSearchParams(window.location.search);
-const productId = params.get("productId");
-const manufacturerContainer = document.getElementById("manufacturer-tables");
+const productId = params.get('productId');
+const manufacturerContainer = document.getElementById('manufacturer-tables');
 
 if (productId && manufacturerContainer) {
   fetch(`/product-options/${productId}`)
@@ -11,7 +11,7 @@ if (productId && manufacturerContainer) {
     .catch((err) => console.error(err));
 
   function renderTables(data) {
-    manufacturerContainer.innerHTML = "";
+    manufacturerContainer.innerHTML = '';
 
     const grouped = {};
 
@@ -23,8 +23,8 @@ if (productId && manufacturerContainer) {
     });
 
     for (const manufacturer in grouped) {
-      const section = document.createElement("div");
-      section.classList.add("manufacturer-block");
+      const section = document.createElement('div');
+      section.classList.add('manufacturer-block');
 
       section.innerHTML = `
     <h3>${manufacturer}</h3>
@@ -42,42 +42,40 @@ if (productId && manufacturerContainer) {
     </table>
     `;
 
-      const tbody = section.querySelector("tbody");
+      const tbody = section.querySelector('tbody');
 
       grouped[manufacturer].forEach((item) => {
         const isAvailable = item.stock > 0;
 
-        let selectedType = "retail";
-        const row = document.createElement("tr");
+        let selectedType = 'retail';
+        const row = document.createElement('tr');
         if (!isAvailable) {
-          row.classList.add("out-of-stock-row");
+          row.classList.add('out-of-stock-row');
         }
         row.innerHTML = `
         <td>${item.diameter}</td>
         <td>${item.weight} кг</td>
-        <td class="price-cell ${isAvailable ? "active" : ""}" data-type="retail">${item.price_retail}</td>
+        <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${item.price_retail}</td>
         <td class="price-cell" data-type="company">${item.price_company}</td>
         <td class="price-cell" data-type="wholesale">${item.price_wholesale}</td>
         <td>
-        <button class="add-to-cart" ${!isAvailable ? "disabled" : ""}>
-          ${isAvailable ? "В кошик" : "Немає в наявності"}
+        <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
+          ${isAvailable ? 'В кошик' : 'Немає в наявності'}
         </button>
         </td>
       `;
         if (isAvailable) {
-          row.querySelectorAll(".price-cell").forEach((cell) => {
-            cell.addEventListener("click", () => {
+          row.querySelectorAll('.price-cell').forEach((cell) => {
+            cell.addEventListener('click', () => {
               selectedType = cell.dataset.type;
-              row
-                .querySelectorAll(".price-cell")
-                .forEach((c) => c.classList.remove("active"));
-              cell.classList.add("active");
+              row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
+              cell.classList.add('active');
             });
           });
 
-          row.querySelector(".add-to-cart").addEventListener("click", () => {
+          row.querySelector('.add-to-cart').addEventListener('click', () => {
             const price = item[`price_${selectedType}`];
-            alert("Товар додан");
+            alert('Товар додан');
             addToCart({
               productId,
               name: currentProduct.name,
@@ -104,10 +102,9 @@ if (productId && manufacturerContainer) {
     .then((res) => res.json())
     .then((product) => {
       currentProduct = product;
-      document.getElementById("product-name").textContent = product.name;
-      document.getElementById("product-description").textContent =
-        product.description;
-      document.getElementById("product-image").src = "images/" + product.image;
+      document.getElementById('product-name').textContent = product.name;
+      document.getElementById('product-description').textContent = product.description;
+      document.getElementById('product-image').src = 'images/' + product.image;
     });
 }
 

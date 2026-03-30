@@ -1,17 +1,17 @@
-const form = document.getElementById("login-form");
-const errorMsg = document.getElementById("error-msg");
+const form = document.getElementById('login-form');
+const errorMsg = document.getElementById('error-msg');
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const username = form.username.value;
   const password = form.password.value;
 
   try {
-    const res = await fetch("/admin/login", {
-      method: "POST",
+    const res = await fetch('/admin/login', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ username, password }),
     });
@@ -19,11 +19,11 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if (res.ok) {
-      window.location.href = "/admin";
+      window.location.href = '/admin';
     } else {
       errorMsg.textContent = data.error;
     }
   } catch (err) {
-    errorMsg.textContent = "Помилка сервера";
+    errorMsg.textContent = 'Помилка сервера';
   }
 });
