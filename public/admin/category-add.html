@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Додати категорію</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Додати категорію</h2>
+
+      <form id="category-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label>Назва</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Зображення</label>
+          <input type="file" id="image" name="image" required />
+        </div>
+
+        <div class="form-group">
+          <img id="preview" style="display: none; max-width: 200px" />
+        </div>
+
+        <button type="submit">Зберегти</button>
+        <a href="categories.html">
+          <button type="button">Назад</button>
+        </a>
+      </form>
+    </div>
+
+    <script src="category-add.js"></script>
+  </body>
+</html>

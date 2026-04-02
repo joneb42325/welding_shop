@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Виробники</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Виробники</h2>
+
+      <div id="manufacturer-form-container">
+        <h3>Додати / Редагувати виробника</h3>
+        <form id="manufacturer-form">
+          <input type="hidden" id="manufacturer-id" />
+          <div class="form-group">
+            <label>Назва виробника</label>
+            <input type="text" id="manufacturer-name" required />
+          </div>
+          <button type="submit" class="save-btn">Зберегти</button>
+          <button type="button" id="cancel-btn" class="cancel-btn">Скасувати</button>
+          <button type="button" onclick="window.history.back()">Назад</button>
+        </form>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Назва</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody id="manufacturer-table-body"></tbody>
+      </table>
+    </div>
+
+    <script src="manufacturers.js"></script>
+  </body>
+</html>

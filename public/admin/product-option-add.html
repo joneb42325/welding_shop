@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Додати опцію продукту</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Додати опцію продукту</h2>
+
+      <form id="add-option-form">
+        <div class="form-group">
+          <label>Виробник</label>
+          <select id="manufacturer" required>
+            <option value="">Завантаження...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Діаметр</label>
+          <input type="text" id="diameter" />
+        </div>
+
+        <div class="form-group">
+          <label>Вага</label>
+          <input type="text" id="weight" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна роздріб</label>
+          <input type="number" id="price_retail" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна компанії</label>
+          <input type="number" id="price_company" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна опт</label>
+          <input type="number" id="price_wholesale" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Кількість</label>
+          <input type="number" id="stock" />
+        </div>
+
+        <button type="submit">Додати опцію</button>
+        <button type="button" onclick="window.history.back()">Назад</button>
+      </form>
+    </div>
+
+    <script src="product-option-add.js"></script>
+  </body>
+</html>

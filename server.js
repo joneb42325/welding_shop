@@ -315,6 +315,7 @@ app.get('/admin/products', adminAuth, (req, res) => {
     c.name as category_name
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
+    ORDER BY p.id DESC
 `;
 
   db.query(query, (err, results) => {
@@ -438,5 +439,284 @@ app.delete('/admin/products/:id', adminAuth, (req, res) => {
       }
       res.json({ success: true });
     });
+  });
+});
+
+// GET all manufacturers
+app.get('/admin/manufacturers', adminAuth, (req, res) => {
+  const query = 'SELECT * FROM manufacturers ORDER BY id';
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    res.json(results);
+  });
+});
+
+// GET manufacturer by ID
+app.get('/admin/manufacturers/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const query = 'SELECT * FROM manufacturers WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    if (results.length === 0) return res.status(404).json({ error: 'Виробника не знайдено' });
+    res.json(results[0]);
+  });
+});
+
+// POST new manufacturer
+app.post('/admin/manufacturers', adminAuth, (req, res) => {
+  const { name } = req.body;
+  const query = 'INSERT INTO manufacturers (name) VALUES (?)';
+  db.query(query, [name], (err) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true });
+  });
+});
+
+// PUT update manufacturer
+app.put('/admin/manufacturers/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const { name } = req.body;
+  const query = 'UPDATE manufacturers SET name = ? WHERE id = ?';
+  db.query(query, [name, id], (err) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true });
+  });
+});
+
+// DELETE manufacturer
+app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const query = 'DELETE FROM manufacturers WHERE id = ?';
+  db.query(query, [id], (err) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true });
+  });
+});
+
+// GET all options for a product
+app.get('/admin/product-options/product/:productId', adminAuth, (req, res) => {
+  const productId = req.params.productId;
+  const query = `
+    SELECT
+      po.id,
+      po.product_id,
+      m.name AS manufacturer,
+      po.diameter,
+      po.weight,
+      po.price_retail,
+      po.price_company,
+      po.price_wholesale,
+      po.stock
+    FROM product_options po
+    JOIN manufacturers m ON po.manufacturer_id = m.id
+    WHERE po.product_id = ?
+  `;
+  db.query(query, [productId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json(results);
+  });
+});
+
+//GET BY ID
+
+app.get('/admin/product-options/edit/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const query = `
+    SELECT * FROM product_options WHERE id = ?
+  `;
+  db.query(query, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    if (results.length === 0) return res.status(404).json({ error: 'Опцію не знайдено' });
+    res.json(results[0]);
+  });
+});
+
+// GET all product-options
+app.get('/admin/product-options/all', adminAuth, (req, res) => {
+  const query = `
+    SELECT 
+      po.*, 
+      p.name AS product_name,
+      m.name AS manufacturer
+    FROM product_options po
+    JOIN products p ON po.product_id = p.id
+    JOIN manufacturers m ON po.manufacturer_id = m.id
+  `;
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    res.json(results);
+  });
+});
+// POST new product option
+app.post('/admin/product-options', adminAuth, (req, res) => {
+  const {
+    product_id,
+    manufacturer_id,
+    diameter,
+    weight,
+    price_retail,
+    price_company,
+    price_wholesale,
+    stock,
+  } = req.body;
+  const query = `
+    INSERT INTO product_options
+    (product_id, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(
+    query,
+    [
+      product_id,
+      manufacturer_id,
+      diameter,
+      weight,
+      price_retail,
+      price_company,
+      price_wholesale,
+      stock,
+    ],
+    (err) => {
+      if (err) return res.status(500).json({ error: 'Помилка БД' });
+      res.json({ success: true });
+    }
+  );
+});
+
+// PUT update product option
+app.put('/admin/product-options/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const { manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock } =
+    req.body;
+  const query = `
+    UPDATE product_options
+    SET manufacturer_id = ?, diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ?
+    WHERE id = ?
+  `;
+  db.query(
+    query,
+    [manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock, id],
+    (err) => {
+      if (err) return res.status(500).json({ error: 'Помилка БД' });
+      res.json({ success: true });
+    }
+  );
+});
+
+// DELETE product option
+app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const query = 'DELETE FROM product_options WHERE id = ?';
+  db.query(query, [id], (err) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true });
+  });
+});
+
+// POST - Створення нового замовлення
+app.post('/api/orders', (req, res) => {
+  const { customer, items, totalPrice } = req.body;
+
+  // 1. Спочатку створюємо запис у таблиці orders
+  const insertOrderQuery = `
+    INSERT INTO orders (customer_name, customer_phone, customer_email, delivery_address, comment, total_price) 
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    insertOrderQuery,
+    [
+      customer.name,
+      customer.phone,
+      customer.email || '',
+      customer.delivery,
+      customer.comment || '',
+      totalPrice,
+    ],
+    (err, orderResult) => {
+      if (err) {
+        console.error('Помилка при створенні замовлення:', err);
+        return res.status(500).json({ error: 'Помилка збереження замовлення' });
+      }
+
+      // Отримуємо ID щойно створеного замовлення
+      const orderId = orderResult.insertId;
+
+      // 2. Тепер додаємо всі товари з кошика у таблицю order_items
+      const insertItemsQuery = `
+      INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type) 
+      VALUES ?
+    `;
+
+      // Формуємо масив масивів для масової вставки (Bulk Insert) у MySQL
+      const itemsData = items.map((item) => [
+        orderId,
+        item.productId,
+        item.name,
+        item.manufacturer,
+        item.diameter || '',
+        item.weight || '',
+        item.price,
+        item.quantity,
+        item.selectedType,
+      ]);
+
+      db.query(insertItemsQuery, [itemsData], (itemErr) => {
+        if (itemErr) {
+          console.error('Помилка при збереженні товарів замовлення:', itemErr);
+          return res.status(500).json({ error: 'Помилка збереження товарів' });
+        }
+
+        // Якщо все пройшло успішно, відправляємо відповідь фронтенду
+        res
+          .status(201)
+          .json({ success: true, message: 'Замовлення успішно створено', orderId: orderId });
+      });
+    }
+  );
+});
+
+app.get('/admin/orders', adminAuth, (req, res) => {
+  const query = 'SELECT * FROM orders ORDER BY created_at DESC';
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Помилка БД' });
+    }
+    res.json(results);
+  });
+});
+
+app.get('/admin/orders/:id/items', adminAuth, (req, res) => {
+  const query = 'SELECT * FROM order_items WHERE order_id = ?';
+  db.query(query, [req.params.id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Помилка БД' });
+    }
+    res.json(results);
+  });
+});
+
+app.put('/admin/orders/:id/status', adminAuth, (req, res) => {
+  const { status } = req.body;
+  const query = 'UPDATE orders SET status = ? WHERE id = ?';
+  db.query(query, [status, req.params.id], (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Помилка оновлення статусу' });
+    }
+    res.json({ success: true });
+  });
+});
+
+app.delete('/admin/orders/:id', adminAuth, (req, res) => {
+  const query = 'DELETE FROM orders WHERE id = ?';
+  db.query(query, [req.params.id], (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Помилка видалення' });
+    }
+    res.json({ success: true });
   });
 });

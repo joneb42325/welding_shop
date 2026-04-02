@@ -54,7 +54,7 @@ if (productId && manufacturerContainer) {
         }
         row.innerHTML = `
         <td>${item.diameter}</td>
-        <td>${item.weight} кг</td>
+        <td>${item.weight}</td>
         <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${item.price_retail}</td>
         <td class="price-cell" data-type="company">${item.price_company}</td>
         <td class="price-cell" data-type="wholesale">${item.price_wholesale}</td>

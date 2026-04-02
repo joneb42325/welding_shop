@@ -20,9 +20,11 @@
         <a href="#">Про нас</a>
         <a href="#">Доставка і оплата</a>
       </nav>
-      <div class="header-right">
-        <input class="search" placeholder="Пошук товарів..." type="text" />
-      </div>
+      <!--
+     <div class="header-right">
+       <input class="search" placeholder="Пошук товарів..." type="text" />
+     </div>
+     -->
     </header>
     <main class="main">
       <aside class="sidebar">
@@ -66,6 +68,61 @@
             <button class="order-button">Підтвердити замовлення</button>
           </div>
         </section>
+      </div>
+
+      <div id="checkout-modal" class="modal hidden">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <h2>Оформлення замовлення</h2>
+          <form id="checkout-form">
+            <div class="form-group">
+              <label for="client-name">ПІБ отримувача *</label>
+              <input
+                type="text"
+                id="client-name"
+                name="name"
+                required
+                placeholder="Іванов Іван Іванович"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="client-phone">Телефон *</label>
+              <input type="tel" id="client-phone" name="phone" required placeholder="+380..." />
+            </div>
+
+            <div class="form-group">
+              <label for="client-email">Email</label>
+              <input type="email" id="client-email" name="email" placeholder="taras@example.com" />
+            </div>
+
+            <div class="form-group">
+              <label for="client-delivery">Місто та відділення (Нова Пошта) *</label>
+              <input
+                type="text"
+                id="client-delivery"
+                name="delivery"
+                required
+                placeholder="м. Київ, відд. №1"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="client-comment">Коментар до замовлення</label>
+              <textarea
+                id="client-comment"
+                name="comment"
+                rows="3"
+                placeholder="Додаткові побажання..."
+              ></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <h3>До сплати: <span id="modal-total-price">0</span> грн</h3>
+              <button type="submit" class="submit-order-btn">Відправити замовлення</button>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
 

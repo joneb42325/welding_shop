@@ -67,7 +67,7 @@ async function loadProduct() {
 }
 
 imageInput.addEventListener('change', () => {
-  const file = imageInput.files[0];
+  const file = this.files[0];
   if (file) {
     preview.src = URL.createObjectURL(file);
     preview.classList.remove('hidden');
@@ -96,6 +96,18 @@ form.addEventListener('submit', async (e) => {
   } catch (err) {
     console.error(err);
     alert("Помилка зв'язку з сервером");
+  }
+});
+
+window.addEventListener('load', async () => {
+  try {
+    const res = await fetch('/admin/check');
+
+    if (res.status === 401) {
+      window.location.href = '/admin/login.html';
+    }
+  } catch (err) {
+    console.error(err);
   }
 });
 

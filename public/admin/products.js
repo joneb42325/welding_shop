@@ -10,13 +10,13 @@ async function loadProducts() {
     products.forEach((prod) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${prod.id}</td>
         <td>${prod.name}</td>
         <td><img src="/images/${prod.image}" width="50" style="border-radius:4px;"></td>
         <td>${prod.category_name || 'Без категорії'}</td>
         <td>${prod.description}</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
+          <button class="edit-btn" onclick="location.href='product-option.html?productId=${prod.id}'">До опцій</button>
           <button class="edit-btn" onclick="location.href='product-edit.html?id=${prod.id}'">Редагувати</button>
           <button class="delete-btn" data-id="${prod.id}">Видалити</button>
         </td>
@@ -35,6 +35,18 @@ tableBody.addEventListener('click', async (e) => {
       const res = await fetch(`/admin/products/${id}`, { method: 'DELETE' });
       if (res.ok) await loadProducts();
     }
+  }
+});
+
+window.addEventListener('load', async () => {
+  try {
+    const res = await fetch('/admin/check');
+
+    if (res.status === 401) {
+      window.location.href = '/admin/login.html';
+    }
+  } catch (err) {
+    console.error(err);
   }
 });
 

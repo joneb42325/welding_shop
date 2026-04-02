@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin — Замовлення</title>
+    <link rel="stylesheet" href="admin.css" />
+    <style></style>
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Замовлення</h2>
+      <div class="admin-actions">
+        <a href="products.html"><button class="secondary-btn">Товари</button></a>
+        <a href="categories.html"><button class="secondary-btn">Категорії</button></a>
+      </div>
+
+      <table id="orders-table">
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>Клієнт</th>
+            <th>Контакти</th>
+            <th>Доставка</th>
+            <th>Сума</th>
+            <th>Статус</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div id="items-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Товари замовлення №<span id="modal-order-id"></span></h3>
+        <p><strong>Коментар клієнта:</strong> <span id="modal-comment"></span></p>
+        <table>
+          <thead>
+            <tr>
+              <th>Назва</th>
+              <th>Опції</th>
+              <th>Тип ціни</th>
+              <th>Ціна х Кіл-ть</th>
+              <th>Сума</th>
+            </tr>
+          </thead>
+          <tbody id="modal-items-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script src="orders.js"></script>
+  </body>
+</html>

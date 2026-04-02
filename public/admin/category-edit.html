@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Редагувати категорію</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <h2>Редагувати категорію</h2>
+
+      <div class="current-info">
+        <h3>Поточні дані:</h3>
+        <p>
+          <strong>Назва:</strong>
+          <span id="current-name-display">Завантаження...</span>
+        </p>
+        <div class="current-image-wrapper">
+          <strong>Поточне зображення:</strong><br />
+          <img id="current-image-display" class="hidden" alt="Поточне зображення" />
+        </div>
+      </div>
+
+      <form id="category-form" enctype="multipart/form-data">
+        <input type="hidden" id="category-id" />
+
+        <div class="form-group">
+          <label>Нова назва (або залиште поточну)</label>
+          <input type="text" id="name" name="name" required />
+        </div>
+
+        <div class="form-group">
+          <label>Нове зображення (залиште порожнім, якщо не змінюєте)</label>
+          <input type="file" id="image" name="image" />
+        </div>
+
+        <div class="form-group">
+          <img id="preview" class="image-preview hidden" />
+        </div>
+
+        <button type="submit">Зберегти</button>
+        <a href="categories.html">
+          <button type="button">Назад</button>
+        </a>
+      </form>
+    </div>
+
+    <script src="category-edit.js"></script>
+  </body>
+</html>
