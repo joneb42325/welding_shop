@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Головна панель | Адмінка</title>
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="admin-container">
+      <div class="dashboard-header">
+        <h2>Панель керування Welding Shop</h2>
+        <button id="logout-btn" style="background-color: #d32f2f">Вийти</button>
+      </div>
+
+      <p>Оберіть розділ для редагування:</p>
+
+      <div class="dashboard-grid">
+        <a href="orders.html" class="dashboard-card">
+          <h3>🛒 Замовлення</h3>
+          <p>Перегляд та обробка замовлень клієнтів</p>
+        </a>
+
+        <a href="products.html" class="dashboard-card">
+          <h3>📦 Товари</h3>
+          <p>Додавання, редагування та видалення товарів</p>
+        </a>
+
+        <a href="manufacturers.html" class="dashboard-card">
+          <h3>🏭 Виробники</h3>
+          <p>Додавання, редагування та видалення виробників</p>
+        </a>
+
+        <a href="categories.html" class="dashboard-card">
+          <h3>📂 Категорії</h3>
+          <p>Керування категоріями каталогу</p>
+        </a>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('logout-btn').addEventListener('click', async () => {
+        try {
+          const response = await fetch('/admin/logout', { method: 'POST' });
+          if (response.ok) {
+            window.location.href = 'login.html';
+          }
+        } catch (error) {
+          console.error('Помилка при виході:', error);
+        }
+      });
+    </script>
+  </body>
+</html>

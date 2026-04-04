@@ -29,6 +29,18 @@ async function loadCategoryProducts() {
 
     categoryContainer.innerHTML = '';
 
+    if (products.length === 0) {
+      categoryContainer.innerHTML = `
+        <div class="empty-message">
+          <h2>У цій категорії поки немає товарів 😔</h2>
+          <p>Ми вже працюємо над її наповненням. Загляньте сюди трохи пізніше!</p>
+          <a href="index.html" class="btn-back">Повернутися на головну</a>
+        </div>
+      `;
+      // Нам більше не треба міняти style.display! CSS Grid зробить все сам.
+      return;
+    }
+
     products.forEach((product) => {
       categoryContainer.appendChild(createProductCard(product));
     });

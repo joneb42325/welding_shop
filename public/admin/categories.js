@@ -8,7 +8,9 @@ async function loadCategories() {
     categories.forEach((cat) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${cat.name}</td>
+        <td><a href="products.html?categoryId=${cat.id}">
+            ${cat.name}
+        </a></td>
         <td><img src="/images/${cat.image}" alt="${cat.name}" width="50"></td>
         <td>
             <a href="category-edit.html?catId=${cat.id}">

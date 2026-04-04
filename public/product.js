@@ -3,6 +3,7 @@ import { addToCart, updateCartUI } from './cart.js';
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
 const manufacturerContainer = document.getElementById('manufacturer-tables');
+const descriptionElement = document.getElementById('product-description');
 
 if (productId && manufacturerContainer) {
   fetch(`/product-options/${productId}`)
@@ -12,6 +13,17 @@ if (productId && manufacturerContainer) {
 
   function renderTables(data) {
     manufacturerContainer.innerHTML = '';
+
+    if (!data || data.length === 0) {
+      manufacturerContainer.innerHTML = `
+        <div class="empty-message">
+          <h2>Ціни та опції наразі оновлюються </h2>
+          <p>Ми вже працюємо над їх наповненням. Загляньте сюди трохи пізніше!</p>
+          <a href="index.html" class="btn-back">Повернутися на головну</a>
+        </div>
+      `;
+      return;
+    }
 
     const grouped = {};
 
@@ -103,7 +115,8 @@ if (productId && manufacturerContainer) {
     .then((product) => {
       currentProduct = product;
       document.getElementById('product-name').textContent = product.name;
-      document.getElementById('product-description').textContent = product.description;
+      descriptionElement.classList.add('product-description-text');
+      descriptionElement.textContent = product.description;
       document.getElementById('product-image').src = 'images/' + product.image;
     });
 }

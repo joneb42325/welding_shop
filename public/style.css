@@ -222,6 +222,11 @@ body {
   object-fit: cover;
 }
 
+.product-description-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .catalog-preview {
   margin-top: 40px;
 }
@@ -470,7 +475,7 @@ body {
   flex: 1;
 }
 
-.empty-cart-message {
+.empty-message {
   text-align: center;
   padding: 50px 20px;
   background: #fff;
@@ -478,7 +483,7 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-.empty-cart-message h2 {
+.empty-message h2 {
   color: #333;
   margin-bottom: 15px;
 }

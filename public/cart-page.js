@@ -19,7 +19,7 @@ function renderCartPage() {
 
   if (cart.length === 0) {
     cartContainer.innerHTML = `
-      <div class="empty-cart-message">
+      <div class="empty-message">
         <h2>Ваша корзина порожня 📦</h2>
         <p>Схоже, ви ще нічого не додали. Завітайте до нашого каталогу!</p>
         <a href="index.html" class="btn-back">Повернутися до покупок</a>

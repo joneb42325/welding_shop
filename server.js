@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const db = require('./db');
 const fs = require('fs');
+require('dotenv').config();
 
 const app = express();
 app.use(express.json());
@@ -128,15 +129,15 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 
 const sessionStore = new MySQLStore({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'welding_shop',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
 
 app.use(
   session({
-    secret: 'secret_solyara',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
@@ -165,7 +166,7 @@ app.use(
 app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
 
-  if (username === 'admin' && password === '1234') {
+  if (username === 'admin' && password === process.env.ADMIN_PASS) {
     req.session.isAdmin = true;
     return res.json({ success: true });
   }
@@ -309,16 +310,26 @@ app.delete('/admin/categories/:id', adminAuth, (req, res) => {
 
 //GET
 app.get('/admin/products', adminAuth, (req, res) => {
-  const query = `
+  const categoryId = req.query.category_id;
+
+  let query = `
     SELECT
     p.*,
     c.name as category_name
     FROM products p
     LEFT JOIN categories c ON p.category_id = c.id
-    ORDER BY p.id DESC
 `;
 
-  db.query(query, (err, results) => {
+  let params = [];
+
+  if (categoryId) {
+    query += ' WHERE p.category_id = ? ';
+    params.push(categoryId);
+  }
+
+  query += ' ORDER BY p.id DESC';
+
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error:' });
     res.json(results);
   });

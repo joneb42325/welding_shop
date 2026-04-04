@@ -160,6 +160,11 @@ table button {
   margin-top: 10px;
 }
 
+#current-description {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 #current-image-display {
   max-width: 200px;
   margin-top: 10px;
@@ -339,4 +344,17 @@ textarea:focus {
 
 .modal.active {
   display: flex;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.description-cell {
+  max-width: 250px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
