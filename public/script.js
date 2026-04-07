@@ -37,7 +37,7 @@ async function loadCategoryProducts() {
           <a href="index.html" class="btn-back">Повернутися на головну</a>
         </div>
       `;
-      // Нам більше не треба міняти style.display! CSS Grid зробить все сам.
+
       return;
     }
 
@@ -128,6 +128,21 @@ async function loadCategories() {
     console.error(err);
   }
 }
+
+function initMobileSidebar() {
+  const sidebarTitles = document.querySelectorAll('.cart-box h3, .catalog h3');
+
+  sidebarTitles.forEach((title) => {
+    title.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        const parent = title.parentElement;
+        parent.classList.toggle('active-mobile');
+      }
+    });
+  });
+}
+
+window.addEventListener('DOMContentLoaded', initMobileSidebar);
 
 loadSpecialProducts();
 loadCategoryProducts();

@@ -7,6 +7,18 @@ body {
   min-height: 100vh;
 }
 
+a,
+a:visited {
+  color: #0056b3;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a:hover {
+  color: #004494;
+  text-decoration: underline;
+}
+
 .login-container {
   background: white;
   padding: 30px 40px;
@@ -357,4 +369,118 @@ textarea:focus {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    margin: 10px;
+    padding: 15px;
+    border-radius: 8px;
+  }
+
+  .login-container {
+    width: 90%;
+    padding: 20px;
+    margin: 40px auto;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .dashboard-header button {
+    width: 100%;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr; /* Картки стають в одну колонку */
+    gap: 15px;
+  }
+
+  .admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .admin-actions a,
+  .admin-actions button,
+  .admin-container > a > button {
+    width: 100%;
+    margin: 0;
+  }
+
+  .form-group input[type='text'],
+  .form-group input[type='number'],
+  .form-group input[type='file'],
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px; /* Запобігає автозуму на iPhone при кліку на поле */
+  }
+
+  .form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-buttons button {
+    width: 100%;
+  }
+
+  .admin-container table,
+  #items-modal table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Плавний скролл на iOS */
+    white-space: nowrap;
+    border: 1px solid #ddd;
+  }
+
+  .admin-container table th,
+  .admin-container table td {
+    padding: 8px 10px;
+  }
+
+  /* Кнопки всередині таблиці (Редагувати/Видалити) */
+  .admin-container table td button {
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+  }
+
+  .admin-container table td button:last-child {
+    margin-bottom: 0;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+    margin-top: 10%;
+    max-height: 85vh;
+  }
+
+  .close-modal {
+    top: 5px;
+    right: 15px;
+    font-size: 28px;
+    padding: 5px;
+  }
+
+  .current-image-wrapper img,
+  #current-image,
+  #preview {
+    max-height: 250px;
+    object-fit: contain;
+  }
+
+  .current-info {
+    padding: 10px;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+  }
 }

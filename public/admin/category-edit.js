@@ -21,6 +21,8 @@ async function loadCategory() {
   const res = await fetch(`/admin/categories/${id}`);
   const category = await res.json();
   document.getElementById('current-name-display').textContent = category.name;
+  const nameInput = document.getElementById('name');
+  nameInput.value = category.name;
 
   const currentImgDisplay = document.getElementById('current-image-display');
 
@@ -28,11 +30,12 @@ async function loadCategory() {
   currentImgDisplay.classList.remove('hidden');
 }
 
-imageInput.addEventListener('change', () => {
+imageInput.addEventListener('change', function () {
   const file = this.files[0];
 
   if (file) {
     preview.src = URL.createObjectURL(file);
+    preview.classList.remove('hidden');
   }
 });
 

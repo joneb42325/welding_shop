@@ -29,13 +29,19 @@ productForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const formData = new FormData(productForm);
 
+  const categoryId = formData.get('category_id');
+
   const res = await fetch('/admin/products', {
     method: 'POST',
     body: formData,
   });
 
   if (res.ok) {
-    window.location.href = 'products.html';
+    if (categoryId) {
+      window.location.href = `products.html?categoryId=${categoryId}`;
+    } else {
+      window.location.href = 'products.html';
+    }
   } else {
     alert('Помилка при збереженні товару');
   }

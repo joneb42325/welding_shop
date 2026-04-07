@@ -12,7 +12,7 @@ refreshCart();
 function renderCartPage() {
   const cartTableBody = document.querySelector('#cart-table tbody');
   const cartContainer = document.querySelector('.cart-section');
-  const sidebar = document.querySelector('.sidebar');
+
   if (!cartTableBody) return;
 
   const cart = getCart();
@@ -33,7 +33,11 @@ function renderCartPage() {
     const row = document.createElement('tr');
 
     row.innerHTML = `
-      <td>${item.name}</td>
+      <td>
+        <a href="product.html?productId=${item.productId}">
+            ${item.name}
+        </a>
+      </td>
       <td>${item.manufacturer}</td>
       <td>${item.diameter}</td>
       <td>${item.weight}</td>
@@ -41,7 +45,7 @@ function renderCartPage() {
       <td>
       <div class="quantity-controls">
         <button class="qty-btn minus">-</button>
-        <span class="qty-value">${item.quantity} </span>
+        <input type="number" class="qty-input" value="${item.quantity}" min="1" step="1">
         <button class="qty-btn plus">+</button>
         </div>
        </td>
@@ -51,10 +55,28 @@ function renderCartPage() {
         <button class="delete-btn">❌</button>
       </td>
     `;
+    const qtyInput = row.querySelector('.qty-input');
     const minusBtn = row.querySelector('.qty-btn.minus');
     const plusBtn = row.querySelector('.qty-btn.plus');
     const deleteBtn = row.querySelector('.delete-btn');
 
+    qtyInput.addEventListener('change', () => {
+      let newQty = parseInt(qtyInput.value);
+
+      if (isNaN(newQty) || newQty < 1) {
+        newQty = 1;
+      }
+      const diff = newQty - item.quantity;
+
+      changeQuantity(index, diff);
+      refreshCart();
+    });
+
+    qtyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        qtyInput.blur(); // Прибираємо фокус, що викличе подію 'change'
+      }
+    });
     minusBtn.addEventListener('click', () => {
       changeQuantity(index, -1);
       refreshCart();

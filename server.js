@@ -148,20 +148,6 @@ app.use(
     },
   })
 );
-/*
-
-app.use(
-  session({
-    secret: "secret_solyara",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      secure: false,
-    },
-  }),
-);
-*/
 
 app.post('/admin/login', (req, res) => {
   const { username, password } = req.body;
@@ -252,29 +238,52 @@ app.post('/admin/categories', adminAuth, upload.single('image'), (req, res) => {
 app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) => {
   const { name } = req.body;
   const id = req.params.id;
+  const getOldImgQuery = 'SELECT image FROM categories WHERE id = ?';
 
-  if (req.file) {
-    const newImage = req.file.filename;
-    const query = 'UPDATE categories SET name = ?, image = ? WHERE id = ?';
+  db.query(getOldImgQuery, [id], (err, results) => {
+    if (err) {
+      console.error('Помилка пошуку категорії:', err);
+      return res.status(500).json({ error: 'Помилка бази даних' });
+    }
 
-    db.query(query, [name, newImage, id], (err) => {
-      if (err) {
-        console.error('Помилка оновлення категорії з фото:', err);
-        return res.status(500).json({ error: 'Server error' });
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Категорію не знайдено' });
+    }
+
+    const oldImageName = results[0].image;
+
+    if (req.file) {
+      const newImage = req.file.filename;
+      const query = 'UPDATE categories SET name = ?, image = ? WHERE id = ?';
+
+      if (oldImageName) {
+        const oldImagePath = path.join(__dirname, 'public/images', oldImageName);
+        fs.unlink(oldImagePath, (fsErr) => {
+          if (fsErr && fsErr.code !== 'ENOENT') {
+            console.error('Не вдалося видалити старе фото:', fsErr);
+          }
+        });
       }
-      res.json({ success: true });
-    });
-  } else {
-    const query = 'UPDATE categories SET name = ? WHERE id = ?';
 
-    db.query(query, [name, id], (err) => {
-      if (err) {
-        console.error('Помилка оновлення категорії без фото:', err);
-        return res.status(500).json({ error: 'Server error' });
-      }
-      res.json({ success: true });
-    });
-  }
+      db.query(query, [name, newImage, id], (err) => {
+        if (err) {
+          console.error('Помилка оновлення категорії з фото:', err);
+          return res.status(500).json({ error: 'Server error' });
+        }
+        res.json({ success: true });
+      });
+    } else {
+      const query = 'UPDATE categories SET name = ? WHERE id = ?';
+
+      db.query(query, [name, id], (err) => {
+        if (err) {
+          console.error('Помилка оновлення категорії без фото:', err);
+          return res.status(500).json({ error: 'Server error' });
+        }
+        res.json({ success: true });
+      });
+    }
+  });
 });
 
 //DELETE
@@ -282,17 +291,25 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
 app.delete('/admin/categories/:id', adminAuth, (req, res) => {
   const id = req.params.id;
 
-  const getImgQuery = 'SELECT image FROM categories WHERE id = ?';
+  const findPhotosQuery = `
+    SELECT image FROM products WHERE category_id = ?
+    UNION
+    SELECT image FROM categories WHERE id = ?
+  `;
 
-  db.query(getImgQuery, [id], (err, results) => {
+  db.query(findPhotosQuery, [id, id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
 
-    if (results.length > 0 && results[0].image) {
-      const imagePath = path.join(__dirname, 'public/images', results[0].image);
+    if (results.length > 0) {
+      results.forEach((row) => {
+        if (row.image) {
+          const imagePath = path.join(__dirname, 'public/images', row.image);
 
-      fs.unlink(imagePath, (err) => {
-        if (err && err.code !== 'ENOENT') {
-          console.error('Помилка видалення файлу зображення:', err);
+          fs.unlink(imagePath, (err) => {
+            if (err && err.code !== 'ENOENT') {
+              console.error('Помилка видалення файлу зображення:', err);
+            }
+          });
         }
       });
     }
@@ -678,7 +695,6 @@ app.post('/api/orders', (req, res) => {
           return res.status(500).json({ error: 'Помилка збереження товарів' });
         }
 
-        // Якщо все пройшло успішно, відправляємо відповідь фронтенду
         res
           .status(201)
           .json({ success: true, message: 'Замовлення успішно створено', orderId: orderId });

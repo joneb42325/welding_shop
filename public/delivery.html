@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Доставка | Wolfram</title>
+    <link rel="icon" type="image/png" href="images/logo.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="header"></header>
+    <main class="main">
+      <aside class="sidebar">
+        <div class="cart-box">
+          <h3>Корзина</h3>
+          <p>Товарів: <span id="cart-count">0</span></p>
+          <p>Сума: <span id="cart-total">0</span> грн</p>
+          <a href="cart.html">
+            <button>Оформити замовлення</button>
+          </a>
+        </div>
+
+        <div class="catalog">
+          <h3>Каталог</h3>
+          <ul id="catalog-list"></ul>
+        </div>
+      </aside>
+      <div class="content about-page">
+        <section class="about-hero">
+          <h1>Про компанію Wolfram</h1>
+          <p>
+            Ваш надійний партнер у сфері професійного зварювального обладнання та металопрокату.
+          </p>
+        </section>
+
+        <section class="about-description">
+          <p>
+            Компанія <strong>Wolfram</strong> займається оптовим та роздрібним продажем товарів для
+            зварювання та слюсарних робіт, а також реалізацією товарів дротяного металопрокату
+            різних марок та сталей.
+          </p>
+
+          <div class="about-highlight">
+            Ми забезпечуємо повний цикл постачання: від підбору необхідного дроту до комплектації
+            складних замовлень для промислових підприємств.
+          </div>
+
+          <div class="about-grid">
+            <div class="about-card">
+              <h3>📦 Асортимент</h3>
+              <p>
+                Великий вибір зварювального дроту (нержавіючий, алюмінієвий, низьковуглецевий) та
+                електродів різного призначення.
+              </p>
+            </div>
+            <div class="about-card">
+              <h3>🏭 Виробництво</h3>
+              <p>
+                Пряма співпраця з провідними заводами-виробниками дозволяє нам гарантувати високу
+                якість кожної котушки дроту.
+              </p>
+            </div>
+            <div class="about-card">
+              <h3>🤝 Гнучкість</h3>
+              <p>
+                Пропонуємо спеціальні умови для ТОВ та гуртових покупців. Працюємо як з великими
+                підприємствами, так і з приватними майстрами.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="about-features">
+          <h2>Чому обирають нас?</h2>
+          <ul class="features-list">
+            <li>
+              <strong>Якість:</strong> Вся продукція відповідає державним та міжнародним стандартам.
+            </li>
+            <li><strong>Наявність:</strong> Більшість товарів завжди на складі в Харкові.</li>
+            <li>
+              <strong>Експертність:</strong> Надаємо професійні консультації щодо вибору марки сталі
+              та типу дроту.
+            </li>
+          </ul>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer"></footer>
+    <script type="module">
+      import { injectHeader, injectFooter } from './layouts.js';
+      injectHeader();
+      injectFooter();
+    </script>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

@@ -55,6 +55,18 @@ body {
   max-width: 100%;
 }
 
+.logo-link {
+  text-decoration: none; /
+  color: inherit;
+  display: contents;
+}
+
+.logo-link:visited,
+.logo-link:active,
+.logo-link:hover {
+  color: inherit;
+}
+
 .nav {
   display: flex;
   justify-content: center;
@@ -322,8 +334,6 @@ body {
   color: red;
 }
 
-/*product*/
-
 #manufacturer-tables {
   display: flex;
   flex-wrap: wrap;
@@ -424,21 +434,6 @@ body {
 .product-info p {
   color: #555;
 }
-
-/*
-@media (max-width: 768px) {
-  .product-header {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  #product-image {
-    width: 100%;
-    max-width: 300px;
-  }
-}
-*/
 
 .price-cell {
   cursor: pointer;
@@ -578,6 +573,21 @@ body {
   text-align: center;
 }
 
+.qty-input {
+  width: 50px;
+  text-align: center;
+  border: 1px solid #ddd;
+  height: 25px;
+  -moz-appearance: textfield; /* Прибирає стандартні стрілочки в Firefox */
+}
+
+/* Прибирає стандартні стрілочки в Chrome/Safari */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .delete-btn {
   background: none;
   border: none;
@@ -686,4 +696,163 @@ body {
 
 .submit-order-btn:hover {
   background-color: #218838;
+}
+
+@media (max-width: 768px) {
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+  }
+
+  .main {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .catalog-grid, #special-products-container, #category-products-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+.catalog-grid > *,
+#special-products-container > *,
+#category-products-container > * {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 10px;
+}
+
+  .catalog-grid img,
+  #special-products-container img,
+  #category-products-container img {
+    width: 100%;
+    height: 120px;
+    object-fit: contain;
+    margin-bottom: 8px;
+  }
+
+  .product-card, .catalog-item {
+    font-size: 14px;
+  }
+
+  /*
+
+  #category-products-container > * {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  #category-products-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    margin-bottom: 8px;
+  }
+
+  #special-products-container > * {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #special-products-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  #special-products-container .product-card {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .catalog-grid > * {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .catalog-grid img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  */
+
+
+  .cart-container,
+  #manufacturer-tables table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .special-banner {
+    display: none !important;
+  }
+
+  /* Стиль заголовків-кнопок */
+  .cart-box h3, .catalog h3 {
+    background-color: #0056b3;
+    color: white;
+    padding: 12px;
+    margin: 0;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Стрілочка */
+  .cart-box h3::after, .catalog h3::after {
+    content: '▼';
+    font-size: 0.7em;
+    transition: transform 0.3s;
+  }
+
+  .cart-box p,
+  .cart-box a,
+  .catalog ul {
+    display: none;
+  }
+
+  .active-mobile h3::after {
+    transform: rotate(180deg);
+  }
+
+  .active-mobile p,
+  .active-mobile a,
+  .active-mobile ul {
+    display: block !important;
+  }
+
+  .product-header {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  #product-image {
+    width: 100%;
+    max-width: 300px;
+  }
 }
