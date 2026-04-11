@@ -177,8 +177,9 @@ table button {
   word-wrap: break-word;
 }
 
-#current-image-display {
-  max-width: 200px;
+.current-image-wrapper img,
+#preview {
+  max-width: 300px;
   margin-top: 10px;
   border-radius: 4px;
 }
@@ -472,7 +473,6 @@ textarea:focus {
   }
 
   .current-image-wrapper img,
-  #current-image,
   #preview {
     max-height: 250px;
     object-fit: contain;

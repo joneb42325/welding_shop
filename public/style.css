@@ -268,6 +268,27 @@ body {
   width: 100%;
 }
 
+.catalog-item,
+.product-card {
+  position: relative;
+}
+
+.catalog-item a::before,
+.product-card a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.catalog-item:hover,
+.product-card:hover {
+  cursor: pointer;
+}
+
 .footer {
   background-color: #f5f5f5;
   padding: 30px 20px;
@@ -749,56 +770,7 @@ body {
     font-size: 14px;
   }
 
-  /*
-
-  #category-products-container > * {
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-  }
-
-  #category-products-container img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-    margin-bottom: 8px;
-  }
-
-  #special-products-container > * {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  #special-products-container img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-  }
-
-  #special-products-container .product-card {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  .catalog-grid > * {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .catalog-grid img {
-    width: 100%;
-    height: auto;
-    object-fit: contain;
-  }
-
-  */
-
-
-  .cart-container,
-  #manufacturer-tables table {
+  .cart-container {
     display: block;
     width: 100%;
     overflow-x: auto;
@@ -855,4 +827,74 @@ body {
     width: 100%;
     max-width: 300px;
   }
+
+  #manufacturer-tables table,
+  #manufacturer-tables tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #manufacturer-tables thead {
+    display: none;
+  }
+
+  #manufacturer-tables tr {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e5e9f2;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  }
+
+  #manufacturer-tables td:nth-child(1),
+  #manufacturer-tables td:nth-child(2) {
+    width: 50%;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 10px;
+  }
+
+  #manufacturer-tables td:nth-child(3),
+  #manufacturer-tables td:nth-child(4),
+  #manufacturer-tables td:nth-child(5) {
+    width: 33.33%;
+    margin-bottom: 10px;
+  }
+
+  #manufacturer-tables td:last-child {
+    width: 100%;
+    margin-top: 15px;
+    padding: 0;
+  }
+
+  #manufacturer-tables .add-to-cart {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    border-radius: 6px;
+  }
+
+  #manufacturer-tables td {
+    display: flex;
+    flex-direction: column;
+    border: none;
+    font-size: 16px;
+  }
+
+  #manufacturer-tables td::before {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+
+  #manufacturer-tables td:nth-child(1)::before { content: "Діаметр"; }
+  #manufacturer-tables td:nth-child(2)::before { content: "Вага"; }
+  #manufacturer-tables td:nth-child(3)::before { content: "Роздріб"; }
+  #manufacturer-tables td:nth-child(4)::before { content: "ТОВ"; }
+  #manufacturer-tables td:nth-child(5)::before { content: "Опт"; }
 }
