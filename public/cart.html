@@ -12,7 +12,7 @@
     <main class="main">
       <aside class="sidebar">
         <div class="cart-box">
-          <h3>Корзина</h3>
+          <h3>🛒 Кошик</h3>
           <p>Товарів: <span id="cart-count">0</span></p>
           <p>Сума: <span id="cart-total">0</span> грн</p>
           <a href="cart.html">
@@ -21,13 +21,16 @@
         </div>
 
         <div class="catalog">
-          <h3>Каталог</h3>
+          <h3>🗂️ Каталог</h3>
           <ul id="catalog-list"></ul>
         </div>
       </aside>
       <div class="content">
         <section class="cart-section">
-          <h1>Ваша корзина</h1>
+          <div class="cart-header-actions">
+            <h1>Ваш кошик</h1>
+            <button id="clear-cart-btn" class="btn-outline-danger">Очистити кошик</button>
+          </div>
           <div class="cart-container">
             <table id="cart-table">
               <thead>

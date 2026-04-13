@@ -67,7 +67,7 @@ app.get('/products/category/:id', (req, res) => {
 });
 
 app.get('/categories/:id/info', (req, res) => {
-  const query = 'SELECT name FROM categories WHERE id = ?';
+  const query = 'SELECT name, image FROM categories WHERE id = ?';
   db.query(query, [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
     res.json(results[0]);

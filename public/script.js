@@ -1,72 +1,6 @@
 import { updateCartUI } from './cart.js';
 
-async function loadSpecialProducts() {
-  const specialContainer = document.getElementById('special-products-container');
-  if (!specialContainer) return;
-
-  try {
-    const res = await fetch('/products/special');
-    const products = await res.json();
-
-    products.forEach((product) => {
-      specialContainer.appendChild(createProductCard(product));
-    });
-  } catch (err) {
-    console.error('Error loading products', err);
-  }
-}
-
-async function loadCategoryProducts() {
-  const params = new URLSearchParams(window.location.search);
-  const categoryId = params.get('categoryId');
-  const categoryContainer = document.getElementById('category-products-container');
-
-  if (!categoryId || !categoryContainer) return;
-
-  try {
-    const res = await fetch(`/products/category/${categoryId}`);
-    const products = await res.json();
-
-    categoryContainer.innerHTML = '';
-
-    if (products.length === 0) {
-      categoryContainer.innerHTML = `
-        <div class="empty-message">
-          <h2>У цій категорії поки немає товарів 😔</h2>
-          <p>Ми вже працюємо над її наповненням. Загляньте сюди трохи пізніше!</p>
-          <a href="index.html" class="btn-back">Повернутися на головну</a>
-        </div>
-      `;
-
-      return;
-    }
-
-    products.forEach((product) => {
-      categoryContainer.appendChild(createProductCard(product));
-    });
-  } catch (err) {
-    console.error('Error loading products', err);
-  }
-}
-
-async function loadCategoryTitle() {
-  const params = new URLSearchParams(window.location.search);
-  const categoryId = params.get('categoryId');
-
-  const categoryTitle = document.getElementById('category-title');
-  if (!categoryTitle || !categoryId) return;
-
-  try {
-    const res = await fetch(`/categories/${categoryId}/info`);
-    const category = await res.json();
-
-    categoryTitle.textContent = category.name;
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-function createProductCard(product) {
+export function createProductCard(product) {
   const isAvailable = product.total_stock > 0;
 
   const card = document.createElement('div');
@@ -144,9 +78,6 @@ function initMobileSidebar() {
 
 window.addEventListener('DOMContentLoaded', initMobileSidebar);
 
-loadSpecialProducts();
-loadCategoryProducts();
-loadCategoryTitle();
 loadCategories();
 
 updateCartUI();

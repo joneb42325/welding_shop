@@ -20,12 +20,22 @@ function renderCartPage() {
   if (cart.length === 0) {
     cartContainer.innerHTML = `
       <div class="empty-message">
-        <h2>Ваша корзина порожня 📦</h2>
+        <h2>Ваш кошик порожній 📦</h2>
         <p>Схоже, ви ще нічого не додали. Завітайте до нашого каталогу!</p>
         <a href="index.html" class="btn-back">Повернутися до покупок</a>
       </div>
     `;
     return;
+  }
+  const clearBtn = document.getElementById('clear-cart-btn');
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      if (confirm('Ви впевнені, що хочете видалити всі товари з кошика?')) {
+        clearCart();
+        refreshCart();
+      }
+    });
   }
   cartTableBody.innerHTML = '';
 
@@ -116,8 +126,6 @@ function refreshCart() {
   updateCartUI();
 }
 
-// --- Логіка оформлення замовлення ---
-
 const checkoutModal = document.getElementById('checkout-modal');
 const closeModalBtn = document.querySelector('.close-modal');
 const orderButton = document.querySelector('.order-button'); // Ваша кнопка "Підтвердити замовлення"
@@ -147,7 +155,6 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// Відправка форми
 checkoutForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 

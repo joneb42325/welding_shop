@@ -3,6 +3,7 @@ import { addToCart, updateCartUI } from './cart.js';
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
 const manufacturerContainer = document.getElementById('manufacturer-tables');
+const descriptionSection = document.querySelector('.product-description');
 const descriptionElement = document.getElementById('product-description');
 
 if (productId && manufacturerContainer) {
@@ -12,18 +13,29 @@ if (productId && manufacturerContainer) {
     .catch((err) => console.error(err));
 
   function renderTables(data) {
+    const pricesSection = document.querySelector('.product-prices');
     manufacturerContainer.innerHTML = '';
 
+    const existingEmptyMessage = document.querySelector('.empty-state-wrapper');
+    if (existingEmptyMessage) existingEmptyMessage.remove();
+
     if (!data || data.length === 0) {
-      manufacturerContainer.innerHTML = `
+      manufacturerContainer.style.display = 'none';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty-state-wrapper';
+      emptyDiv.innerHTML = `
         <div class="empty-message">
-          <h2>Ціни та опції наразі оновлюються </h2>
+          <h2>Ціни та опції наразі оновлюються 🛠️</h2>
           <p>Ми вже працюємо над їх наповненням. Загляньте сюди трохи пізніше!</p>
           <a href="index.html" class="btn-back">Повернутися на головну</a>
         </div>
       `;
+
+      pricesSection.appendChild(emptyDiv);
       return;
     }
+
+    manufacturerContainer.style.display = '';
 
     const grouped = {};
 
@@ -67,9 +79,9 @@ if (productId && manufacturerContainer) {
         row.innerHTML = `
         <td>${item.diameter}</td>
         <td>${item.weight}</td>
-        <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${item.price_retail}</td>
-        <td class="price-cell" data-type="company">${item.price_company}</td>
-        <td class="price-cell" data-type="wholesale">${item.price_wholesale}</td>
+        <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${item.price_retail} грн</td>
+        <td class="price-cell" data-type="company">${item.price_company} грн</td>
+        <td class="price-cell" data-type="wholesale">${item.price_wholesale} грн</td>
         <td>
         <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
           ${isAvailable ? 'В кошик' : 'Немає в наявності'}
@@ -87,7 +99,7 @@ if (productId && manufacturerContainer) {
 
           row.querySelector('.add-to-cart').addEventListener('click', () => {
             const price = item[`price_${selectedType}`];
-            alert('Товар додан');
+            showToast(`${currentProduct.name} додано до кошика!`);
             addToCart({
               productId,
               name: currentProduct.name,
@@ -115,10 +127,40 @@ if (productId && manufacturerContainer) {
     .then((product) => {
       currentProduct = product;
       document.getElementById('product-name').textContent = product.name;
-      descriptionElement.classList.add('product-description-text');
-      descriptionElement.textContent = product.description;
+      if (product.description && product.description.trim() !== '') {
+        descriptionElement.classList.add('product-description-text');
+        descriptionElement.textContent = product.description;
+        descriptionSection.style.display = 'block';
+      } else {
+        descriptionSection.style.display = 'none';
+      }
       document.getElementById('product-image').src = 'images/' + product.image;
     });
+}
+
+function showToast(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span>🛒</span>
+    <span>${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, 3000);
 }
 
 updateCartUI();

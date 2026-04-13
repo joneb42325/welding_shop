@@ -12,7 +12,7 @@
     <main class="main">
       <aside class="sidebar">
         <div class="cart-box">
-          <h3>Корзина</h3>
+          <h3>🛒 Кошик</h3>
           <p>Товарів: <span id="cart-count">0</span></p>
           <p>Сума: <span id="cart-total">0</span> грн</p>
           <a href="cart.html">
@@ -21,13 +21,15 @@
         </div>
 
         <div class="catalog">
-          <h3>Каталог</h3>
+          <h3>🗂️ Каталог</h3>
           <ul id="catalog-list"></ul>
         </div>
       </aside>
       <div class="content">
         <section class="category-header">
-          <h2 id="category-title"></h2>
+          <div class="category-header-content">
+            <h2 id="category-title"></h2>
+          </div>
         </section>
         <section class="category-products">
           <div id="category-products-container" class="catalog-grid"></div>
@@ -43,5 +45,6 @@
       injectFooter();
     </script>
     <script type="module" src="script.js"></script>
+    <script type="module" src="category-page.js"></script>
   </body>
 </html>

@@ -12,7 +12,7 @@
     <main class="main">
       <aside class="sidebar">
         <div class="cart-box">
-          <h3>Корзина</h3>
+          <h3>🛒 Кошик</h3>
           <p>Товарів: <span id="cart-count">0</span></p>
           <p>Сума: <span id="cart-total">0</span> грн</p>
           <a href="cart.html">
@@ -21,18 +21,22 @@
         </div>
 
         <div class="catalog">
-          <h3>Каталог</h3>
+          <h3>🗂️ Каталог</h3>
           <ul id="catalog-list"></ul>
         </div>
       </aside>
       <div class="content">
-        <section class="special">
-          <img src="images/sales.png" alt="Акції" class="special-banner" />
-          <h1>Спеціальні пропозиції Wolfram</h1>
-          <div id="special-products-container"></div>
+        <section class="special-banner">
+          <div class="special-banner-content">
+            <h1>Професійні зварювальні матеріали</h1>
+            <p>Найкращі електроди та дріт для будь-яких задач</p>
+            <a href="#catalog-container" class="banner-btn">Перейти до каталогу</a>
+          </div>
         </section>
+        <h1>Спеціальні пропозиції Wolfram</h1>
+        <div id="special-products-container"></div>
+        <h1>Каталог</h1>
         <section class="catalog-preview">
-          <h2>Каталог</h2>
           <div id="catalog-container" class="catalog-grid"></div>
         </section>
       </div>
@@ -45,5 +49,6 @@
       injectFooter();
     </script>
     <script type="module" src="script.js"></script>
+    <script type="module" src="home-page.js"></script>
   </body>
 </html>

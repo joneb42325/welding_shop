@@ -72,6 +72,11 @@ export function updateCartUI() {
   const countEl = document.getElementById('cart-count');
   const totalEl = document.getElementById('cart-total');
 
+  document.querySelectorAll('.cart-count').forEach((el) => {
+    el.textContent = count;
+    el.style.display = count > 0 ? 'block' : 'none';
+  });
+
   if (countEl) countEl.textContent = count;
   if (totalEl) totalEl.textContent = total;
 }
