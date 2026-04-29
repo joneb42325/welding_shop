@@ -22,7 +22,7 @@ a {
 body {
   font-family:'Inter', sans-serif;
   /*background-color: #f8f9fa;*/
-  background: url('images/Gemini_Generated_Image_yw4k9oyw4k9oyw4k.cleaned.png');
+  background: url('images/Gemini_Generated_Image_yw4k9oyw4k9oyw4k.cleaned.webp');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -1028,6 +1028,11 @@ body {
 }
 
 @media (max-width: 768px) {
+
+  body {
+    background: url('images/Gemini_Generated_Image_tox9rqtox9rqtox9.png');
+    background-attachment: fixed;
+  }
 
   .header {
     display: flex;
