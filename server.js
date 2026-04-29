@@ -1,9 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const db = require('./db');
 const fs = require('fs');
-require('dotenv').config();
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('./cloudinaryConfig');
 
