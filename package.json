@@ -19,5 +19,10 @@
   },
   "scripts": {
     "start": "node server.js"
+  },
+  "overrides": {
+    "multer-storage-cloudinary": {
+      "cloudinary": "$cloudinary"
+    }
   }
 }
