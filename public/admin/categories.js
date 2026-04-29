@@ -11,7 +11,7 @@ async function loadCategories() {
         <td><a href="products.html?categoryId=${cat.id}">
             ${cat.name}
         </a></td>
-        <td><img src="/images/${cat.image}" alt="${cat.name}" width="50"></td>
+        <td><img src="${cat.image}" alt="${cat.name}" width="50"></td>
         <td>
             <a href="category-edit.html?catId=${cat.id}">
                  <button class="edit-btn" data-id="${cat.id}">Редагувати</button>

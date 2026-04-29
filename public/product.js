@@ -126,6 +126,20 @@ if (productId && manufacturerContainer) {
     .then((res) => res.json())
     .then((product) => {
       currentProduct = product;
+      document.title = `${product.name} — Купити в Wolfram Shop`;
+
+      //SEO
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.name = 'description';
+        document.head.appendChild(metaDesc);
+      }
+      const descText = product.description
+        ? product.description.substring(0, 150).replace(/\n/g, ' ')
+        : `Купити ${product.name} оптом та в роздріб.`;
+      metaDesc.content = `${descText}... Найкращі ціни в Wolfram Shop.`;
+
       document.getElementById('product-name').textContent = product.name;
       if (product.description && product.description.trim() !== '') {
         descriptionElement.classList.add('product-description-text');
@@ -134,7 +148,9 @@ if (productId && manufacturerContainer) {
       } else {
         descriptionSection.style.display = 'none';
       }
-      document.getElementById('product-image').src = 'images/' + product.image;
+      const productImg = document.getElementById('product-image');
+      productImg.src = product.image.startsWith('http') ? product.image : 'images/' + product.image;
+      productImg.alt = `Фото товару: ${product.name}`;
     });
 }
 

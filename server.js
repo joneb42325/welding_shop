@@ -4,6 +4,8 @@ const path = require('path');
 const db = require('./db');
 const fs = require('fs');
 require('dotenv').config();
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('./cloudinaryConfig');
 
 const app = express();
 app.use(express.json());
@@ -19,6 +21,16 @@ app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
 });
 
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'wolfram_products',
+    allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    public_id: (req, file) => Date.now() + '-' + file.originalname.split('.')[0],
+  },
+});
+
+/*
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'public/images');
@@ -28,6 +40,7 @@ const storage = multer.diskStorage({
     cb(null, uniqueName);
   },
 });
+ */
 
 const upload = multer({ storage: storage });
 
@@ -222,7 +235,7 @@ app.get('/admin/categories/:id', adminAuth, (req, res) => {
 //POST
 app.post('/admin/categories', adminAuth, upload.single('image'), (req, res) => {
   const name = req.body.name;
-  const image = req.file.filename;
+  const image = req.file.path;
 
   const query = 'INSERT INTO categories (name, image) VALUES (?, ?)';
 
@@ -242,7 +255,7 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
   const id = req.params.id;
   const getOldImgQuery = 'SELECT image FROM categories WHERE id = ?';
 
-  db.query(getOldImgQuery, [id], (err, results) => {
+  db.query(getOldImgQuery, [id], async (err, results) => {
     if (err) {
       console.error('Помилка пошуку категорії:', err);
       return res.status(500).json({ error: 'Помилка бази даних' });
@@ -255,16 +268,31 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
     const oldImageName = results[0].image;
 
     if (req.file) {
-      const newImage = req.file.filename;
+      const newImage = req.file.path;
       const query = 'UPDATE categories SET name = ?, image = ? WHERE id = ?';
 
+      // Видаляємо старий файл з диска, якщо він був
       if (oldImageName) {
-        const oldImagePath = path.join(__dirname, 'public/images', oldImageName);
-        fs.unlink(oldImagePath, (fsErr) => {
-          if (fsErr && fsErr.code !== 'ENOENT') {
-            console.error('Не вдалося видалити старе фото:', fsErr);
+        if (oldImageName.startsWith('http')) {
+          try {
+            const parts = oldImageName.split('/');
+            const fileName = parts.pop();
+            const folder = parts.pop();
+            const publicId = `${folder}/${fileName.split('.')[0]}`;
+
+            await cloudinary.uploader.destroy(publicId);
+            console.log('Видалено з Cloudinary:', publicId);
+          } catch (err) {
+            console.error('Помилка видалення з Cloudinary:', err);
           }
-        });
+        } else {
+          const imagePath = path.join(__dirname, 'public/images', oldImageName);
+          fs.unlink(imagePath, (err) => {
+            if (err && err.code !== 'ENOENT') {
+              console.error('Помилка видалення локального файлу:', err);
+            }
+          });
+        }
       }
 
       db.query(query, [name, newImage, id], (err) => {
@@ -299,21 +327,32 @@ app.delete('/admin/categories/:id', adminAuth, (req, res) => {
     SELECT image FROM categories WHERE id = ?
   `;
 
-  db.query(findPhotosQuery, [id, id], (err, results) => {
+  db.query(findPhotosQuery, [id, id], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
 
-    if (results.length > 0) {
-      results.forEach((row) => {
-        if (row.image) {
-          const imagePath = path.join(__dirname, 'public/images', row.image);
+    for (const row of results) {
+      if (!row.image) continue;
 
-          fs.unlink(imagePath, (err) => {
-            if (err && err.code !== 'ENOENT') {
-              console.error('Помилка видалення файлу зображення:', err);
-            }
-          });
+      if (row.image.startsWith('http')) {
+        try {
+          const parts = row.image.split('/');
+          const fileName = parts.pop();
+          const folder = parts.pop();
+          const publicId = `${folder}/${fileName.split('.')[0]}`;
+
+          await cloudinary.uploader.destroy(publicId);
+          console.log('Видалено з Cloudinary:', publicId);
+        } catch (err) {
+          console.error('Помилка видалення з Cloudinary:', err);
         }
-      });
+      } else {
+        const imagePath = path.join(__dirname, 'public/images', row.image);
+        fs.unlink(imagePath, (err) => {
+          if (err && err.code !== 'ENOENT') {
+            console.error('Помилка видалення локального файлу:', err);
+          }
+        });
+      }
     }
     const deleteQuery = 'DELETE FROM categories WHERE id = ?';
     db.query(deleteQuery, [id], (err, results) => {
@@ -374,7 +413,7 @@ app.get('/admin/products/:id', adminAuth, (req, res) => {
 
 app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
   const { name, category_id, description, is_special } = req.body;
-  const image = req.file ? req.file.filename : null;
+  const image = req.file ? req.file.path : null;
 
   const query =
     'INSERT INTO products (name, category_id, description, image, is_special) VALUES (?, ?, ?, ?, ?)';
@@ -396,7 +435,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
 
   const getOldImgQuery = 'SELECT image FROM products WHERE id = ?';
 
-  db.query(getOldImgQuery, [id], (err, results) => {
+  db.query(getOldImgQuery, [id], async (err, results) => {
     if (err) {
       console.error('Помилка пошуку товару:', err);
       return res.status(500).json({ error: 'Помилка бази даних' });
@@ -412,19 +451,34 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     let params;
 
     if (req.file) {
+      const newImageValue = req.file.path;
       // ФОТО ЗМІНЮЄТЬСЯ
       query =
         'UPDATE products SET name = ?, category_id = ?, description = ?, is_special = ?, image = ? WHERE id = ?';
-      params = [name, category_id, description, specialVal, req.file.filename, id];
+      params = [name, category_id, description, specialVal, newImageValue, id];
 
       // Видаляємо старий файл з диска, якщо він був
       if (oldImageName) {
-        const oldImagePath = path.join(__dirname, 'public/images', oldImageName);
-        fs.unlink(oldImagePath, (fsErr) => {
-          if (fsErr && fsErr.code !== 'ENOENT') {
-            console.error('Не вдалося видалити старе фото:', fsErr);
+        if (oldImageName.startsWith('http')) {
+          try {
+            const parts = oldImageName.split('/');
+            const fileName = parts.pop();
+            const folder = parts.pop();
+            const publicId = `${folder}/${fileName.split('.')[0]}`;
+
+            await cloudinary.uploader.destroy(publicId);
+            console.log('Видалено з Cloudinary:', publicId);
+          } catch (err) {
+            console.error('Помилка видалення з Cloudinary:', err);
           }
-        });
+        } else {
+          const imagePath = path.join(__dirname, 'public/images', oldImageName);
+          fs.unlink(imagePath, (err) => {
+            if (err && err.code !== 'ENOENT') {
+              console.error('Помилка видалення локального файлу:', err);
+            }
+          });
+        }
       }
     } else {
       // ФОТО НЕ ЗМІНЮЄТЬСЯ
@@ -447,18 +501,32 @@ app.delete('/admin/products/:id', adminAuth, (req, res) => {
   const id = req.params.id;
 
   const getImgQuery = 'SELECT image FROM products WHERE id = ?';
-  db.query(getImgQuery, [id], (err, results) => {
+  db.query(getImgQuery, [id], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Помилка сервера' });
 
     const imageName = results.length > 0 ? results[0].image : null;
 
     if (imageName) {
-      const imagePath = path.join(__dirname, 'public/images', imageName);
-      fs.unlink(imagePath, (fsErr) => {
-        if (fsErr && fsErr.code !== 'ENOENT') {
-          console.error('Помилка видалення зображення:', fsErr);
+      if (imageName.startsWith('http')) {
+        try {
+          const parts = imageName.split('/');
+          const fileName = parts.pop();
+          const folder = parts.pop();
+          const publicId = `${folder}/${fileName.split('.')[0]}`;
+
+          await cloudinary.uploader.destroy(publicId);
+          console.log('Видалено з Cloudinary:', publicId);
+        } catch (err) {
+          console.error('Помилка видалення з Cloudinary:', err);
         }
-      });
+      } else {
+        const imagePath = path.join(__dirname, 'public/images', imageName);
+        fs.unlink(imagePath, (err) => {
+          if (err && err.code !== 'ENOENT') {
+            console.error('Помилка видалення локального файлу:', err);
+          }
+        });
+      }
     }
 
     const deleteQuery = 'DELETE FROM products WHERE id = ?';

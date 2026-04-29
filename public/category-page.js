@@ -52,8 +52,15 @@ async function loadCategoryTitle() {
     const res = await fetch(`/categories/${categoryId}/info`);
     const category = await res.json();
 
+    document.title = `${category.name} — Купити в Wolfram Shop`;
+    //SEO
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.content = `Каталог продукції у категорії ${category.name}. Великий вибір зварювальних матеріалів за найкращими цінами.`;
+    }
     categoryTitle.textContent = category.name;
-    header.style.backgroundImage = `url('images/${category.image}')`;
+    const bgUrl = category.image.startsWith('http') ? category.image : `images/${category.image}`;
+    header.style.backgroundImage = `url('${bgUrl}')`;
   } catch (err) {
     console.error(err);
   }

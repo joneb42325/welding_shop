@@ -7,7 +7,7 @@ export function createProductCard(product) {
   card.classList.add('product-card');
 
   card.innerHTML = `
-    <img src="images/${product.image}" alt="${product.name}">
+    <img src="${product.image}" alt="${product.name}">
     
     <a href="product.html?productId=${product.id}">
       <h3>${product.name}</h3>
@@ -49,7 +49,7 @@ async function loadCategories() {
         card.classList.add('catalog-item');
 
         card.innerHTML = `
-          <img src="images/${category.image}" alt="${category.name}">
+          <img src="${category.image}" alt="${category.name}">
           <a href="category.html?categoryId=${category.id}">
             ${category.name}
           </a>

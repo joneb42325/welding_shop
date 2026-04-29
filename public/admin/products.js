@@ -43,7 +43,7 @@ async function loadProducts() {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${prod.name}</td>
-        <td><img src="/images/${prod.image}" width="50" style="border-radius:4px;"></td>
+        <td><img src="${prod.image}" width="50" style="border-radius:4px;"></td>
         <td>${prod.category_name || 'Без категорії'}</td>
         <td class="description-cell" title="${prod.description}">
             ${prod.description || 'Немає опису'}
