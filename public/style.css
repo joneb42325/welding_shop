@@ -1143,9 +1143,39 @@ body {
 
 @media (max-width: 768px) {
 
+  /*body {*/
+  /*  background: url('images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');*/
+  /*  background-attachment: fixed;*/
+  /*  background-color: #1a1d23;*/
+  /*  height: 100%;*/
+  /*  min-height: 110%;*/
+  /*}*/
+
   body {
-    background: url('images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');
-    background-attachment: fixed;
+    background: #1a1d23;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* 110% створює запас під панеллю браузера */
+    height: 110%;
+
+    background-image: url('images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');
+    background-repeat: no-repeat;
+
+    /* Відправляємо фон за весь контент */
+    z-index: -1;
+
+    /* Запобігає смиканню картинки при зміні висоти */
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   .header {
