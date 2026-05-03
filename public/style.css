@@ -343,6 +343,18 @@ body {
   border-color: rgba(255, 215, 0, 0.4);
 }
 
+.delivery-title {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.delivery-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
+
 .about-card h3 {
   color: #FFD700;
   font-size: 1.3em;
