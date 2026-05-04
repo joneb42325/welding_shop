@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /temp/
+Disallow: /cart.html
+
+Sitemap: https://wolfram-shop.com.ua/sitemap.xml
