@@ -52,19 +52,30 @@ body {
 
 .header-left p {
   color: #ffffff;
-  font-size: 1.4em;
+  text-transform: uppercase;
+  font-size: 1.2em;
   font-weight: bold;
+  letter-spacing: 2px;
   margin: 0;
+
+  background: linear-gradient(to bottom, #FFD700 20%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.8));
+
+  transition: filter 0.3s ease;
 }
 
-/*
+.logo-link:hover p {
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.4));
+}
+
+
 .header-right {
   display: flex;
   justify-content: flex-end;
-  width: 100%;
 }
-
- */
 
 .header .logo {
   font-size: 1.2em;
@@ -92,17 +103,22 @@ body {
 .nav {
   display: flex;
   justify-content: center;
-  gap: 25px;
-  border-radius: 8px;
-  transition: 0.3s;
-  padding: 8px 8px;
+  gap: 30px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(2px);
+  padding: 10px 20px;
 }
 
 .header .nav a {
-  font-size: 1em;
+  font-size: 0.9em;
   margin: 0;
   text-decoration: none;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
   font-weight: 500;
 }
 
@@ -111,7 +127,12 @@ body {
 }
 
 .cart {
-  display: none;
+  display: block;
+  font-size: 22px;
+}
+
+.cart:hover {
+  transform: scale(1.1);
 }
 
 .burger {
@@ -129,14 +150,15 @@ body {
   left: -280px;
   width: 260px;
   height: 100%;
-  background: white;
-  box-shadow: 2px 0 15px rgba(0,0,0,0.1);
+  background: rgba(30, 34, 43, 0.95);
+  box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
   padding: 20px;
   transition: 0.3s;
   z-index: 1000;
   display: flex;
   flex-direction: column;
   gap: 15px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mobile-menu.active {
@@ -145,8 +167,20 @@ body {
 
 .mobile-menu a {
   text-decoration: none;
-  color: #1e293b;
-  font-size: 16px;
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.mobile-menu a:hover {
+  color: #FFD700;
+}
+
+.mobile-menu hr {
+  border: none;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  width: 100%;
+  margin: 10px 0;
 }
 
 .mobile-overlay {
@@ -897,6 +931,10 @@ body {
 .cart-section {
   padding: 20px;
   flex: 1;
+  background: rgba(30, 34, 43, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .empty-state-wrapper {
@@ -910,14 +948,15 @@ body {
   max-width: 500px;
   width: 100%;
   padding: 40px 20px;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  background: rgba(30, 34, 43, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
   text-align: center;
 }
 
 .empty-message h2 {
-  color: #333;
+  color: #FFD700;
   margin-bottom: 15px;
 }
 
@@ -925,11 +964,17 @@ body {
   display: inline-block;
   margin-top: 20px;
   padding: 12px 25px;
-  background-color: #0056b3;
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
   color: white !important;
   text-decoration: none;
   border-radius: 8px;
   transition: 0.3s;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.btn-back:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
 }
 
 .cart-header-actions {
@@ -938,6 +983,7 @@ body {
   align-items: center;
   margin-bottom: 20px;
 }
+
 
 .btn-outline-danger {
   background: transparent;
@@ -959,7 +1005,7 @@ body {
 #cart-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #fff;
+  background-color: transparent;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
@@ -967,18 +1013,34 @@ body {
 }
 
 #cart-table th {
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: rgba(0, 86, 179, 0.5);
+  color: #ffffff;
   text-align: left;
   padding: 15px;
-  border-bottom: 2px solid #dee2e6;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
   font-weight: 600;
 }
 
 #cart-table td {
   padding: 15px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   vertical-align: middle;
+  color: #e2e8f0;
+  background: rgba(30, 34, 43, 0.4);
+}
+
+#cart-table tr:hover td {
+  background: rgba(37, 99, 235, 0.1);
+}
+
+#cart-table td a {
+  color: #ffffff;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+#cart-table td a:hover {
+  color: #FFD700;
 }
 
 .out-of-stock-row {
@@ -991,14 +1053,20 @@ body {
   align-items: center;
   gap: 20px;
   padding: 20px;
-  background: #fdfdfd;
-  border-top: 2px solid #0056b3;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 2px solid #FFD700;
+  border-radius: 0 0 12px 12px;
+}
+
+.cart-summary h3 {
+  color: #ffffff;
+  margin: 0;
 }
 
 #cart-page-total {
   font-size: 1.2em;
   font-weight: bold;
-  color: #0056b3;
+  color: #FFD700;
 }
 
 .quantity-controls {
@@ -1009,8 +1077,9 @@ body {
 }
 
 .qty-btn {
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
   width: 25px;
   height: 25px;
   display: flex;
@@ -1029,11 +1098,19 @@ body {
 }
 
 .qty-input {
+  background: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
   width: 50px;
   text-align: center;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
   height: 25px;
   -moz-appearance: textfield; /* Прибирає стандартні стрілочки в Firefox */
+}
+
+.qty-input:focus {
+  outline: none;
+  border-color: #2563eb;
 }
 
 /* Прибирає стандартні стрілочки в Chrome/Safari */
@@ -1054,7 +1131,7 @@ body {
 
 #cart-table td:nth-child(7) {
   font-weight: bold;
-  color: #28a745;
+  color: #FFD700;
 }
 
 .modal {
@@ -1063,7 +1140,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1078,13 +1155,21 @@ body {
 }
 
 .modal-content {
-  background-color: white;
+  background-color: #1e222b;
+  color: #ffffff;
   padding: 30px;
   border-radius: 12px;
   width: 90%;
   max-width: 500px;
   position: relative;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h2 {
+  color: #FFD700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .close-modal {
@@ -1094,7 +1179,7 @@ body {
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
-  color: #666;
+  color: #aaa;
 }
 
 .close-modal:hover {
@@ -1110,28 +1195,52 @@ body {
 .form-group label {
   font-weight: bold;
   margin-bottom: 5px;
-  color: #333;
+  color: #cbd5e1;
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
+  background: rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   font-family: inherit;
   font-size: 14px;
+  transition: 0.3s;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  /* Цей хак замінює колір фону на дуже повільну анімацію внутрішньої тіні */
+  -webkit-box-shadow: 0 0 0px 1000px rgba(30, 34, 43, 0.9) inset !important;
+  /* Колір тексту */
+  -webkit-text-fill-color: #ffffff !important;
+  /* Плавність переходу */
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #64748b;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: #0056b3;
+  border-color: #2563eb;
+  background: rgba(0, 0, 0, 0.4);
   outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .modal-footer {
   margin-top: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 20px;
   display: flex;
   justify-content: space-between;
@@ -1216,30 +1325,25 @@ body {
 
   .mobile-contacts {
     padding: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     margin-top: 10px;
   }
 
   .mobile-contacts h4 {
     margin-bottom: 10px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     font-size: 16px;
   }
 
   .mobile-contacts a,
   .mobile-contacts div {
     display: block;
-    margin-bottom: 8px;
-    color: #333;
+    margin-bottom: 12px;
+    color: #cbd5e1;
+    font-size: 17px;
     text-decoration: none;
-  }
-
-  .cart {
-    display: block;
-   font-size: 22px;
-  }
-
-  .cart:hover {
-    transform: scale(1.1);
   }
 
   .nav {

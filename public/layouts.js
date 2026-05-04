@@ -8,7 +8,7 @@ export function injectHeader() {
       <div class="header-left">
         <a href="index.html" class="logo-link">
           <div class="logo">
-            <img src="images/logo.png" alt="Wolfram" />
+            <img src="images/logo.webp" alt="Wolfram" />
           </div>
           <p>Wolfram</p>
         </a>

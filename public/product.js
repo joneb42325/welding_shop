@@ -164,10 +164,15 @@ function showToast(message, type = 'success') {
 
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
+  toast.style.cursor = 'pointer';
   toast.innerHTML = `
     <span>🛒</span>
     <span>${message}</span>
   `;
+
+  toast.addEventListener('click', () => {
+    window.location.href = 'cart.html';
+  });
 
   container.appendChild(toast);
 
