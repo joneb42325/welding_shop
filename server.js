@@ -124,6 +124,43 @@ app.get('/product-options/:id', (req, res) => {
   });
 });
 
+app.get('/api/search', (req, res) => {
+  const searchTerm = req.query.q;
+  if (!searchTerm) return res.json([]);
+
+  // 1. Розбиваємо запит на масив слів (наприклад, ["Дріт", "0.8", "мм"])
+  const words = searchTerm.split(' ').filter((word) => word.length > 0);
+
+  // 2. Будуємо складний запит динамічно
+  // Для кожного слова ми перевіряємо всі ключові колонки
+  let conditions = [];
+  let params = [];
+
+  words.forEach((word) => {
+    const p = `%${word}%`;
+    conditions.push(
+      `(p.name LIKE ? OR p.description LIKE ? OR o.diameter LIKE ? OR m.name LIKE ?)`
+    );
+    params.push(p, p, p, p);
+  });
+
+  const query = `
+    SELECT DISTINCT p.* 
+    FROM products p
+    LEFT JOIN product_options o ON p.id = o.product_id
+    LEFT JOIN manufacturers m ON o.manufacturer_id = m.id
+    WHERE ${conditions.join(' AND ')} 
+    LIMIT 10`;
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error('Search error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+    res.json(results);
+  });
+});
+
 app.get('/product/:id', (req, res) => {
   const productId = req.params.id;
 

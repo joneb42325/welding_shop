@@ -25,6 +25,9 @@ function renderCartPage() {
         <a href="index.html" class="btn-back">Повернутися до покупок</a>
       </div>
     `;
+    cartContainer.style.background = 'none';
+    cartContainer.style.border = 'none';
+    cartContainer.style.boxShadow = 'none';
     return;
   }
   const clearBtn = document.getElementById('clear-cart-btn');

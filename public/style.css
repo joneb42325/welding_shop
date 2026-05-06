@@ -42,6 +42,8 @@ body {
   padding: 0 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   column-gap: 20px;
+  position: relative;
+  z-index: 990;
 }
 
 .header-left {
@@ -75,6 +77,81 @@ body {
 .header-right {
   display: flex;
   justify-content: flex-end;
+}
+
+.search-container {
+  position: relative;
+  margin-right: 15px;
+}
+
+#search-input {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  border-radius: 20px;
+  padding: 8px 15px;
+  color: white;
+  backdrop-filter: blur(5px);
+  width: 180px;
+  transition: width 0.3s;
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 10px center;
+  background-size: 20px;
+  padding-left: 40px;
+}
+
+#search-input:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+#search-input:focus {
+  width: 250px;
+  outline: none;
+  border-color: #FFD700;
+}
+
+
+#search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: rgba(30, 34, 43, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+  z-index: 9999 !important;
+}
+
+.search-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  text-decoration: none;
+  color: white;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s;
+}
+
+.search-item:hover {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.search-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  margin-right: 10px;
+  border-radius: 4px;
 }
 
 .header .logo {
@@ -181,6 +258,28 @@ body {
   background: rgba(255, 255, 255, 0.1);
   width: 100%;
   margin: 10px 0;
+}
+
+.mobile-menu-brand {
+  padding: 10px 0 20px 0;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  margin-bottom: 15px;
+}
+
+.mobile-menu-brand p {
+  color: #ffffff;
+  text-transform: uppercase;
+  font-size: 1.2em;
+  font-weight: bold;
+  letter-spacing: 3px;
+  margin: 0;
+
+  background: linear-gradient(to bottom, #FFD700 20%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.8));
 }
 
 .mobile-overlay {
@@ -1262,15 +1361,138 @@ textarea:-webkit-autofill:focus {
   background-color: #218838;
 }
 
-@media (max-width: 768px) {
+/* Контейнер віджета */
+.contact-widget {
+  position: fixed;
+  bottom: 50px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
 
-  /*body {*/
-  /*  background: url('images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');*/
-  /*  background-attachment: fixed;*/
-  /*  background-color: #1a1d23;*/
-  /*  height: 100%;*/
-  /*  min-height: 110%;*/
-  /*}*/
+/* Меню з іконками (сховане за замовчуванням) */
+.contact-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Ефект пружності */
+  pointer-events: none; /* Щоб не клікалося, коли сховане */
+}
+
+/* Коли віджет активний (відкритий) */
+.contact-widget.active .contact-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* Круглі кнопочки месенджерів */
+.contact-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  transition: 0.2s;
+}
+
+.contact-item:hover {
+  transform: scale(1.1);
+}
+
+/* Фірмові кольори месенджерів */
+.contact-item.telegram { background: #0088cc; }
+.contact-item.viber { background: #665CAC; }
+.contact-item.phone { background: #25d366; }
+
+/* Головна кнопка чату */
+.contact-main-btn {
+  width: 85px;
+  height: 85px;
+  border-radius: 50%;
+  background: rgba(30, 34, 43, 0.85);
+  backdrop-filter: blur(10px);
+  border: 2px solid #FFD700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  transition: 0.3s;
+  animation: pulse-border 2s infinite;
+}
+
+.main-btn-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.main-btn-content span {
+  font-size: 10px; /* Маленький, але чіткий шрифт */
+  font-weight: 800;
+  color: #ffffff;
+  margin-top: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.contact-widget.active .main-btn-content span {
+  display: none;
+}
+
+/* Анімація перетворення кнопки при відкритті меню (хрестик) */
+.contact-widget.active .contact-main-btn {
+  background: #FFD700;
+  border-color: transparent;
+  transform: rotate(90deg); /* Крутимо іконку */
+  animation: none; /* Вимикаємо пульсацію, коли меню відкрите */
+}
+
+/* Анімація пульсації золотої рамки */
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+/* Ширша анімація пульсації золотої рамки */
+/*@keyframes pulse-border {*/
+/*  0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5); }*/
+/*  70% { box-shadow: 0 0 0 20px rgba(255, 215, 0, 0); }*/
+/*  100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); }*/
+/*}*/
+
+/* Адаптація для телефонів */
+@media (max-width: 480px) {
+  .contact-widget {
+    bottom: 50px;
+    right: 15px;
+  }
+  .contact-main-btn {
+    width: 70px;
+    height: 70px;
+  }
+  .contact-item {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 768px) {
 
   body {
     background: #1a1d23;
@@ -1312,6 +1534,34 @@ textarea:-webkit-autofill:focus {
     display: flex;
     align-items: center;
     gap: 0;
+  }
+
+  .header-left p {
+    display: none;
+  }
+
+  .logo-link {
+    gap: 0;
+  }
+
+  .search-container {
+    flex-grow: 1;
+  }
+
+  #search-input {
+    width: 100%;
+  }
+
+  #search-input:focus {
+    width: 100%;
+  }
+
+  .search-results-dropdown {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    width: calc(100% - 20px);
+    top: 80px;
   }
 
   .header-right {
