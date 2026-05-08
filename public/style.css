@@ -1678,6 +1678,10 @@ textarea:-webkit-autofill:focus {
     max-width: 300px;
   }
 
+    .manufacturer-block {
+        flex: 1 1 100%;
+    }
+
   #manufacturer-tables table,
   #manufacturer-tables tbody {
     display: block;
