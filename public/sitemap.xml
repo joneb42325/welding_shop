@@ -7,12 +7,12 @@
     </url>
     <!-- Про нас -->
     <url>
-        <loc>https://wolfram-shop.com.ua/about_2.html</loc>
+        <loc>https://wolfram-shop.com.ua/about.html</loc>
         <priority>0.8</priority>
     </url>
     <!-- Доставка -->
     <url>
-        <loc>https://wolfram-shop.com.ua/delivery_2.html</loc>
+        <loc>https://wolfram-shop.com.ua/delivery.html</loc>
         <priority>0.8</priority>
     </url>
 </urlset>
