@@ -48,7 +48,7 @@ async function loadProducts() {
         <td class="description-cell" title="${prod.description}">
             ${prod.description || 'Немає опису'}
         </td>
-        <td id="options-status-${prod.id}" class="status-loading">⏳ Перевірка...</td>
+        <td id="options-status-${prod.id}" class="status-loading" onclick="location.href='product-option.html?productId=${prod.id}'">⏳ Перевірка...</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
           <button class="edit-btn" onclick="location.href='product-option.html?productId=${prod.id}'">До опцій</button>

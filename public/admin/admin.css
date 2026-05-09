@@ -399,6 +399,19 @@ textarea:focus {
   color: white;
 }
 
+.status-ok,
+.status-empty,
+.status-error,
+.status-loading {
+  cursor: pointer; /* Робимо так, щоб при наведенні з'являлася "рука" */
+  transition: opacity 0.2s;
+}
+
+.status-ok:hover,
+.status-empty:hover {
+  opacity: 0.8; /* Ефект при наведенні, щоб було видно відгук */
+}
+
 @media (max-width: 768px) {
   .admin-container {
     margin: 10px;
