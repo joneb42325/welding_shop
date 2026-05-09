@@ -21,6 +21,7 @@ if (productId && manufacturerContainer) {
 
     if (!data || data.length === 0) {
       manufacturerContainer.style.display = 'none';
+      pricesSection.classList.add('is-empty');
       const emptyDiv = document.createElement('div');
       emptyDiv.className = 'empty-state-wrapper';
       emptyDiv.innerHTML = `
@@ -35,6 +36,7 @@ if (productId && manufacturerContainer) {
       return;
     }
 
+    pricesSection.classList.remove('is-empty');
     manufacturerContainer.style.display = '';
 
     const grouped = {};
