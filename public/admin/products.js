@@ -29,7 +29,7 @@ async function loadProducts() {
     if (categoryFilterId && !document.getElementById('clear-filter-btn')) {
       const clearBtn = document.createElement('a');
       clearBtn.href = 'products.html';
-      clearBtn.innerHTML = `<button id="clear-filter-btn"  style="padding: 10px 15px; font-size: 14px; background: #ff9800; color: white;">✖ Показати всі товари</button>`;
+      clearBtn.innerHTML = `<button id="clear-filter-btn"  class="clear-filter-btn">✖ Показати всі товари</button>`;
       actionsDiv.appendChild(clearBtn);
     }
 
@@ -39,7 +39,7 @@ async function loadProducts() {
       return;
     }
 
-    products.forEach((prod) => {
+    products.forEach(async (prod) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${prod.name}</td>
@@ -48,6 +48,7 @@ async function loadProducts() {
         <td class="description-cell" title="${prod.description}">
             ${prod.description || 'Немає опису'}
         </td>
+        <td id="options-status-${prod.id}" class="status-loading">⏳ Перевірка...</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
           <button class="edit-btn" onclick="location.href='product-option.html?productId=${prod.id}'">До опцій</button>
@@ -56,6 +57,27 @@ async function loadProducts() {
         </td>
       `;
       tableBody.appendChild(tr);
+
+      try {
+        const res = await fetch(`/admin/product-options/product/${prod.id}`);
+        const options = await res.json();
+
+        const statusCell = document.getElementById(`options-status-${prod.id}`);
+        statusCell.classList.remove('status-loading');
+
+        if (options && options.length > 0) {
+          statusCell.innerHTML = `<span class="status-ok">✅ Є (${options.length})</span>`;
+        } else {
+          statusCell.innerHTML = `<span class="status-empty">❌ ПОРОЖНЬО</span>`;
+        }
+      } catch (err) {
+        console.error(`Помилка завантаження опцій для товару ${prod.id}:`, err);
+        const statusCell = document.getElementById(`options-status-${prod.id}`);
+        if (statusCell) {
+          statusCell.classList.remove('status-loading');
+          statusCell.innerHTML = `<span class="status-error">Помилка</span>`;
+        }
+      }
     });
   } catch (err) {
     console.error('Помилка завантаження товарів:', err);

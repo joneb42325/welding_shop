@@ -372,6 +372,33 @@ textarea:focus {
   text-overflow: ellipsis;
 }
 
+.status-ok {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.status-empty {
+  color: #ef4444;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+.status-loading {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.clear-filter-btn {
+  padding: 10px 15px;
+  font-size: 14px;
+  background: #ff9800;
+  color: white;
+}
+
 @media (max-width: 768px) {
   .admin-container {
     margin: 10px;
