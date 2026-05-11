@@ -161,6 +161,33 @@ app.get('/api/search', (req, res) => {
   });
 });
 
+app.get('/products', (req, res) => {
+  const ids = req.query.ids;
+  let sql = `
+    SELECT p.*,
+    COALESCE(SUM(o.stock), 0) as total_stock
+    FROM products p
+    LEFT JOIN product_options o ON o.product_id = p.id
+    `;
+
+  const params = [];
+
+  if (ids) {
+    const idArray = ids.split(',').map((id) => id.trim());
+    if (idArray.length > 0) {
+      sql += ' WHERE p.id IN (?)';
+      params.push(idArray);
+    }
+  }
+  sql += ' GROUP BY p.id';
+
+  db.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+
+    res.json(results);
+  });
+});
+
 app.get('/product/:id', (req, res) => {
   const productId = req.params.id;
 

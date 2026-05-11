@@ -1,12 +1,17 @@
 import { updateCartUI } from './cart.js';
+import { updateFavoritesUI } from './favorites.js';
+import { isFavorite, toggleFavorite } from './favorites.js';
 
 export function createProductCard(product) {
   const isAvailable = product.total_stock > 0;
+
+  const inFav = isFavorite(product.id);
 
   const card = document.createElement('div');
   card.classList.add('product-card');
 
   card.innerHTML = `
+    <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
     <img src="${product.image}" alt="${product.name}">
     
     <a href="product.html?productId=${product.id}">
@@ -19,6 +24,15 @@ export function createProductCard(product) {
         : `<p><span class="available">В наявності</span></p>`
     }
   `;
+
+  const favBtn = card.querySelector('.fav-btn');
+  favBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const isAdded = toggleFavorite(product.id);
+    favBtn.innerHTML = isAdded ? '❤️' : '🤍';
+    favBtn.style.transform = 'scale(1.3)';
+    setTimeout(() => (favBtn.style.transform = 'scale(1)'), 200);
+  });
 
   return card;
 }
@@ -81,3 +95,4 @@ window.addEventListener('DOMContentLoaded', initMobileSidebar);
 loadCategories();
 
 updateCartUI();
+updateFavoritesUI();

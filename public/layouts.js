@@ -23,6 +23,7 @@ export function injectHeader() {
     <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
     <div id="search-results" class="search-results-dropdown"></div>
   </div>
+  <a href="favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
   <a href="cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
 </div>
 
@@ -39,6 +40,7 @@ export function injectHeader() {
       <a href="about.html">ℹ️ Про нас</a>
       <a href="delivery.html">🚚 Доставка і оплата</a>
       <hr>
+      <a href="favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
       <a href="cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
        <div class="mobile-contacts">
     <h4>Контакти</h4>

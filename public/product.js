@@ -1,4 +1,5 @@
 import { addToCart, updateCartUI } from './cart.js';
+import { isFavorite, toggleFavorite } from './favorites.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -7,6 +8,23 @@ const descriptionSection = document.querySelector('.product-description');
 const descriptionElement = document.getElementById('product-description');
 
 if (productId && manufacturerContainer) {
+  const imageWrapper = document.querySelector('.product-image-wrapper');
+
+  const favBtn = document.createElement('div');
+  favBtn.className = 'fav-btn';
+  favBtn.innerHTML = isFavorite(productId) ? '❤️' : '🤍';
+
+  favBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const added = toggleFavorite(productId);
+    favBtn.innerHTML = added ? '❤️' : '🤍';
+
+    favBtn.style.transform = 'scale(1.2)';
+    setTimeout(() => (favBtn.style.transform = 'scale(1)'), 200);
+  });
+
+  imageWrapper.appendChild(favBtn);
+  // -----------------------------------------
   fetch(`/product-options/${productId}`)
     .then((res) => res.json())
     .then((data) => renderTables(data))

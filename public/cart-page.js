@@ -19,10 +19,12 @@ function renderCartPage() {
 
   if (cart.length === 0) {
     cartContainer.innerHTML = `
+    <div class="empty-state-wrapper">
       <div class="empty-message">
         <h2>Ваш кошик порожній 📦</h2>
         <p>Схоже, ви ще нічого не додали. Завітайте до нашого каталогу!</p>
         <a href="index.html" class="btn-back">Повернутися до покупок</a>
+      </div>
       </div>
     `;
     cartContainer.style.background = 'none';
