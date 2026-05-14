@@ -25,6 +25,43 @@
         </div>
 
         <div class="form-group">
+          <label>Виробник</label>
+          <select name="manufacturer_id" id="manufacturer-select" required>
+            <option value="">Завантаження виробників...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Діаметр (напр. 3.0 мм)</label>
+          <input type="text" name="diameter" required />
+        </div>
+
+        <div class="form-group">
+          <label>Вага (напр. 2.5 кг)</label>
+          <input type="text" name="weight" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна роздріб (грн)</label>
+          <input type="number" name="price_retail" step="0.01" required />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна ТОВ (грн)</label>
+          <input type="number" name="price_company" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна опт (грн)</label>
+          <input type="number" name="price_wholesale" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Кількість на складі</label>
+          <input type="number" name="stock" value="100" />
+        </div>
+
+        <div class="form-group">
           <label>Опис</label>
           <textarea name="description" rows="5"></textarea>
         </div>

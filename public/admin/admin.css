@@ -1,7 +1,7 @@
 /* Общие стили для всего тела */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+  background-color: #ffffff;
   margin: 0;
   padding: 0;
   min-height: 100vh;
@@ -75,7 +75,7 @@ button:hover {
 }
 
 .admin-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 30px auto;
   font-family: sans-serif;
   background: white;
@@ -317,6 +317,11 @@ textarea:focus {
   border-bottom: 1px solid #ddd;
 }
 
+.admin-container table td img {
+  width: 50px;
+  border-radius: 4px;
+}
+
 .order-date {
   color: #777;
   font-size: 0.85em;
@@ -410,6 +415,24 @@ textarea:focus {
 .status-ok:hover,
 .status-empty:hover {
   opacity: 0.8; /* Ефект при наведенні, щоб було видно відгук */
+}
+
+.view-site-link {
+  color: #2c3e50;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1.5px solid #2c3e50;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.view-site-link:hover {
+  text-decoration: none;
+}
+
+.dashboard-card p:hover {
+  text-decoration: none;
 }
 
 @media (max-width: 768px) {

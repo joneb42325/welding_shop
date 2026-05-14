@@ -16,6 +16,22 @@ const currentCategory = document.getElementById('current-category');
 const currentDescription = document.getElementById('current-description');
 const currentImage = document.getElementById('current-image');
 
+const manufacturerSelect = document.getElementById('manufacturer-select');
+
+// Добавляем загрузку производителей
+async function loadManufacturers() {
+  try {
+    const res = await fetch('/admin/manufacturers');
+    const manufacturers = await res.json();
+    manufacturerSelect.innerHTML = '<option value="">Оберіть виробника</option>';
+    manufacturers.forEach((m) => {
+      manufacturerSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+    });
+  } catch (err) {
+    console.error('Error loading manufacturers:', err);
+  }
+}
+
 async function checkAuth() {
   try {
     const res = await fetch('/admin/check');
@@ -44,25 +60,31 @@ async function loadProduct() {
   try {
     const res = await fetch(`/admin/products/${productId}`);
     if (!res.ok) throw new Error('Товар не знайдено');
-
     const product = await res.json();
 
+    // Заполняем основные поля
     document.getElementById('name').value = product.name;
     document.getElementById('description').value = product.description || '';
     document.getElementById('category-select').value = product.category_id;
+    document.getElementById('manufacturer-select').value = product.manufacturer_id;
     document.getElementById('is_special').checked = product.is_special === 1;
 
-    currentName.textContent = product.name;
-    currentDescription.textContent = product.description || '';
-    currentCategory.textContent = categorySelect.selectedOptions[0].text;
+    // Заполняем поля опций/цен
+    document.getElementById('diameter').value = product.diameter || '';
+    document.getElementById('weight').value = product.weight || '';
+    document.getElementById('price_retail').value = product.price_retail || 0;
+    document.getElementById('price_company').value = product.price_company || 0;
+    document.getElementById('price_wholesale').value = product.price_wholesale || 0;
+    document.getElementById('stock').value = product.stock || 0;
 
+    // Показываем текущее фото
     if (product.image) {
-      currentImage.src = `/images/${product.image}`;
+      currentImage.src = product.image;
       currentImage.classList.remove('hidden');
     }
   } catch (err) {
     console.error(err);
-    alert('Помилка завантаження товару');
+    alert('Помилка завантаження даних товару');
   }
 }
 
@@ -114,5 +136,6 @@ window.addEventListener('load', async () => {
 (async function initPage() {
   await checkAuth();
   await loadCategories();
+  await loadManufacturers();
   await loadProduct();
 })();

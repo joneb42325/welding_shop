@@ -26,7 +26,7 @@ async function loadCategory() {
 
   const currentImgDisplay = document.getElementById('current-image-display');
 
-  currentImgDisplay.src = `/images/${category.image}`;
+  currentImgDisplay.src = `${category.image}`;
   currentImgDisplay.classList.remove('hidden');
 }
 

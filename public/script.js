@@ -1,29 +1,72 @@
-import { updateCartUI } from './cart.js';
+import { updateCartUI, addToCart } from './cart.js';
 import { updateFavoritesUI } from './favorites.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 
 export function createProductCard(product) {
   const isAvailable = product.total_stock > 0;
-
   const inFav = isFavorite(product.id);
+
+  const displayName = product.manufacturer_name
+    ? `${product.name} ${product.manufacturer_name}`
+    : product.name;
+
+  const priceDisplay = product.price_retail
+    ? `<div class="product-price">
+         ${product.price_retail} <span>грн</span>
+       </div>`
+    : `<div class="product-price-empty">Ціна уточнюється</div>`;
 
   const card = document.createElement('div');
   card.classList.add('product-card');
 
   card.innerHTML = `
     <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
-    <img src="${product.image}" alt="${product.name}">
     
     <a href="product.html?productId=${product.id}">
-      <h3>${product.name}</h3>
+      <img src="${product.image}" alt="${product.name}">
+      <h3>${displayName}</h3>
     </a>
-
+    <!--<p class="price">${priceDisplay}</p> -->
+    <div class="price-wrapper">
+      ${priceDisplay}
+    </div>
     ${
       !isAvailable
         ? `<p class="out-of-stock">Немає в наявності</p>`
         : `<p><span class="available">В наявності</span></p>`
     }
+    
+    <button class="add-to-cart-btn" ${!isAvailable || !product.price_retail ? 'disabled' : ''}>
+    ${isAvailable && product.price_retail ? '🛒 В кошик' : 'Недоступно'}
+    </button>
   `;
+
+  const cartBtn = card.querySelector('.add-to-cart-btn');
+  if (cartBtn) {
+    cartBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        manufacturer: product.manufacturer_name || '',
+        diameter: product.diameter || '',
+        weight: product.weight || '',
+        selectedType: 'retail', // За замовчуванням беремо роздріб
+        price: product.price_retail,
+      });
+      updateCartUI();
+      const originalText = cartBtn.innerHTML;
+      cartBtn.innerHTML = '✅ Додано';
+      cartBtn.classList.add('added');
+      setTimeout(() => {
+        cartBtn.innerHTML = originalText;
+        cartBtn.classList.remove('added');
+      }, 2000);
+    });
+  }
 
   const favBtn = card.querySelector('.fav-btn');
   favBtn.addEventListener('click', (e) => {

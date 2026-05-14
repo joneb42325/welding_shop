@@ -46,13 +46,13 @@ const upload = multer({ storage: storage });
 
 app.get('/products/special', (req, res) => {
   const query = `
-    SELECT 
+    SELECT
       p.*,
-      COALESCE(SUM(o.stock), 0) as total_stock
+      p.stock AS total_stock,
+      m.name AS manufacturer_name
     FROM products p
-    LEFT JOIN product_options o ON o.product_id = p.id
-    WHERE p.is_special = 1
-    GROUP BY p.id
+           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+    WHERE is_special = 1
   `;
 
   db.query(query, (err, results) => {
@@ -67,11 +67,14 @@ app.get('/products/special', (req, res) => {
 app.get('/products/category/:id', (req, res) => {
   const categoryId = req.params.id;
   const query = `
-    SELECT p.*, COALESCE(SUM(o.stock), 0) as total_stock
+    SELECT
+      p.*,
+      p.stock AS total_stock,
+      m.name AS manufacturer_name
     FROM products p
-    LEFT JOIN product_options o ON o.product_id = p.id
+           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
     WHERE p.category_id = ?
-    GROUP BY p.id`;
+  `;
 
   db.query(query, [categoryId], (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
@@ -104,7 +107,6 @@ app.get('/product-options/:id', (req, res) => {
 
   const query = `
   SELECT 
-  m.name as manufacturer,
   o.diameter,
   o.weight,
   o.stock,
@@ -112,7 +114,6 @@ app.get('/product-options/:id', (req, res) => {
   o.price_company,
   o.price_wholesale
   FROM product_options o
-  JOIN manufacturers m ON o.manufacturer_id = m.id
   WHERE o.product_id = ?
   `;
 
@@ -164,10 +165,7 @@ app.get('/api/search', (req, res) => {
 app.get('/products', (req, res) => {
   const ids = req.query.ids;
   let sql = `
-    SELECT p.*,
-    COALESCE(SUM(o.stock), 0) as total_stock
-    FROM products p
-    LEFT JOIN product_options o ON o.product_id = p.id
+    SELECT *, stock as total_stock FROM products 
     `;
 
   const params = [];
@@ -175,11 +173,10 @@ app.get('/products', (req, res) => {
   if (ids) {
     const idArray = ids.split(',').map((id) => id.trim());
     if (idArray.length > 0) {
-      sql += ' WHERE p.id IN (?)';
+      sql += ' WHERE id IN (?)';
       params.push(idArray);
     }
   }
-  sql += ' GROUP BY p.id';
 
   db.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
@@ -192,13 +189,21 @@ app.get('/product/:id', (req, res) => {
   const productId = req.params.id;
 
   const sql = `
-    SELECT name, description, image
+    SELECT
+      p.*,
+      m.name AS manufacturer_name,
+      p.stock AS total_stock  
     FROM products p
-    WHERE id = ?
+           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+    WHERE p.id = ?
   `;
 
   db.query(sql, [productId], (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Товар не знайдено' });
+    }
 
     res.json(results[0]);
   });
@@ -284,7 +289,7 @@ app.get('/admin/categories', adminAuth, (req, res) => {
 //GET BY ID
 app.get('/admin/categories/:id', adminAuth, (req, res) => {
   const id = req.params.id;
-  const query = 'SELECT * FROM categories WHERE id = ?';
+  const query = 'SELECT *  FROM categories WHERE id = ?';
 
   db.query(query, [id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error:' });
@@ -337,25 +342,16 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
 
       // Видаляємо старий файл з диска, якщо він був
       if (oldImageName) {
-        if (oldImageName.startsWith('http')) {
-          try {
-            const parts = oldImageName.split('/');
-            const fileName = parts.pop();
-            const folder = parts.pop();
-            const publicId = `${folder}/${fileName.split('.')[0]}`;
+        try {
+          const parts = oldImageName.split('/');
+          const fileName = parts.pop();
+          const folder = parts.pop();
+          const publicId = `${folder}/${fileName.split('.')[0]}`;
 
-            await cloudinary.uploader.destroy(publicId);
-            console.log('Видалено з Cloudinary:', publicId);
-          } catch (err) {
-            console.error('Помилка видалення з Cloudinary:', err);
-          }
-        } else {
-          const imagePath = path.join(__dirname, 'public/images', oldImageName);
-          fs.unlink(imagePath, (err) => {
-            if (err && err.code !== 'ENOENT') {
-              console.error('Помилка видалення локального файлу:', err);
-            }
-          });
+          await cloudinary.uploader.destroy(publicId);
+          console.log('Видалено з Cloudinary:', publicId);
+        } catch (err) {
+          console.error('Помилка видалення з Cloudinary:', err);
         }
       }
 
@@ -397,25 +393,16 @@ app.delete('/admin/categories/:id', adminAuth, (req, res) => {
     for (const row of results) {
       if (!row.image) continue;
 
-      if (row.image.startsWith('http')) {
-        try {
-          const parts = row.image.split('/');
-          const fileName = parts.pop();
-          const folder = parts.pop();
-          const publicId = `${folder}/${fileName.split('.')[0]}`;
+      try {
+        const parts = row.image.split('/');
+        const fileName = parts.pop();
+        const folder = parts.pop();
+        const publicId = `${folder}/${fileName.split('.')[0]}`;
 
-          await cloudinary.uploader.destroy(publicId);
-          console.log('Видалено з Cloudinary:', publicId);
-        } catch (err) {
-          console.error('Помилка видалення з Cloudinary:', err);
-        }
-      } else {
-        const imagePath = path.join(__dirname, 'public/images', row.image);
-        fs.unlink(imagePath, (err) => {
-          if (err && err.code !== 'ENOENT') {
-            console.error('Помилка видалення локального файлу:', err);
-          }
-        });
+        await cloudinary.uploader.destroy(publicId);
+        console.log('Видалено з Cloudinary:', publicId);
+      } catch (err) {
+        console.error('Помилка видалення з Cloudinary:', err);
       }
     }
     const deleteQuery = 'DELETE FROM categories WHERE id = ?';
@@ -436,126 +423,197 @@ app.get('/admin/products', adminAuth, (req, res) => {
 
   let query = `
     SELECT
-    p.*,
-    c.name as category_name
+      p.*,
+      c.name AS category_name,
+      m.name AS manufacturer_name
     FROM products p
-    LEFT JOIN categories c ON p.category_id = c.id
-`;
+           LEFT JOIN categories c ON p.category_id = c.id
+           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+  `;
 
   let params = [];
-
   if (categoryId) {
-    query += ' WHERE p.category_id = ? ';
+    query += ` WHERE p.category_id = ?`;
     params.push(categoryId);
   }
 
-  query += ' ORDER BY p.id DESC';
+  query += ` ORDER BY p.id DESC`;
 
   db.query(query, params, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error:' });
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'DB Error' });
+    }
     res.json(results);
   });
 });
 
 //GET BY ID
 app.get('/admin/products/:id', adminAuth, (req, res) => {
-  const id = req.params.id;
+  const query = `SELECT * FROM products WHERE id = ? LIMIT 1`;
 
-  const sql = `
-    SELECT id, name, description, image, category_id, is_special
-    FROM products
-    WHERE id = ?
-  `;
-
-  db.query(sql, [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Помилка БД' });
-    if (results.length === 0) return res.status(404).json({ error: 'Товар не знайдено' });
-
+  db.query(query, [req.params.id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'DB Error' });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Товар не знайдено' });
+    }
     res.json(results[0]);
   });
 });
 
 app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
-  const { name, category_id, description, is_special } = req.body;
+  const {
+    name,
+    category_id,
+    description,
+    is_special,
+    manufacturer_id,
+    diameter,
+    weight,
+    price_retail,
+    price_company,
+    price_wholesale,
+    stock,
+  } = req.body;
+
   const image = req.file ? req.file.path : null;
+  const isSpecial = is_special ? 1 : 0;
+  const sql = `
+    INSERT INTO products
+    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
-  const query =
-    'INSERT INTO products (name, category_id, description, image, is_special) VALUES (?, ?, ?, ?, ?)';
-
-  db.query(query, [name, category_id, description, image, is_special], (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Помилка БД' });
+  db.query(
+    sql,
+    [
+      name,
+      category_id,
+      description,
+      image,
+      isSpecial,
+      manufacturer_id,
+      diameter,
+      weight,
+      price_retail || 0,
+      price_company || 0,
+      price_wholesale || 0,
+      stock || 0,
+    ],
+    (err) => {
+      if (err) return res.status(500).json({ error: 'Помилка БД' });
+      res.status(201).json({ success: true });
     }
-    res.json({ success: true });
-  });
+  );
 });
 
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {
-  const id = req.params.id;
-  const { name, category_id, description, is_special } = req.body;
+  const productId = req.params.id;
 
+  // 1. Отримуємо всі поля з тіла запиту (всі вони тепер в одній таблиці)
+  const {
+    name,
+    category_id,
+    description,
+    is_special,
+    manufacturer_id,
+    diameter,
+    weight,
+    price_retail,
+    price_company,
+    price_wholesale,
+    stock,
+  } = req.body;
+
+  // Форматування даних для БД
   const specialVal = is_special ? 1 : 0;
+  const mId = manufacturer_id ? parseInt(manufacturer_id) : null;
+  const pRetail = parseFloat(price_retail) || 0;
+  const pCompany = parseFloat(price_company) || 0;
+  const pWholesale = parseFloat(price_wholesale) || 0;
+  const s = parseInt(stock) || 0;
 
-  const getOldImgQuery = 'SELECT image FROM products WHERE id = ?';
+  // Пошук старої картинки для видалення з Cloudinary (якщо завантажено нову)
+  db.query('SELECT image FROM products WHERE id = ?', [productId], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Помилка бази даних' });
+    if (results.length === 0) return res.status(404).json({ error: 'Товар не знайдено' });
 
-  db.query(getOldImgQuery, [id], async (err, results) => {
-    if (err) {
-      console.error('Помилка пошуку товару:', err);
-      return res.status(500).json({ error: 'Помилка бази даних' });
-    }
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'Товар не знайдено' });
-    }
-
-    const oldImageName = results[0].image;
-
+    const oldImage = results[0].image;
     let query;
     let params;
 
+    // 2. Формуємо єдиний запит UPDATE для таблиці products
     if (req.file) {
-      const newImageValue = req.file.path;
-      // ФОТО ЗМІНЮЄТЬСЯ
-      query =
-        'UPDATE products SET name = ?, category_id = ?, description = ?, is_special = ?, image = ? WHERE id = ?';
-      params = [name, category_id, description, specialVal, newImageValue, id];
-
-      // Видаляємо старий файл з диска, якщо він був
-      if (oldImageName) {
-        if (oldImageName.startsWith('http')) {
-          try {
-            const parts = oldImageName.split('/');
-            const fileName = parts.pop();
-            const folder = parts.pop();
-            const publicId = `${folder}/${fileName.split('.')[0]}`;
-
-            await cloudinary.uploader.destroy(publicId);
-            console.log('Видалено з Cloudinary:', publicId);
-          } catch (err) {
-            console.error('Помилка видалення з Cloudinary:', err);
-          }
-        } else {
-          const imagePath = path.join(__dirname, 'public/images', oldImageName);
-          fs.unlink(imagePath, (err) => {
-            if (err && err.code !== 'ENOENT') {
-              console.error('Помилка видалення локального файлу:', err);
-            }
-          });
-        }
-      }
+      // Якщо завантажено нове фото
+      query = `
+        UPDATE products SET 
+          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ?, image = ? 
+        WHERE id = ?
+      `;
+      params = [
+        name,
+        category_id,
+        description,
+        specialVal,
+        mId,
+        diameter,
+        weight,
+        pRetail,
+        pCompany,
+        pWholesale,
+        s,
+        req.file.path,
+        productId,
+      ];
     } else {
-      // ФОТО НЕ ЗМІНЮЄТЬСЯ
-      query =
-        'UPDATE products SET name = ?, category_id = ?, description = ?, is_special = ? WHERE id = ?';
-      params = [name, category_id, description, specialVal, id];
+      // Якщо фото не змінювалось
+      query = `
+        UPDATE products SET 
+          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ? 
+        WHERE id = ?
+      `;
+      params = [
+        name,
+        category_id,
+        description,
+        specialVal,
+        mId,
+        diameter,
+        weight,
+        pRetail,
+        pCompany,
+        pWholesale,
+        s,
+        productId,
+      ];
     }
 
-    db.query(query, params, (updateErr) => {
+    // 3. Виконуємо оновлення
+    db.query(query, params, async (updateErr) => {
       if (updateErr) {
-        console.error('Помилка оновлення БД:', updateErr);
+        console.error('Помилка оновлення:', updateErr);
         return res.status(500).json({ error: 'Помилка при збереженні даних' });
       }
+
+      // 4. Якщо була нова картинка — видаляємо стару з Cloudinary
+      if (req.file && oldImage && oldImage.startsWith('http')) {
+        try {
+          const parts = oldImage.split('/');
+          const fileName = parts.pop();
+          const folder = parts.pop();
+          const publicId = `${folder}/${fileName.split('.')[0]}`;
+          await cloudinary.uploader.destroy(publicId);
+          console.log('Видалено з Cloudinary:', publicId);
+        } catch (cErr) {
+          console.error('Помилка видалення старого фото:', cErr);
+        }
+      }
+
       res.json({ success: true });
     });
   });
@@ -564,41 +622,28 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
 app.delete('/admin/products/:id', adminAuth, (req, res) => {
   const id = req.params.id;
 
-  const getImgQuery = 'SELECT image FROM products WHERE id = ?';
-  db.query(getImgQuery, [id], async (err, results) => {
-    if (err) return res.status(500).json({ error: 'Помилка сервера' });
+  db.query('SELECT image FROM products WHERE id = ?', [id], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Серверна помилка' });
+    if (results.length === 0) return res.status(404).json({ error: 'Товар не знайдено' });
 
-    const imageName = results.length > 0 ? results[0].image : null;
+    const imageName = results[0].image;
 
-    if (imageName) {
-      if (imageName.startsWith('http')) {
-        try {
-          const parts = imageName.split('/');
-          const fileName = parts.pop();
-          const folder = parts.pop();
-          const publicId = `${folder}/${fileName.split('.')[0]}`;
-
-          await cloudinary.uploader.destroy(publicId);
-          console.log('Видалено з Cloudinary:', publicId);
-        } catch (err) {
-          console.error('Помилка видалення з Cloudinary:', err);
-        }
-      } else {
-        const imagePath = path.join(__dirname, 'public/images', imageName);
-        fs.unlink(imagePath, (err) => {
-          if (err && err.code !== 'ENOENT') {
-            console.error('Помилка видалення локального файлу:', err);
-          }
-        });
+    // Видаляємо з Cloudinary
+    if (imageName && imageName.startsWith('http')) {
+      try {
+        const parts = imageName.split('/');
+        const fileName = parts.pop();
+        const folder = parts.pop();
+        const publicId = `${folder}/${fileName.split('.')[0]}`;
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cErr) {
+        console.error('Cloudinary error:', cErr);
       }
     }
 
-    const deleteQuery = 'DELETE FROM products WHERE id = ?';
-    db.query(deleteQuery, [id], (deleteErr) => {
-      if (deleteErr) {
-        console.error('Помилка видалення товару з БД:', deleteErr);
-        return res.status(500).json({ error: 'Помилка сервера' });
-      }
+    // Видаляємо тільки з однієї таблиці!
+    db.query('DELETE FROM products WHERE id = ?', [id], (deleteErr) => {
+      if (deleteErr) return res.status(500).json({ error: 'Помилка видалення' });
       res.json({ success: true });
     });
   });
@@ -662,7 +707,6 @@ app.get('/admin/product-options/product/:productId', adminAuth, (req, res) => {
     SELECT
       po.id,
       po.product_id,
-      m.name AS manufacturer,
       po.diameter,
       po.weight,
       po.price_retail,
@@ -670,7 +714,6 @@ app.get('/admin/product-options/product/:productId', adminAuth, (req, res) => {
       po.price_wholesale,
       po.stock
     FROM product_options po
-    JOIN manufacturers m ON po.manufacturer_id = m.id
     WHERE po.product_id = ?
   `;
   db.query(query, [productId], (err, results) => {

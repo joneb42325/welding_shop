@@ -2,6 +2,7 @@ const categorySelect = document.getElementById('category-select');
 const productForm = document.getElementById('product-form');
 const imageInput = document.getElementById('image-input');
 const preview = document.getElementById('preview');
+const manufacturerSelect = document.getElementById('manufacturer-select');
 
 async function loadCategories() {
   try {
@@ -14,6 +15,20 @@ async function loadCategories() {
     });
   } catch (err) {
     console.error('Error loading categories:', err);
+  }
+}
+
+async function loadManufacturers() {
+  try {
+    const res = await fetch('/admin/manufacturers');
+    const manufacturers = await res.json();
+
+    manufacturerSelect.innerHTML = '<option value="">Оберіть виробника</option>';
+    manufacturers.forEach((m) => {
+      manufacturerSelect.innerHTML += `<option value="${m.id}">${m.name}</option>`;
+    });
+  } catch (err) {
+    console.error('Error loading manufacturers:', err);
   }
 }
 
@@ -60,3 +75,4 @@ window.addEventListener('load', async () => {
 });
 
 loadCategories();
+loadManufacturers();

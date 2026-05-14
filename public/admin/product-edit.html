@@ -12,11 +12,6 @@
       <h2>Редагування товару</h2>
 
       <div class="current-info">
-        <h3>Поточні дані:</h3>
-        <p><strong>Назва:</strong> <span id="current-name">Завантаження...</span></p>
-        <p><strong>Категорія:</strong> <span id="current-category">Завантаження...</span></p>
-        <p><strong>Опис:</strong></p>
-        <p id="current-description">Завантаження...</p>
         <div class="current-image-wrapper">
           <strong>Поточне зображення:</strong><br />
           <img id="current-image" class="hidden" alt="Поточне зображення" />
@@ -34,6 +29,43 @@
           <select id="category-select" name="category_id" required>
             <option value="">Завантаження категорій...</option>
           </select>
+        </div>
+
+        <div class="form-group">
+          <label>Виробник</label>
+          <select id="manufacturer-select" name="manufacturer_id" required>
+            <option value="">Завантаження виробників...</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Діаметр (напр. 3.0 мм)</label>
+          <input type="text" id="diameter" name="diameter" required />
+        </div>
+
+        <div class="form-group">
+          <label>Вага (напр. 2.5 кг)</label>
+          <input type="text" id="weight" name="weight" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна роздріб (грн)</label>
+          <input type="number" id="price_retail" name="price_retail" step="0.01" required />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна ТОВ (грн)</label>
+          <input type="number" id="price_company" name="price_company" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Ціна опт (грн)</label>
+          <input type="number" id="price_wholesale" name="price_wholesale" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Кількість на складі</label>
+          <input type="number" id="stock" name="stock" />
         </div>
 
         <div class="form-group">

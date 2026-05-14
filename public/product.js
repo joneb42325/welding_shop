@@ -3,175 +3,177 @@ import { isFavorite, toggleFavorite } from './favorites.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
+
 const manufacturerContainer = document.getElementById('manufacturer-tables');
 const descriptionSection = document.querySelector('.product-description');
 const descriptionElement = document.getElementById('product-description');
 
-if (productId && manufacturerContainer) {
-  const imageWrapper = document.querySelector('.product-image-wrapper');
+let currentProduct = null;
 
+async function initProductPage() {
+  if (!productId || !manufacturerContainer) return;
+
+  try {
+    // 1. Завантажуємо дані про товар (назва, опис, бренд)
+    const productRes = await fetch(`/product/${productId}`);
+    if (!productRes.ok) throw new Error('Товар не знайдено');
+
+    currentProduct = await productRes.json();
+
+    // Оновлюємо інтерфейс даними товару
+    renderProductInfo(currentProduct);
+
+    // Отрисовуємо таблицю
+    renderTable(currentProduct);
+  } catch (err) {
+    console.error('Помилка завантаження сторінки:', err);
+    renderEmptyState(); // Показуємо повідомлення про помилку/пусту сторінку
+  }
+}
+
+function renderProductInfo(product) {
+  const displayName = product.manufacturer_name
+    ? `${product.name} ${product.manufacturer_name}`
+    : product.name;
+
+  document.title = `${displayName} — Купити в Wolfram Shop`;
+  document.getElementById('product-name').textContent = displayName;
+
+  // Опис
+  if (product.description && product.description.trim() !== '') {
+    descriptionElement.classList.add('product-description-text');
+    descriptionElement.textContent = product.description;
+    descriptionSection.style.display = 'block';
+  } else {
+    descriptionSection.style.display = 'none';
+  }
+
+  // Зображення
+  const productImg = document.getElementById('product-image');
+  productImg.src = product.image;
+  productImg.alt = `Фото товару: ${displayName}`;
+
+  // Кнопка обраного
+  setupFavoriteButton(product.id);
+}
+
+function setupFavoriteButton(id) {
+  const productInfo = document.querySelector('.product-info');
   const favBtn = document.createElement('div');
   favBtn.className = 'fav-btn';
-  favBtn.innerHTML = isFavorite(productId) ? '❤️' : '🤍';
+  favBtn.innerHTML = isFavorite(id) ? '❤️' : '🤍';
 
   favBtn.addEventListener('click', (e) => {
     e.preventDefault();
-    const added = toggleFavorite(productId);
+    const added = toggleFavorite(id);
     favBtn.innerHTML = added ? '❤️' : '🤍';
-
     favBtn.style.transform = 'scale(1.2)';
     setTimeout(() => (favBtn.style.transform = 'scale(1)'), 200);
   });
 
-  imageWrapper.appendChild(favBtn);
-  // -----------------------------------------
-  fetch(`/product-options/${productId}`)
-    .then((res) => res.json())
-    .then((data) => renderTables(data))
-    .catch((err) => console.error(err));
+  productInfo.appendChild(favBtn);
+}
 
-  function renderTables(data) {
-    const pricesSection = document.querySelector('.product-prices');
-    manufacturerContainer.innerHTML = '';
+function renderTable(product) {
+  const pricesSection = document.querySelector('.product-prices');
+  manufacturerContainer.innerHTML = '';
 
-    const existingEmptyMessage = document.querySelector('.empty-state-wrapper');
-    if (existingEmptyMessage) existingEmptyMessage.remove();
+  if (!product || !product.price_retail) {
+    renderEmptyState();
+    return;
+  }
 
-    if (!data || data.length === 0) {
-      manufacturerContainer.style.display = 'none';
-      pricesSection.classList.add('is-empty');
-      const emptyDiv = document.createElement('div');
-      emptyDiv.className = 'empty-state-wrapper';
-      emptyDiv.innerHTML = `
-        <div class="empty-message">
-          <h2>Ціни та опції наразі оновлюються 🛠️</h2>
-          <p>Ми вже працюємо над їх наповненням. Загляньте сюди трохи пізніше!</p>
-          <a href="index.html" class="btn-back">Повернутися на головну</a>
-        </div>
-      `;
+  pricesSection.classList.remove('is-empty');
+  manufacturerContainer.style.display = '';
 
-      pricesSection.appendChild(emptyDiv);
-      return;
-    }
+  const section = document.createElement('div');
+  section.classList.add('manufacturer-block');
 
-    pricesSection.classList.remove('is-empty');
-    manufacturerContainer.style.display = '';
-
-    const grouped = {};
-
-    data.forEach((item) => {
-      if (!grouped[item.manufacturer]) {
-        grouped[item.manufacturer] = [];
-      }
-      grouped[item.manufacturer].push(item);
-    });
-
-    for (const manufacturer in grouped) {
-      const section = document.createElement('div');
-      section.classList.add('manufacturer-block');
-
-      section.innerHTML = `
-    <h3>${manufacturer}</h3>
+  section.innerHTML = `
     <table>
-    <thead>
-    <tr>
-       <th>Діаметр</th>
-            <th>Вага</th>
-            <th>ЧП</th>
-            <th>ТОВ</th>
-            <th>Опт</th>
-    </tr>
-    </thead>
-    <tbody></tbody>
+      <thead>
+        <tr>
+          <th>Діаметр</th>
+          <th>Вага</th>
+          <th>Роздріб</th>
+          <th>ТОВ</th>
+          <th>Опт</th>
+          <th>Дія</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     </table>
-    `;
+  `;
 
-      const tbody = section.querySelector('tbody');
+  const tbody = section.querySelector('tbody');
 
-      grouped[manufacturer].forEach((item) => {
-        const isAvailable = item.stock > 0;
+  const isAvailable = product.stock > 0;
+  let selectedType = 'retail';
 
-        let selectedType = 'retail';
-        const row = document.createElement('tr');
-        if (!isAvailable) {
-          row.classList.add('out-of-stock-row');
-        }
-        row.innerHTML = `
-        <td>${item.diameter}</td>
-        <td>${item.weight}</td>
-        <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${item.price_retail} грн</td>
-        <td class="price-cell" data-type="company">${item.price_company} грн</td>
-        <td class="price-cell" data-type="wholesale">${item.price_wholesale} грн</td>
-        <td>
+  const row = document.createElement('tr');
+  if (!isAvailable) row.classList.add('out-of-stock-row');
+
+  row.innerHTML = `
+      <td>${product.diameter || '-'}</td>
+      <td>${product.weight || '-'}</td>
+      <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${product.price_retail} грн</td>
+      <td class="price-cell" data-type="company">${product.price_company} грн</td>
+      <td class="price-cell" data-type="wholesale">${product.price_wholesale} грн</td>
+      <td>
         <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
           ${isAvailable ? 'В кошик' : 'Немає в наявності'}
         </button>
-        </td>
-      `;
-        if (isAvailable) {
-          row.querySelectorAll('.price-cell').forEach((cell) => {
-            cell.addEventListener('click', () => {
-              selectedType = cell.dataset.type;
-              row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
-              cell.classList.add('active');
-            });
-          });
+      </td>
+    `;
 
-          row.querySelector('.add-to-cart').addEventListener('click', () => {
-            const price = item[`price_${selectedType}`];
-            showToast(`${currentProduct.name} додано до кошика!`);
-            addToCart({
-              productId,
-              name: currentProduct.name,
-              image: currentProduct.image,
-              manufacturer: item.manufacturer,
-              diameter: item.diameter,
-              weight: item.weight,
-              selectedType,
-              price,
-            });
-
-            updateCartUI();
-          });
-        }
-        tbody.appendChild(row);
+  if (isAvailable) {
+    // Логіка вибору типу ціни
+    row.querySelectorAll('.price-cell').forEach((cell) => {
+      cell.addEventListener('click', () => {
+        selectedType = cell.dataset.type;
+        row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
+        cell.classList.add('active');
       });
-      manufacturerContainer.appendChild(section);
-    }
-  }
-
-  let currentProduct = null;
-
-  fetch(`/product/${productId}`)
-    .then((res) => res.json())
-    .then((product) => {
-      currentProduct = product;
-      document.title = `${product.name} — Купити в Wolfram Shop`;
-
-      //SEO
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.name = 'description';
-        document.head.appendChild(metaDesc);
-      }
-      const descText = product.description
-        ? product.description.substring(0, 150).replace(/\n/g, ' ')
-        : `Купити ${product.name} оптом та в роздріб.`;
-      metaDesc.content = `${descText}... Найкращі ціни в Wolfram Shop.`;
-
-      document.getElementById('product-name').textContent = product.name;
-      if (product.description && product.description.trim() !== '') {
-        descriptionElement.classList.add('product-description-text');
-        descriptionElement.textContent = product.description;
-        descriptionSection.style.display = 'block';
-      } else {
-        descriptionSection.style.display = 'none';
-      }
-      const productImg = document.getElementById('product-image');
-      productImg.src = product.image.startsWith('http') ? product.image : 'images/' + product.image;
-      productImg.alt = `Фото товару: ${product.name}`;
     });
+
+    // Додавання в кошик
+    row.querySelector('.add-to-cart').addEventListener('click', () => {
+      const price = product[`price_${selectedType}`];
+      showToast(`${currentProduct.name} додано до кошика!`);
+
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        manufacturer: product.manufacturer_name || '', // Тепер беремо з товару!
+        diameter: product.diameter,
+        weight: product.weight,
+        selectedType,
+        price,
+      });
+      updateCartUI();
+    });
+  }
+  tbody.appendChild(row);
+
+  manufacturerContainer.appendChild(section);
+}
+
+function renderEmptyState() {
+  const pricesSection = document.querySelector('.product-prices');
+  manufacturerContainer.style.display = 'none';
+  pricesSection.classList.add('is-empty');
+
+  const emptyDiv = document.createElement('div');
+  emptyDiv.className = 'empty-state-wrapper';
+  emptyDiv.innerHTML = `
+    <div class="empty-message">
+      <h2>Ціни наразі оновлюються 🛠️</h2>
+      <p>Ми вже працюємо над їх наповненням.</p>
+      <a href="index.html" class="btn-back">Повернутися на головну</a>
+    </div>
+  `;
+  pricesSection.appendChild(emptyDiv);
 }
 
 function showToast(message, type = 'success') {
@@ -204,4 +206,5 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
+initProductPage();
 updateCartUI();

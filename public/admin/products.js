@@ -41,17 +41,28 @@ async function loadProducts() {
 
     products.forEach(async (prod) => {
       const tr = document.createElement('tr');
+      const pRetail = prod.price_retail || 0;
+      const pCompany = prod.price_company || 0;
+      const pWholesale = prod.price_wholesale || 0;
+      const fullName = prod.manufacturer_name
+        ? `${prod.name} ${prod.manufacturer_name}`
+        : prod.name;
+      const stock = prod.stock || 0;
       tr.innerHTML = `
-        <td>${prod.name}</td>
-        <td><img src="${prod.image}" width="50" style="border-radius:4px;"></td>
-        <td>${prod.category_name || 'Без категорії'}</td>
+        <td>${fullName}</td>
+        <td><img src="${prod.image}"></td>
+        <td><a href="products.html?categoryId=${prod.category_id}">
+            ${prod.category_name}
+        </a></td>
         <td class="description-cell" title="${prod.description}">
             ${prod.description || 'Немає опису'}
         </td>
-        <td id="options-status-${prod.id}" class="status-loading" onclick="location.href='product-option.html?productId=${prod.id}'">⏳ Перевірка...</td>
+       <td> ${pRetail} </td>
+       <td> ${pCompany} </td>
+       <td> ${pWholesale} </td>
+       <td> ${stock} шт </td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
-          <button class="edit-btn" onclick="location.href='product-option.html?productId=${prod.id}'">До опцій</button>
           <button class="edit-btn" onclick="location.href='product-edit.html?id=${prod.id}'">Редагувати</button>
           <button class="delete-btn" data-id="${prod.id}">Видалити</button>
         </td>
