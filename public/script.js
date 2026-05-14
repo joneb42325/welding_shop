@@ -56,6 +56,10 @@ export function createProductCard(product) {
         weight: product.weight || '',
         selectedType: 'retail', // За замовчуванням беремо роздріб
         price: product.price_retail,
+
+        price_retail: product.price_retail,
+        price_wholesale: product.price_wholesale,
+        wholesale_threshold: product.wholesale_threshold,
       });
       updateCartUI();
       const originalText = cartBtn.innerHTML;

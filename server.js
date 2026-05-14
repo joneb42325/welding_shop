@@ -125,6 +125,7 @@ app.get('/product-options/:id', (req, res) => {
   });
 });
 
+/*
 app.get('/api/search', (req, res) => {
   const searchTerm = req.query.q;
   if (!searchTerm) return res.json([]);
@@ -181,6 +182,41 @@ app.get('/products', (req, res) => {
   db.query(sql, params, (err, results) => {
     if (err) return res.status(500).json({ error: 'Server error' });
 
+    res.json(results);
+  });
+});
+ */
+
+app.get('/api/search', (req, res) => {
+  const searchTerm = req.query.q;
+  if (!searchTerm) return res.json([]);
+
+  const words = searchTerm.split(' ').filter((word) => word.length > 0);
+
+  let conditions = [];
+  let params = [];
+
+  words.forEach((word) => {
+    const p = `%${word}%`;
+    // Шукаємо слово в назві, описі, діаметрі АБО назві виробника
+    conditions.push(
+      `(p.name LIKE ? OR p.description LIKE ? OR p.diameter LIKE ? OR m.name LIKE ?)`
+    );
+    params.push(p, p, p, p);
+  });
+
+  const query = `
+    SELECT p.*, m.name as manufacturer_name, p.stock as total_stock
+    FROM products p
+    LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+    WHERE ${conditions.length > 0 ? conditions.join(' AND ') : '1'} 
+    LIMIT 15`; // Збільшив ліміт, 10 замало для пошуку
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error('Search error:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
     res.json(results);
   });
 });
@@ -476,6 +512,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     price_retail,
     price_company,
     price_wholesale,
+    wholesale_threshold,
     stock,
   } = req.body;
 
@@ -483,8 +520,8 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
   const isSpecial = is_special ? 1 : 0;
   const sql = `
     INSERT INTO products
-    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, wholesale_threshold, stock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -501,6 +538,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       price_retail || 0,
       price_company || 0,
       price_wholesale || 0,
+      wholesale_threshold || 50,
       stock || 0,
     ],
     (err) => {
@@ -525,6 +563,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     price_retail,
     price_company,
     price_wholesale,
+    wholesale_threshold,
     stock,
   } = req.body;
 
@@ -551,7 +590,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       query = `
         UPDATE products SET 
           name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ?, image = ? 
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, wholesale_threshold = ?, stock = ?, image = ? 
         WHERE id = ?
       `;
       params = [
@@ -565,6 +604,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         pRetail,
         pCompany,
         pWholesale,
+        wholesale_threshold,
         s,
         req.file.path,
         productId,
@@ -574,7 +614,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       query = `
         UPDATE products SET 
           name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ? 
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, wholesale_threshold = ?, stock = ? 
         WHERE id = ?
       `;
       params = [
@@ -588,6 +628,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         pRetail,
         pCompany,
         pWholesale,
+        wholesale_threshold,
         s,
         productId,
       ];

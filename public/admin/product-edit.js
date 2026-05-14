@@ -75,6 +75,7 @@ async function loadProduct() {
     document.getElementById('price_retail').value = product.price_retail || 0;
     document.getElementById('price_company').value = product.price_company || 0;
     document.getElementById('price_wholesale').value = product.price_wholesale || 0;
+    document.getElementById('wholesale_threshold').value = product.wholesale_threshold || 0;
     document.getElementById('stock').value = product.stock || 0;
 
     // Показываем текущее фото

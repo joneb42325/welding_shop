@@ -96,7 +96,7 @@ function renderTable(product) {
           <th>Діаметр</th>
           <th>Вага</th>
           <th>Роздріб</th>
-          <th>ТОВ</th>
+          <th>ФОП</th>
           <th>Опт</th>
           <th>Дія</th>
         </tr>
@@ -118,7 +118,11 @@ function renderTable(product) {
       <td>${product.weight || '-'}</td>
       <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${product.price_retail} грн</td>
       <td class="price-cell" data-type="company">${product.price_company} грн</td>
-      <td class="price-cell" data-type="wholesale">${product.price_wholesale} грн</td>
+      <!--<td class="price-cell" data-type="wholesale">${product.price_wholesale} грн</td> -->
+      <td class="wholesale-info">
+    <span class="price-val">${product.price_wholesale} грн</span>
+    <span class="threshold-text">від ${product.wholesale_threshold} шт</span>
+  </td>
       <td>
         <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
           ${isAvailable ? 'В кошик' : 'Немає в наявності'}
@@ -145,11 +149,15 @@ function renderTable(product) {
         productId: product.id,
         name: product.name,
         image: product.image,
-        manufacturer: product.manufacturer_name || '', // Тепер беремо з товару!
-        diameter: product.diameter,
-        weight: product.weight,
+        manufacturer: product.manufacturer_name || '',
+        diameter: product.diameter || '',
+        weight: product.weight || '',
         selectedType,
         price,
+
+        price_retail: product.price_retail,
+        price_wholesale: product.price_wholesale,
+        wholesale_threshold: product.wholesale_threshold,
       });
       updateCartUI();
     });

@@ -61,6 +61,7 @@ async function loadProducts() {
        <td> ${pCompany} </td>
        <td> ${pWholesale} </td>
        <td> ${stock} шт </td>
+        <td>${prod.wholesale_threshold}</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
           <button class="edit-btn" onclick="location.href='product-edit.html?id=${prod.id}'">Редагувати</button>

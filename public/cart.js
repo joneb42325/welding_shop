@@ -11,23 +11,27 @@ export function saveCart(cart) {
 export function addToCart(item) {
   const cart = getCart();
 
-  const existing = cart.find(
+  const existingIndex = cart.findIndex(
     (i) =>
       i.productId === item.productId &&
       i.diameter === item.diameter &&
       i.weight === item.weight &&
       i.manufacturer === item.manufacturer &&
-      i.selectedType === item.selectedType &&
-      i.price === item.price
+      i.selectedType === item.selectedType
   );
 
-  if (existing) {
-    existing.quantity += 1;
+  if (existingIndex !== -1) {
+    changeQuantity(existingIndex, 1);
   } else {
-    cart.push({ ...item, quantity: 1 });
-  }
+    const newItem = {
+      ...item,
+      quantity: 1,
+    };
+    newItem.price = updateItemPrice(newItem);
 
-  saveCart(cart);
+    cart.push(newItem);
+    saveCart(cart);
+  }
 }
 
 export function removeFromCart(index) {
@@ -50,17 +54,38 @@ export function clearCart() {
   localStorage.removeItem(CART_KEY);
 }
 
+export function updateItemPrice(item) {
+  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+  const wholesale = parseFloat(item.price_wholesale) || retail;
+  const threshold = parseInt(item.wholesale_threshold) || 999999;
+
+  console.log('Поріг:', threshold, 'Роздріб:', retail, 'Опт:', wholesale);
+
+  if (item.quantity >= threshold) {
+    return wholesale;
+  }
+  return retail;
+}
+
 export function changeQuantity(index, delta) {
   const cart = getCart();
-  cart[index].quantity += delta;
+  const item = cart[index];
 
-  if (cart[index].quantity < 1) {
+  if (!item) return;
+
+  item.quantity += delta;
+
+  if (item.quantity < 1) {
     if (confirm('Видалити товар з кошика?')) {
       cart.splice(index, 1);
+      saveCart(cart);
+      return;
     } else {
       cart[index].quantity = 1;
     }
   }
+
+  item.price = updateItemPrice(item);
 
   saveCart(cart);
 }

@@ -47,13 +47,25 @@
         </div>
 
         <div class="form-group">
-          <label>Ціна ТОВ (грн)</label>
+          <label>Ціна ФОП (грн)</label>
           <input type="number" name="price_company" step="0.01" />
         </div>
 
         <div class="form-group">
           <label>Ціна опт (грн)</label>
           <input type="number" name="price_wholesale" step="0.01" />
+        </div>
+
+        <div class="form-group">
+          <label>Поріг опту (від скількох штук)</label>
+          <input
+            type="number"
+            name="wholesale_threshold"
+            value="50"
+            min="2"
+            step="1"
+            placeholder="Наприклад: 50"
+          />
         </div>
 
         <div class="form-group">

@@ -32,20 +32,30 @@ function renderCartPage() {
     cartContainer.style.boxShadow = 'none';
     return;
   }
-  const clearBtn = document.getElementById('clear-cart-btn');
 
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      if (confirm('Ви впевнені, що хочете видалити всі товари з кошика?')) {
-        clearCart();
-        refreshCart();
-      }
-    });
-  }
   cartTableBody.innerHTML = '';
 
   cart.forEach((item, index) => {
     const row = document.createElement('tr');
+
+    const threshold = parseInt(item.wholesale_threshold) || 999999;
+    const isWholesale = item.quantity >= threshold;
+
+    const price = parseFloat(item.price) || 0;
+    const total = price * item.quantity;
+
+    let statusContent = '';
+    if (isWholesale) {
+      statusContent = `<strong class="opt-badge">ОПТ</strong>`;
+    } else {
+      statusContent = formatType(item.selectedType);
+
+      if (threshold < 999999) {
+        statusContent += `<br><span class="opt-hint">Опт від ${threshold} шт</span>`;
+      }
+    }
+
+    const priceClass = isWholesale ? 'opt-price' : '';
 
     row.innerHTML = `
       <td>
@@ -56,7 +66,7 @@ function renderCartPage() {
       <td>${item.manufacturer}</td>
       <td>${item.diameter}</td>
       <td>${item.weight}</td>
-      <td>${item.price}</td>
+      <td class="${priceClass}">${price.toFixed(2)} грн</td>
       <td>
       <div class="quantity-controls">
         <button class="qty-btn minus">-</button>
@@ -64,8 +74,8 @@ function renderCartPage() {
         <button class="qty-btn plus">+</button>
         </div>
        </td>
-      <td>${item.price * item.quantity}</td>
-      <td>${formatType(item.selectedType)}</td>
+      <td>${total.toFixed(2)} грн</td>
+        <td>${statusContent}</td>
       <td>
         <button class="delete-btn">❌</button>
       </td>
@@ -118,7 +128,7 @@ function formatType(type) {
     case 'retail':
       return 'ЧП';
     case 'company':
-      return 'ТОВ';
+      return 'ФОП';
     case 'wholesale':
       return 'Опт';
     default:
@@ -159,6 +169,16 @@ window.addEventListener('click', (e) => {
     checkoutModal.classList.add('hidden');
   }
 });
+
+const clearBtn = document.getElementById('clear-cart-btn');
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Ви впевнені, що хочете видалити всі товари з кошика?')) {
+      clearCart();
+      refreshCart();
+    }
+  });
+}
 
 checkoutForm.addEventListener('submit', async (e) => {
   e.preventDefault();
