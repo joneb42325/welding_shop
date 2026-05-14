@@ -163,6 +163,8 @@ app.get('/api/search', (req, res) => {
   });
 });
 
+ */
+
 app.get('/products', (req, res) => {
   const ids = req.query.ids;
   let sql = `
@@ -185,7 +187,6 @@ app.get('/products', (req, res) => {
     res.json(results);
   });
 });
- */
 
 app.get('/api/search', (req, res) => {
   const searchTerm = req.query.q;
