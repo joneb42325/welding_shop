@@ -178,7 +178,7 @@ function renderEmptyState() {
     <div class="empty-message">
       <h2>Ціни наразі оновлюються 🛠️</h2>
       <p>Ми вже працюємо над їх наповненням.</p>
-      <a href="index.html" class="btn-back">Повернутися на головну</a>
+      <a href="/index.html" class="btn-back">Повернутися на головну</a>
     </div>
   `;
   pricesSection.appendChild(emptyDiv);

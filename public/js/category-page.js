@@ -25,7 +25,7 @@ async function loadCategoryProducts() {
         <div class="empty-message">
           <h2>У цій категорії поки немає товарів 😔</h2>
           <p>Ми вже працюємо над її наповненням. Загляньте сюди трохи пізніше!</p>
-          <a href="index.html" class="btn-back">Повернутися на головну</a>
+          <a href="/index.html" class="btn-back">Повернутися на головну</a>
         </div>
       `;
       categorySection.appendChild(emptyWrapper);

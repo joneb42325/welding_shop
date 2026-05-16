@@ -6,25 +6,25 @@ export function injectHeader() {
   header.innerHTML = `
       <button class="burger">☰</button>
       <div class="header-left">
-        <a href="index.html" class="logo-link">
+        <a href="/index.html" class="logo-link">
           <div class="logo">
-            <img src="images/logo.webp" alt="Wolfram" />
+            <img src="/images/logo.webp" alt="Wolfram" />
           </div>
           <p>Wolfram</p>
         </a>
       </div>
       <nav class="nav">
-        <a href="index.html">Головна</a>
-        <a href="about.html">Про нас</a>
-        <a href="delivery.html">Доставка і оплата</a>
+        <a href="/index.html">Головна</a>
+        <a href="/about.html">Про нас</a>
+        <a href="/delivery.html">Доставка і оплата</a>
       </nav>
 <div class="header-right">
 <div class="search-container">
     <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
     <div id="search-results" class="search-results-dropdown"></div>
   </div>
-  <a href="favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
-  <a href="cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
+  <a href="/favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
+  <a href="/cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
 </div>
 
     `;
@@ -36,12 +36,12 @@ export function injectHeader() {
     <div class="mobile-menu-brand">
         <p>WOLFRAM</p>
     </div>
-      <a href="index.html">🏠 Головна</a>
-      <a href="about.html">ℹ️ Про нас</a>
-      <a href="delivery.html">🚚 Доставка і оплата</a>
+      <a href="/index.html">🏠 Головна</a>
+      <a href="/about.html">ℹ️ Про нас</a>
+      <a href="/delivery.html">🚚 Доставка і оплата</a>
       <hr>
-      <a href="favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
-      <a href="cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
+      <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
+      <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
        <div class="mobile-contacts">
     <h4>Контакти</h4>
     <a href="tel:+380634383823">📞 +38 (063) 438-38-23</a>
@@ -87,9 +87,9 @@ export function injectFooter() {
         </div>
         <div class="footer-column">
           <h4>Швидкі посилання</h4>
-          <a href="index.html">Головна</a>
-          <a href="about.html">Про нас</a>
-          <a href="delivery.html">Доставка і оплата</a>
+          <a href="/index.html">Головна</a>
+          <a href="/about.html">Про нас</a>
+          <a href="/delivery.html">Доставка і оплата</a>
         </div>
       </div>
       <div class="footer-bottom">
@@ -108,7 +108,7 @@ export function injectFooter() {
       </a>
       <!-- Viber -->
       <a href="viber://chat?number=%2B380634383823" class="contact-item viber">
-        <img src="images/logos/viber-tile.svg" alt="Viber" width="28" height="28">
+        <img src="/images/logos/viber-tile.svg" alt="Viber" width="28" height="28">
       </a>
       <!-- Звичайний дзвінок -->
       <a href="tel:+380634383823" class="contact-item phone">
