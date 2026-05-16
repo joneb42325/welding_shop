@@ -1701,7 +1701,7 @@ textarea:-webkit-autofill:focus {
     /* 110% створює запас під панеллю браузера */
     height: 110%;
 
-    background-image: url('/public/images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');
+    background-image: url('../images/Gemini_Generated_Image_rzheumrzheumrzhe.webp');
     background-repeat: no-repeat;
 
     /* Відправляємо фон за весь контент */
