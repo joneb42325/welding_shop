@@ -1667,6 +1667,101 @@ textarea:-webkit-autofill:focus {
   font-weight: 500;
 }
 
+.search-view-all {
+  padding: 10px;
+  text-align: center;
+  background: rgba(37, 99, 235, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-view-all a {
+  color: #2563eb;
+  font-weight: 500;
+  font-size: 14px;
+  display: block;
+  transition: color 0.2s ease;
+}
+
+.search-view-all a:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.search-loading,
+.search-empty-msg,
+.search-error-msg {
+  color: #aaa;
+  font-size: 16px;
+}
+
+.no-results-box {
+  text-align: center;
+  padding: 40px;
+  background: rgba(30, 34, 43, 0.85);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  grid-column: 1 / -1; /* Щоб блок розтягувався на всю ширину сітки каталогу */
+}
+
+.no-results-title {
+  font-size: 18px;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+}
+
+.no-results-title strong {
+  color: #2563eb;
+}
+
+.no-results-hint {
+  font-size: 14px;
+  color: #aaa;
+  margin: 0;
+}
+
+.search-page-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.sort-container {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+}
+
+.sort-container select {
+  background: #1e222b;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.sort-container select:focus {
+  border-color: #2563eb;
+}
+
+@media (max-width: 576px) {
+  .search-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .sort-container {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+
 /* Адаптація для телефонів */
 @media (max-width: 480px) {
   .contact-widget {

@@ -211,7 +211,7 @@ app.get('/api/search', (req, res) => {
     FROM products p
     LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
     WHERE ${conditions.length > 0 ? conditions.join(' AND ') : '1'} 
-    LIMIT 15`;
+    LIMIT 100`;
 
   db.query(query, params, (err, results) => {
     if (err) {

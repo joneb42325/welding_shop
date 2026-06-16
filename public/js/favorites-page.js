@@ -1,5 +1,5 @@
 import { getFavorites } from './favorites.js';
-import { createProductCard } from './script.js';
+import { createProductCard, loadCategories } from './script.js';
 
 const favoritesContainer = document.getElementById('favorites-container');
 const emptyMessage = document.getElementById('empty-favorites');
@@ -35,3 +35,4 @@ async function loadFavoritesPage() {
 }
 
 loadFavoritesPage();
+loadCategories();

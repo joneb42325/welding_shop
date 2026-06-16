@@ -1,4 +1,4 @@
-import { createProductCard } from './script.js';
+import { createProductCard, loadCategories } from './script.js';
 import { updateCartUI } from './cart.js';
 
 async function loadSpecialProducts() {
@@ -19,3 +19,4 @@ async function loadSpecialProducts() {
 
 loadSpecialProducts();
 updateCartUI();
+loadCategories();

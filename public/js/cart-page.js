@@ -6,6 +6,7 @@ import {
   updateCartUI,
   clearCart,
 } from './cart.js';
+import { loadCategories } from './script.js';
 
 refreshCart();
 
@@ -219,3 +220,5 @@ checkoutForm.addEventListener('submit', async (e) => {
     alert("Помилка з'єднання з сервером. Перевірте інтернет та спробуйте ще раз.");
   }
 });
+
+loadCategories();

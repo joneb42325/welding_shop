@@ -1,4 +1,24 @@
-// Функція для вставки шапки
+export function injectSidebar() {
+  const sidebar = document.querySelector('aside.sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = `
+    <div class="cart-box">
+      <h2>🛒 Кошик</h2>
+      <p>Товарів: <span id="cart-count">0</span></p>
+      <p>Сума: <span id="cart-total">0</span> грн</p>
+      <a href="/cart.html">
+        <button>Оформити замовлення</button>
+      </a>
+    </div>
+
+    <div class="catalog">
+      <h2>🗂️ Каталог</h2>
+      <ul id="catalog-list"></ul>
+    </div>
+  `;
+}
+
 export function injectHeader() {
   const header = document.querySelector('header.header');
   if (!header) return;
@@ -158,6 +178,15 @@ function initSearch() {
 
   if (!searchInput || !resultsContainer) return;
 
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      const query = e.target.value.trim();
+      if (query.length >= 2) {
+        window.location.href = `/search.html?q=${encodeURIComponent(query)}`;
+      }
+    }
+  });
+
   searchInput.addEventListener('input', async (e) => {
     const query = e.target.value.trim();
 
@@ -170,7 +199,7 @@ function initSearch() {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       const matches = await response.json();
       console.log('Дані з сервера:', matches);
-      renderSearchResult(matches, resultsContainer);
+      renderSearchResult(matches, resultsContainer, query);
     } catch (err) {
       console.error('Помилка при пошуку:', err);
     }
@@ -184,11 +213,13 @@ function initSearch() {
   });
 }
 
-function renderSearchResult(items, container) {
+function renderSearchResult(items, container, query) {
   if (!items || items.length === 0) {
     container.innerHTML = '<div class="search-item">Нічого не знайдено</div>';
   } else {
-    container.innerHTML = items
+    const maxItemsToShow = 12;
+    const itemsHtml = items
+      .slice(0, maxItemsToShow)
       .map((item) => {
         const imgSrc = item.image.startsWith('http') ? item.image : `images/${item.image}`;
         return `
@@ -201,6 +232,15 @@ function renderSearchResult(items, container) {
         `;
       })
       .join('');
+
+    const viewAllHtml = `
+    <div class="search-view-all">
+    <a href="/search.html?q=${encodeURIComponent(query)}">
+          Переглянути всі результати (${items.length}) ➔
+        </a>
+    </div>
+    `;
+    container.innerHTML = viewAllHtml + itemsHtml;
   }
   container.style.display = 'block';
 }

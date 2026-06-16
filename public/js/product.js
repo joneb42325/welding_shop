@@ -1,5 +1,6 @@
 import { addToCart, updateCartUI } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
+import { loadCategories } from './script.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -216,3 +217,4 @@ function showToast(message, type = 'success') {
 
 initProductPage();
 updateCartUI();
+loadCategories();

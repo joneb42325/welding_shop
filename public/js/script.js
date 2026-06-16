@@ -84,7 +84,7 @@ export function createProductCard(product) {
   return card;
 }
 
-async function loadCategories() {
+export async function loadCategories() {
   const catalogList = document.getElementById('catalog-list');
   const catalogContainer = document.getElementById('catalog-container');
 
@@ -139,7 +139,8 @@ function initMobileSidebar() {
 
 window.addEventListener('DOMContentLoaded', initMobileSidebar);
 
-loadCategories();
+//loadCategories();
 
 updateCartUI();
 updateFavoritesUI();
+loadCategories();

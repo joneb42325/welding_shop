@@ -11,18 +11,7 @@
     <header class="header"></header>
 
     <main class="main">
-      <aside class="sidebar">
-        <div class="cart-box">
-          <h3>🛒 Кошик</h3>
-          <p>Товарів: <span id="cart-count">0</span></p>
-          <p>Сума: <span id="cart-total">0</span> грн</p>
-          <a href="cart.html"><button>Оформити замовлення</button></a>
-        </div>
-        <div class="catalog">
-          <h3>🗂️ Каталог</h3>
-          <ul id="catalog-list"></ul>
-        </div>
-      </aside>
+      <aside class="sidebar"></aside>
 
       <div class="content">
         <h2>Ваші обрані товари</h2>
@@ -41,7 +30,8 @@
     <footer class="footer"></footer>
 
     <script type="module">
-      import { injectHeader, injectFooter } from './js/layouts.js';
+      import { injectSidebar, injectHeader, injectFooter } from './js/layouts.js';
+      injectSidebar();
       injectHeader();
       injectFooter();
     </script>
