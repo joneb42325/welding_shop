@@ -513,16 +513,20 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     price_retail,
     price_company,
     price_wholesale,
+    unit,
     wholesale_threshold,
     stock,
   } = req.body;
 
   const image = req.file ? req.file.path : null;
   const isSpecial = is_special ? 1 : 0;
+
+  const productUnit = unit || 'шт';
+
   const sql = `
     INSERT INTO products
-    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, wholesale_threshold, stock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -539,6 +543,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       price_retail || 0,
       price_company || 0,
       price_wholesale || 0,
+      productUnit,
       wholesale_threshold || 50,
       stock || 0,
     ],
@@ -552,7 +557,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {
   const productId = req.params.id;
 
-  // 1. Отримуємо всі поля з тіла запиту (всі вони тепер в одній таблиці)
+  // 1. Отримуємо всі поля з тіла запиту (включаючи unit)
   const {
     name,
     category_id,
@@ -564,6 +569,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     price_retail,
     price_company,
     price_wholesale,
+    unit, // Дістаємо unit
     wholesale_threshold,
     stock,
   } = req.body;
@@ -574,6 +580,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
   const pRetail = parseFloat(price_retail) || 0;
   const pCompany = parseFloat(price_company) || 0;
   const pWholesale = parseFloat(price_wholesale) || 0;
+  const productUnit = unit || 'шт'; // Фоллбек на 'шт'
   const s = parseInt(stock) || 0;
 
   // Пошук старої картинки для видалення з Cloudinary (якщо завантажено нову)
@@ -585,13 +592,13 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     let query;
     let params;
 
-    // 2. Формуємо єдиний запит UPDATE для таблиці products
+    // 2. Формуємо єдиний запит UPDATE для таблиці products з урахуванням unit
     if (req.file) {
       // Якщо завантажено нове фото
       query = `
-        UPDATE products SET 
-          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, wholesale_threshold = ?, stock = ?, image = ? 
+        UPDATE products SET
+                          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?,
+                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?, image = ?
         WHERE id = ?
       `;
       params = [
@@ -605,6 +612,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         pRetail,
         pCompany,
         pWholesale,
+        productUnit, // Передаємо unit
         wholesale_threshold,
         s,
         req.file.path,
@@ -613,9 +621,9 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     } else {
       // Якщо фото не змінювалось
       query = `
-        UPDATE products SET 
-          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?, 
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, wholesale_threshold = ?, stock = ? 
+        UPDATE products SET
+                          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?,
+                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?
         WHERE id = ?
       `;
       params = [
@@ -629,6 +637,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         pRetail,
         pCompany,
         pWholesale,
+        productUnit, // Передаємо unit
         wholesale_threshold,
         s,
         productId,

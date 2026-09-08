@@ -10,10 +10,6 @@ const form = document.getElementById('edit-product-form');
 const categorySelect = document.getElementById('category-select');
 const preview = document.getElementById('preview');
 const imageInput = document.getElementById('image-input');
-
-const currentName = document.getElementById('current-name');
-const currentCategory = document.getElementById('current-category');
-const currentDescription = document.getElementById('current-description');
 const currentImage = document.getElementById('current-image');
 
 const manufacturerSelect = document.getElementById('manufacturer-select');
@@ -76,6 +72,7 @@ async function loadProduct() {
     document.getElementById('price_company').value = product.price_company || 0;
     document.getElementById('price_wholesale').value = product.price_wholesale || 0;
     document.getElementById('wholesale_threshold').value = product.wholesale_threshold || 0;
+    document.getElementById('unit').value = product.unit || 'шт';
     document.getElementById('stock').value = product.stock || 0;
 
     // Показываем текущее фото

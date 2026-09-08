@@ -39,7 +39,7 @@ async function loadProducts() {
       return;
     }
 
-    products.forEach(async (prod) => {
+    products.forEach((prod) => {
       const tr = document.createElement('tr');
       const pRetail = prod.price_retail || 0;
       const pCompany = prod.price_company || 0;
@@ -48,6 +48,7 @@ async function loadProducts() {
         ? `${prod.name} ${prod.manufacturer_name}`
         : prod.name;
       const stock = prod.stock || 0;
+      const unit = prod.unit || 'шт';
       tr.innerHTML = `
         <td>${fullName}</td>
         <td><img src="${prod.image}"></td>
@@ -60,7 +61,7 @@ async function loadProducts() {
        <td> ${pRetail} </td>
        <td> ${pCompany} </td>
        <td> ${pWholesale} </td>
-       <td> ${stock} шт </td>
+       <td> ${stock} ${unit}</td>
         <td>${prod.wholesale_threshold}</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
         <td>
@@ -69,27 +70,6 @@ async function loadProducts() {
         </td>
       `;
       tableBody.appendChild(tr);
-
-      try {
-        const res = await fetch(`/admin/product-options/product/${prod.id}`);
-        const options = await res.json();
-
-        const statusCell = document.getElementById(`options-status-${prod.id}`);
-        statusCell.classList.remove('status-loading');
-
-        if (options && options.length > 0) {
-          statusCell.innerHTML = `<span class="status-ok">✅ Є (${options.length})</span>`;
-        } else {
-          statusCell.innerHTML = `<span class="status-empty">❌ ПОРОЖНЬО</span>`;
-        }
-      } catch (err) {
-        console.error(`Помилка завантаження опцій для товару ${prod.id}:`, err);
-        const statusCell = document.getElementById(`options-status-${prod.id}`);
-        if (statusCell) {
-          statusCell.classList.remove('status-loading');
-          statusCell.innerHTML = `<span class="status-error">Помилка</span>`;
-        }
-      }
     });
   } catch (err) {
     console.error('Помилка завантаження товарів:', err);
