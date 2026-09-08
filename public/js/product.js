@@ -117,12 +117,12 @@ function renderTable(product) {
   row.innerHTML = `
       <td>${product.diameter || '-'}</td>
       <td>${product.weight || '-'}</td>
-      <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${product.price_retail} грн</td>
-      <td class="price-cell" data-type="company">${product.price_company} грн</td>
+      <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${product.price_retail} грн / ${product.unit}</td>
+      <td class="price-cell" data-type="company">${product.price_company} грн / ${product.unit}</td>
       <!--<td class="price-cell" data-type="wholesale">${product.price_wholesale} грн</td> -->
       <td class="wholesale-info">
-    <span class="price-val">${product.price_wholesale} грн</span>
-    <span class="threshold-text">від ${product.wholesale_threshold} шт</span>
+    <span class="price-val">${product.price_wholesale} грн / ${product.unit}</span>
+    <span class="threshold-text">від ${product.wholesale_threshold} ${product.unit}</span>
   </td>
       <td>
         <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
