@@ -74,6 +74,7 @@ app.get('/products/category/:id', (req, res) => {
     FROM products p
            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
     WHERE p.category_id = ?
+    ORDER BY p.sort_order ASC, p.id DESC
   `;
 
   db.query(query, [categoryId], (err, results) => {
@@ -124,46 +125,6 @@ app.get('/product-options/:id', (req, res) => {
     res.json(results);
   });
 });
-
-/*
-app.get('/api/search', (req, res) => {
-  const searchTerm = req.query.q;
-  if (!searchTerm) return res.json([]);
-
-  // 1. Розбиваємо запит на масив слів (наприклад, ["Дріт", "0.8", "мм"])
-  const words = searchTerm.split(' ').filter((word) => word.length > 0);
-
-  // 2. Будуємо складний запит динамічно
-  // Для кожного слова ми перевіряємо всі ключові колонки
-  let conditions = [];
-  let params = [];
-
-  words.forEach((word) => {
-    const p = `%${word}%`;
-    conditions.push(
-      `(p.name LIKE ? OR p.description LIKE ? OR o.diameter LIKE ? OR m.name LIKE ?)`
-    );
-    params.push(p, p, p, p);
-  });
-
-  const query = `
-    SELECT DISTINCT p.* 
-    FROM products p
-    LEFT JOIN product_options o ON p.id = o.product_id
-    LEFT JOIN manufacturers m ON o.manufacturer_id = m.id
-    WHERE ${conditions.join(' AND ')} 
-    LIMIT 10`;
-
-  db.query(query, params, (err, results) => {
-    if (err) {
-      console.error('Search error:', err);
-      return res.status(500).json({ error: 'Server error' });
-    }
-    res.json(results);
-  });
-});
-
- */
 
 app.get('/products', (req, res) => {
   const ids = req.query.ids;
@@ -474,7 +435,8 @@ app.get('/admin/products', adminAuth, (req, res) => {
     params.push(categoryId);
   }
 
-  query += ` ORDER BY p.id DESC`;
+  /*query += ` ORDER BY p.id DESC`; */
+  query += ` ORDER BY p.sort_order ASC, p.id DESC`;
 
   db.query(query, params, (err, results) => {
     if (err) {
@@ -552,6 +514,32 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       res.status(201).json({ success: true });
     }
   );
+});
+
+app.put('/admin/products/reorder', adminAuth, async (req, res) => {
+  const { items } = req.body;
+
+  if (!Array.isArray(items)) {
+    return res.status(400).json({ error: 'Некоректний формат даних' });
+  }
+
+  try {
+    const promises = items.map((item) => {
+      return new Promise((resolve, reject) => {
+        db.query(
+          'UPDATE products SET sort_order = ? WHERE id = ?',
+          [item.sort_order, item.id],
+          (err) => (err ? reject(err) : resolve())
+        );
+      });
+    });
+
+    await Promise.all(promises);
+    res.json({ message: 'Порядок товарів успішно збережено' });
+  } catch (err) {
+    console.error('Помилка оновлення порядку:', err);
+    res.status(500).json({ error: 'Помилка бази даних' });
+  }
 });
 
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {

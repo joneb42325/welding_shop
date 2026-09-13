@@ -64,6 +64,8 @@ async function loadProducts() {
        <td> ${stock} ${unit}</td>
         <td>${prod.wholesale_threshold}</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
+        <td><input type="number" class="sort-input" data-id="${prod.id}" value="${prod.sort_order || 0}"
+        style="width: 60px; text-align: center;"></td>
         <td>
           <button class="edit-btn" onclick="location.href='product-edit.html?id=${prod.id}'">Редагувати</button>
           <button class="delete-btn" data-id="${prod.id}">Видалити</button>
@@ -85,6 +87,35 @@ tableBody.addEventListener('click', async (e) => {
     }
   }
 });
+
+document.getElementById('save-order-btn').addEventListener('click', async() => {
+  const inputs = document.querySelectorAll('.sort-input');
+  const items = Array.from(inputs).map((input) => ({
+    id: input.dataset.id,
+    sort_order: parseInt(input.value, 10) || 100
+  }));
+
+  try {
+    const response = await fetch(`/admin/products/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ items }),
+    });
+
+    if (response.ok) {
+      alert('Порядок товарів успішно збережено!');
+      location.reload();
+    }
+    else {
+      alert('Помилка при збереженні порядку.');
+    }
+  }
+    catch (err) {
+      console.error('Помилка мережі:', err);
+      alert('Server error');
+    }
+})
 
 window.addEventListener('load', async () => {
   try {

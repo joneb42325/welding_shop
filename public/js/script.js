@@ -12,7 +12,7 @@ export function createProductCard(product) {
 
   const priceDisplay = product.price_retail
     ? `<div class="product-price">
-         ${product.price_retail} <span>грн</span>
+         ${product.price_retail} <span>грн / ${product.unit}</span>
        </div>`
     : `<div class="product-price-empty">Ціна уточнюється</div>`;
 
