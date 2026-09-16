@@ -19,4 +19,3 @@ async function loadSpecialProducts() {
 
 loadSpecialProducts();
 updateCartUI();
-loadCategories();
