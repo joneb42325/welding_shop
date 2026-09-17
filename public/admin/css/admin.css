@@ -1,4 +1,3 @@
-/* Общие стили для всего тела */
 body {
   font-family: Arial, sans-serif;
   background-color: #ffffff;
@@ -75,7 +74,7 @@ button:hover {
 }
 
 .admin-container {
-  max-width: 1200px;
+  width: 1300px;
   margin: 30px auto;
   font-family: sans-serif;
   background: white;
