@@ -1,10 +1,20 @@
 const urlParams = new URLSearchParams(window.location.search);
 const productId = urlParams.get('id');
 
+const categoryId = urlParams.get('categoryId');
+
 if (!productId) {
   alert('ID товару не знайдено');
   window.location.href = 'products.html';
 }
+
+  function redirectBack() {
+    if (categoryId) {
+      window.location.href = `products.html?categoryId=${categoryId}`;
+    } else {
+      window.location.href = 'products.html';
+    }
+  }
 
 const form = document.getElementById('edit-product-form');
 const categorySelect = document.getElementById('category-select');
@@ -14,7 +24,11 @@ const currentImage = document.getElementById('current-image');
 
 const manufacturerSelect = document.getElementById('manufacturer-select');
 
-// Добавляем загрузку производителей
+const cancelBtn = document.getElementById('cancel-btn');
+if (cancelBtn) {
+  cancelBtn.addEventListener('click', redirectBack);
+}
+
 async function loadManufacturers() {
   try {
     const res = await fetch('/admin/manufacturers');
@@ -58,14 +72,12 @@ async function loadProduct() {
     if (!res.ok) throw new Error('Товар не знайдено');
     const product = await res.json();
 
-    // Заполняем основные поля
     document.getElementById('name').value = product.name;
     document.getElementById('description').value = product.description || '';
     document.getElementById('category-select').value = product.category_id;
     document.getElementById('manufacturer-select').value = product.manufacturer_id;
     document.getElementById('is_special').checked = product.is_special === 1;
 
-    // Заполняем поля опций/цен
     document.getElementById('diameter').value = product.diameter || '';
     document.getElementById('weight').value = product.weight || '';
     document.getElementById('price_retail').value = product.price_retail || 0;
@@ -75,7 +87,6 @@ async function loadProduct() {
     document.getElementById('unit').value = product.unit || 'шт';
     document.getElementById('stock').value = product.stock || 0;
 
-    // Показываем текущее фото
     if (product.image) {
       currentImage.src = product.image;
       currentImage.classList.remove('hidden');
@@ -109,7 +120,7 @@ form.addEventListener('submit', async (e) => {
 
     if (res.ok && result.success) {
       alert('Дані успішно оновлено!');
-      window.location.href = 'products.html';
+      redirectBack();
     } else {
       alert('Помилка при збереженні: ' + (result.error || 'невідома помилка'));
     }

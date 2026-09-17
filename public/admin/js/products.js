@@ -49,6 +49,11 @@ async function loadProducts() {
         : prod.name;
       const stock = prod.stock || 0;
       const unit = prod.unit || 'шт';
+
+      const editUrl = categoryFilterId
+        ? `product-edit.html?id=${prod.id}&categoryId=${categoryFilterId}`
+        : `product-edit.html?id=${prod.id}`;
+
       tr.innerHTML = `
         <td>${fullName}</td>
         <td><img src="${prod.image}"></td>
@@ -67,7 +72,7 @@ async function loadProducts() {
         <td><input type="number" class="sort-input" data-id="${prod.id}" value="${prod.sort_order || 0}"
         style="width: 60px; text-align: center;"></td>
         <td>
-          <button class="edit-btn" onclick="location.href='product-edit.html?id=${prod.id}'">Редагувати</button>
+          <button class="edit-btn" onclick="location.href='${editUrl}'">Редагувати</button>
           <button class="delete-btn" data-id="${prod.id}">Видалити</button>
         </td>
       `;
