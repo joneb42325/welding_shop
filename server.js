@@ -26,6 +26,10 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'wolfram_products',
     allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+    /*
+    format: 'webp',
+    transformation: [{ width: 800, crop: 'limit', quality: 'auto' }],
+    */
     public_id: (req, file) => Date.now() + '-' + file.originalname.split('.')[0],
   },
 });
@@ -857,6 +861,47 @@ app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
   });
 });
 
+async function sendTelegramNotification(customer, items, totalPrice, orderId) {
+  const TELEGRAM_TOKEN = '8686983891:AAHvT8WtZoDYFy0E_TiP4q1LHNFfY7HXJYw';
+  const CHAT_ID = '1293237281';
+
+  let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
+  message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
+  message += `📞 <b>Телефон:</b> ${customer.phone}\n`;
+  if (customer.email) message += `📧 <b>Email:</b> ${customer.email}\n`;
+  message += `📍 <b>Доставка:</b> ${customer.delivery}\n`;
+  if (customer.comment) message += `💬 <b>Коментар:</b> ${customer.comment}\n\n`;
+
+  message += `🛒 <b>ТОВАРИ:</b>\n`;
+  items.forEach((item, index) => {
+    message += `${index + 1}. ${item.name} `;
+    if (item.diameter) message += `(Ø ${item.diameter}) `;
+    if (item.weight) message += `[${item.weight}] `;
+
+    const sum = (parseFloat(item.price) * parseInt(item.quantity)).toFixed(2);
+    message += `\n   К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
+  });
+
+  message += `\n💰 <b>Всього до сплати: ${totalPrice} грн</b>`;
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+    console.log(`Повідомлення для замовлення #${orderId} відправлено в ТГ!`);
+  } catch (err) {
+    console.error('Помилка відправки в ТГ:', err);
+  }
+}
+
 // POST - Створення нового замовлення
 app.post('/api/orders', (req, res) => {
   const { customer, items, totalPrice } = req.body;
@@ -911,6 +956,8 @@ app.post('/api/orders', (req, res) => {
           return res.status(500).json({ error: 'Помилка збереження товарів' });
         }
 
+        sendTelegramNotification(customer, items, totalPrice, orderId);
+
         res
           .status(201)
           .json({ success: true, message: 'Замовлення успішно створено', orderId: orderId });
@@ -963,3 +1010,5 @@ app.delete('/admin/orders/:id', adminAuth, (req, res) => {
     res.json({ success: true });
   });
 });
+
+

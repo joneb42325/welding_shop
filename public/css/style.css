@@ -2070,4 +2070,80 @@ textarea:-webkit-autofill:focus {
   .product-image-wrapper .fav-btn {
     touch-action: manipulation;
   }
+
+
+  /* === Адаптація корзини для мобілних пристроїв === */
+
+  .cart-container {
+    overflow-x: hidden;
+  }
+
+  #cart-table,
+  #cart-table tbody,
+  #cart-table tr,
+  #cart-table td {
+    display: block;
+    width: 100%;
+  }
+
+  #cart-table thead {
+    display: none;
+  }
+
+  /* Превращаем каждую строку товара в "карточку" */
+  #cart-table tr {
+    background: rgba(30, 34, 43, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  #cart-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+    text-align: right;
+    background: transparent;
+  }
+
+  #cart-table td:last-child {
+    border-bottom: none;
+    justify-content: center;
+    padding-top: 15px;
+  }
+
+  #cart-table td::before {
+    font-size: 14px;
+    color: #aaa;
+    font-weight: normal;
+    text-align: left;
+    margin-right: 15px;
+  }
+
+  #cart-table td:nth-child(1)::before { content: "Товар:"; }
+  #cart-table td:nth-child(2)::before { content: "Виробник:"; }
+  #cart-table td:nth-child(3)::before { content: "Діаметр:"; }
+  #cart-table td:nth-child(4)::before { content: "Вага:"; }
+  #cart-table td:nth-child(5)::before { content: "Ціна:"; }
+  #cart-table td:nth-child(6)::before { content: "Кількість:"; }
+  #cart-table td:nth-child(7)::before { content: "Сума:"; }
+  #cart-table td:nth-child(8)::before { content: "Тип:"; }
+
+  #cart-table td:nth-child(1) {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  #cart-table td:nth-child(1)::before {
+    margin-bottom: 5px;
+  }
+
+  .quantity-controls {
+    justify-content: flex-end;
+  }
 }

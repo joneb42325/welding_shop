@@ -2,9 +2,20 @@ import { updateCartUI, addToCart } from './cart.js';
 import { updateFavoritesUI } from './favorites.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 
+function getOptimizedImg(url) {
+  if (!url) return '';
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    // Вшиваем трансформации авто-формата (webp), авто-качества и ограничение ширины в 800px
+    return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+  }
+  return url;
+}
+
 export function createProductCard(product) {
   const isAvailable = product.total_stock > 0;
   const inFav = isFavorite(product.id);
+
+  const optimizedImg = getOptimizedImg(product.image);
 
   const displayName = product.manufacturer_name
     ? `${product.name} ${product.manufacturer_name}`
@@ -23,7 +34,8 @@ export function createProductCard(product) {
     <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
     
     <a href="product.html?productId=${product.id}">
-      <img src="${product.image}" alt="${product.name}">
+     <!-- <img src="${product.image}" alt="${product.name}"> -->
+     <img src="${optimizedImg}" loading="lazy" width="250" height="250" alt="${product.name}">
       <h3>${displayName}</h3>
     </a>
     <!--<p class="price">${priceDisplay}</p> -->
@@ -109,8 +121,11 @@ export async function loadCategories() {
         const card = document.createElement('div');
         card.classList.add('catalog-item');
 
+        const optimizedCatImg = getOptimizedImg(category.image);
+
         card.innerHTML = `
-          <img src="${category.image}" alt="${category.name}">
+          <!-- <img src="${category.image}" alt="${category.name}"> -->
+          <img src="${optimizedCatImg}" loading="lazy" width="200" height="200" alt="${category.name}">
           <a href="category.html?categoryId=${category.id}">
             ${category.name}
           </a>
