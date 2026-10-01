@@ -6,7 +6,7 @@ import {
   updateCartUI,
   clearCart,
 } from './cart.js';
-import { loadCategories } from './script.js';
+import { loadCategories, getOptimizedImg } from './script.js';
 
 refreshCart();
 
@@ -59,9 +59,10 @@ function renderCartPage() {
     const priceClass = isWholesale ? 'opt-price' : '';
 
     row.innerHTML = `
-      <td>
-        <a href="product.html?productId=${item.productId}">
-            ${item.name}
+      <td class="cart-product-cell">
+        <a href="product.html?productId=${item.productId}" class="cart-product-link">
+            <img src="${getOptimizedImg(item.image)}" alt="${item.name}">
+            <span>${item.name}</span>
         </a>
       </td>
       <td>${item.manufacturer}</td>

@@ -2,7 +2,7 @@ import { updateCartUI, addToCart } from './cart.js';
 import { updateFavoritesUI } from './favorites.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 
-function getOptimizedImg(url) {
+export function getOptimizedImg(url) {
   if (!url) return '';
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     // Вшиваем трансформации авто-формата (webp), авто-качества и ограничение ширины в 800px
