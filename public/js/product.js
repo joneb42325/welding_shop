@@ -1,6 +1,6 @@
 import { addToCart, updateCartUI } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { loadCategories } from './script.js';
+import { loadCategories, getOptimizedImg } from './script.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -51,7 +51,7 @@ function renderProductInfo(product) {
 
   // Зображення
   const productImg = document.getElementById('product-image');
-  productImg.src = product.image;
+  productImg.src = getOptimizedImg(product.image);;
   productImg.alt = `Фото товару: ${displayName}`;
 
   // Кнопка обраного
@@ -149,7 +149,7 @@ function renderTable(product) {
       addToCart({
         productId: product.id,
         name: product.name,
-        image: product.image,
+        image: getOptimizedImg(product.image),
         manufacturer: product.manufacturer_name || '',
         diameter: product.diameter || '',
         weight: product.weight || '',

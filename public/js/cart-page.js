@@ -65,9 +65,6 @@ function renderCartPage() {
             <span>${item.name}</span>
         </a>
       </td>
-      <td>${item.manufacturer}</td>
-      <td>${item.diameter}</td>
-      <td>${item.weight}</td>
       <td class="${priceClass}">${price.toFixed(2)} грн</td>
       <td>
       <div class="quantity-controls">
