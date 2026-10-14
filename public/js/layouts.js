@@ -3,6 +3,7 @@ export function injectSidebar() {
   if (!sidebar) return;
 
   sidebar.innerHTML = `
+  <!--
     <div class="cart-box">
       <h2>🛒 Кошик</h2>
       <p>Товарів: <span id="cart-count">0</span></p>
@@ -11,11 +12,11 @@ export function injectSidebar() {
         <button>Оформити замовлення</button>
       </a>
     </div>
-
     <div class="catalog">
       <h2>🗂️ Каталог</h2>
       <ul id="catalog-list"></ul>
     </div>
+        -->
   `;
 }
 

@@ -187,6 +187,7 @@ checkoutForm.addEventListener('submit', async (e) => {
   const customerData = Object.fromEntries(formData.entries());
 
   const cartItems = getCart();
+  const totalSum = getCartTotal();
 
   const orderPayload = {
     customer: customerData,
@@ -204,6 +205,14 @@ checkoutForm.addEventListener('submit', async (e) => {
     });
 
     if (res.ok) {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'conversion', {
+          send_to: 'AW-18487453527/lSUhCIqu-4wdENfOwO9E',
+          value: parseFloat(totalSum) || 1.0,
+          currency: 'UAH',
+          transaction_id: '',
+        });
+      }
       alert("Дякуємо! Ваше замовлення успішно прийнято. Ми зв'яжемося з вами найближчим часом.");
       clearCart();
       refreshCart();
