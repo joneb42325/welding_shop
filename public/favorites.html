@@ -6,6 +6,23 @@
     <title>Обрані товари | Wolfram Shop</title>
     <link rel="icon" type="image/png" href="images/logo.webp" />
     <link rel="stylesheet" href="/css/style.css" />
+    <!-- Вставляти у <head> після gtag.js -->
+    <script>
+      function gtag_report_conversion(url) {
+        var callback = function () {
+          if (typeof(url) != 'undefined') {
+            window.location = url;
+          }
+        };
+        gtag('event', 'conversion', {
+          'send_to': 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
+          'value': 1.0,
+          'currency': 'UAH',
+          'event_callback': callback
+        });
+        return false;
+      }
+    </script>
   </head>
   <body>
     <header class="header"></header>

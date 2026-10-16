@@ -2,8 +2,9 @@ export function injectSidebar() {
   const sidebar = document.querySelector('aside.sidebar');
   if (!sidebar) return;
 
+
   sidebar.innerHTML = `
-  <!--
+<!--
     <div class="cart-box">
       <h2>🛒 Кошик</h2>
       <p>Товарів: <span id="cart-count">0</span></p>
@@ -17,7 +18,6 @@ export function injectSidebar() {
       <h2>🗂️ Каталог</h2>
       <ul id="catalog-list"></ul>
     </div>
-
   `;
 }
 
@@ -40,36 +40,37 @@ export function injectHeader() {
         <a href="/about.html">Про нас</a>
         <a href="/delivery.html">Доставка і оплата</a>
       </nav>
-<div class="header-right">
-<div class="search-container">
-    <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
-    <div id="search-results" class="search-results-dropdown"></div>
-  </div>
-  <a href="/favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
-  <a href="/cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
-</div>
-
+      <div class="header-right">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
+            <div id="search-results" class="search-results-dropdown"></div>
+        </div>
+        <a href="/favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
+        <a href="/cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
+      </div>
     `;
+
   document.body.insertAdjacentHTML(
     'beforeend',
     `
     <div class="mobile-overlay"></div>
     <div class="mobile-menu">
-    <div class="mobile-menu-brand">
-        <p>WOLFRAM</p>
-    </div>
+      <div class="mobile-menu-brand">
+          <p>WOLFRAM</p>
+      </div>
       <a href="/index.html">🏠 Головна</a>
       <a href="/about.html">ℹ️ Про нас</a>
       <a href="/delivery.html">🚚 Доставка і оплата</a>
       <hr>
       <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
       <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
-       <div class="mobile-contacts">
-    <h4>Контакти</h4>
-    <a href="tel:+380634383823">📞 +38 (063) 438-38-23</a>
-    <a href="mailto:dgeeek1990@gmail.com">📧 dgeeek1990@gmail.com</a>
-    <div>📍 м. Харків</div>
-    </div>
+      <div class="mobile-contacts">
+        <h4>Контакти</h4>
+        <!-- Клік по телефону у мобільному меню -->
+        <a href="tel:+380634383823" onclick="return gtag_report_conversion('tel:+380634383823');">📞 +38 (063) 438-38-23</a>
+        <a href="mailto:dgeeek1990@gmail.com">📧 dgeeek1990@gmail.com</a>
+        <div>📍 м. Харків</div>
+      </div>
     </div>
   `
   );
@@ -103,7 +104,8 @@ export function injectFooter() {
         </div>
         <div class="footer-column">
           <h4>Контакти</h4>
-          <p>Телефон: +380 63 438 3823 Євген</p>
+          <!-- Номер у футері зроблено клікабельним посиланням з відстеженням -->
+          <p>Телефон: <a href="tel:+380634383823" onclick="return gtag_report_conversion('tel:+380634383823');">+380 63 438 3823</a> Євген</p>
           <p>Email: dgeeek1990@gmail.com</p>
           <p>Адреса: Харків, Україна</p>
         </div>
@@ -132,24 +134,23 @@ export function injectFooter() {
       <a href="viber://chat?number=%2B380634383823" class="contact-item viber">
         <img src="/images/logos/viber-tile.svg" alt="Viber" width="28" height="28">
       </a>
-      <!-- Звичайний дзвінок -->
-      <a href="tel:+380634383823" class="contact-item phone">
+      <!-- Звичайний дзвінок із кнопкою віджету -->
+      <a href="tel:+380634383823" class="contact-item phone" onclick="return gtag_report_conversion('tel:+380634383823');">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 00-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/></svg>
       </a>
     </div>
-<button class="contact-main-btn" id="contact-toggle">
-  <div class="main-btn-content">
-    <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
-    </svg>
-    <span>КНОПКА<br>ЗВ'ЯЗКУ</span>
-  </div>
-</button>
+    <button class="contact-main-btn" id="contact-toggle">
+      <div class="main-btn-content">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="white">
+          <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+        </svg>
+        <span>КНОПКА<br>ЗВ'ЯЗКУ</span>
+      </div>
+    </button>
   </div>
   `
   );
 
-  // Додаємо логіку відкриття/закриття меню
   const contactToggle = document.getElementById('contact-toggle');
   const contactWidget = document.querySelector('.contact-widget');
 
@@ -158,7 +159,6 @@ export function injectFooter() {
       contactWidget.classList.toggle('active');
     });
 
-    // Закривати меню при кліку в будь-якому іншому місці
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.contact-widget')) {
         contactWidget.classList.remove('active');
@@ -193,14 +193,12 @@ function initSearch() {
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       const matches = await response.json();
-      console.log('Дані з сервера:', matches);
       renderSearchResult(matches, resultsContainer, query);
     } catch (err) {
       console.error('Помилка при пошуку:', err);
     }
   });
 
-  // Закриття при кліку поза пошуком
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.search-container')) {
       resultsContainer.style.display = 'none';
@@ -230,9 +228,9 @@ function renderSearchResult(items, container, query) {
 
     const viewAllHtml = `
     <div class="search-view-all">
-    <a href="/search.html?q=${encodeURIComponent(query)}">
-          Переглянути всі результати (${items.length}) ➔
-        </a>
+      <a href="/search.html?q=${encodeURIComponent(query)}">
+        Переглянути всі результати (${items.length}) ➔
+      </a>
     </div>
     `;
     container.innerHTML = viewAllHtml + itemsHtml;
