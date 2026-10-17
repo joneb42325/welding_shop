@@ -96,10 +96,17 @@ app.get('/categories/:id/info', (req, res) => {
 });
 
 app.get('/categories', (req, res) => {
-  const query = 'SELECT * FROM categories';
+  // Рахуємо кількість товарів для кожної категорії через LEFT JOIN
+  const query = `
+    SELECT c.*, COUNT(p.id) AS product_count
+    FROM categories c
+    LEFT JOIN products p ON c.id = p.category_id
+    GROUP BY c.id
+  `;
 
   db.query(query, (err, results) => {
     if (err) {
+      console.error('Помилка отримання категорій:', err);
       return res.status(500).json({ error: 'Server error' });
     }
 

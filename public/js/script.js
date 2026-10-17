@@ -106,7 +106,9 @@ export async function loadCategories() {
     const res = await fetch('/categories');
     const categories = await res.json();
 
-    categories.forEach((category) => {
+    const activeCategories = categories.filter((category) => category.product_count > 0);
+
+    activeCategories.forEach((category) => {
       if (catalogList) {
         const li = document.createElement('li');
         li.innerHTML = `
