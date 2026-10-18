@@ -870,7 +870,8 @@ app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
 
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = '8686983891:AAHvT8WtZoDYFy0E_TiP4q1LHNFfY7HXJYw';
-  const CHAT_ID = '1293237281';
+  // Масив із двома CHAT_ID (твій та Жені)
+  const CHAT_IDS = ['1293237281', '5106522924'];
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
@@ -893,19 +894,22 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
 
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
-  try {
-    await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: CHAT_ID,
-        text: message,
-        parse_mode: 'HTML',
-      }),
-    });
-    console.log(`Повідомлення для замовлення #${orderId} відправлено в ТГ!`);
-  } catch (err) {
-    console.error('Помилка відправки в ТГ:', err);
+  // Цикл для відправки повідомлення у всі вказані чати
+  for (const chatId of CHAT_IDS) {
+    try {
+      await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message,
+          parse_mode: 'HTML',
+        }),
+      });
+      console.log(`Повідомлення для замовлення #${orderId} відправлено в ТГ (${chatId})!`);
+    } catch (err) {
+      console.error(`Помилка відправки в ТГ для ${chatId}:`, err);
+    }
   }
 }
 
