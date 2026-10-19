@@ -1106,9 +1106,9 @@ function calculateDynamicPriceServer(item, quantity) {
     markup = t1;
   } else if (qty >= 5 && qty < 10) {
     markup = t2;
-  } else if (qty >= 10 && qty < 40) {
+  } else if (qty >= 10 && qty < 50) {
     markup = t3;
-  } else if (qty >= 40 && qty < threshold) {
+  } else if (qty >= 50 && qty < threshold) {
     markup = 0.0;
   } else if (qty >= threshold) {
     markup = 0.0;
