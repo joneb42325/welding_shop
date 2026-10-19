@@ -15,7 +15,7 @@ export function injectSidebar() {
     </div>
     -->
     <div class="catalog">
-      <h2>🗂️ Каталог</h2>
+      <h2>🗂️ Категорії</h2>
       <ul id="catalog-list"></ul>
     </div>
   `;

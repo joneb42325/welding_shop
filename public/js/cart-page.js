@@ -5,6 +5,7 @@ import {
   changeQuantity,
   updateCartUI,
   clearCart,
+  calculateDynamicPrice,
 } from './cart.js';
 import { loadCategories, getOptimizedImg } from './script.js';
 
@@ -26,7 +27,7 @@ function renderCartPage() {
         <p>Схоже, ви ще нічого не додали. Завітайте до нашого каталогу!</p>
         <a href="/index.html" class="btn-back">Повернутися до покупок</a>
       </div>
-      </div>
+    </div>
     `;
     cartContainer.style.background = 'none';
     cartContainer.style.border = 'none';
@@ -39,24 +40,48 @@ function renderCartPage() {
   cart.forEach((item, index) => {
     const row = document.createElement('tr');
 
-    const threshold = parseInt(item.wholesale_threshold) || 999999;
-    const isWholesale = item.quantity >= threshold;
-
-    const price = parseFloat(item.price) || 0;
-    const total = price * item.quantity;
-
+    let price = parseFloat(item.price) || 0;
+    let total = 0;
     let statusContent = '';
-    if (isWholesale) {
-      statusContent = `<strong class="opt-badge">ОПТ</strong>`;
-    } else {
-      statusContent = formatType(item.selectedType);
+    let priceClass = '';
 
-      if (threshold < 999999) {
-        statusContent += `<br><span class="opt-hint">Опт від ${threshold} шт</span>`;
+    if (item.has_dynamic_pricing) {
+      const calc = calculateDynamicPrice(item, item.quantity);
+      price = calc.pricePerKg;
+      total = calc.totalPrice;
+
+      // Визначаємо, чи досягнуто поріг опту
+      const threshold = parseInt(item.wholesale_threshold) || 999999;
+      const isWholesale = item.quantity >= threshold;
+
+      let typeLabel = isWholesale ? 'ОПТ' : formatType(item.selectedType);
+
+      if (isWholesale) {
+        priceClass = 'opt-price';
+        // Якщо опт досягнуто, виводимо ОПТ і порізку
+        statusContent = `<strong class="opt-badge">ОПТ</strong> <span style="font-size: 0.9em; opacity: 0.8;">/ Порізка +${calc.cutFee} грн</span>`;
+      } else {
+        // Якщо опт НЕ досягнуто, виводимо ЧП, порізку, і на новому рядку підказку
+        statusContent = `${typeLabel} <span style="font-size: 0.9em; opacity: 0.8;">/ Порізка +${calc.cutFee} грн</span>`;
+        if (threshold < 999999) {
+          statusContent += `<br><span class="opt-hint">Опт від ${threshold} кг</span>`;
+        }
+      }
+    } else {
+      total = price * item.quantity;
+      const threshold = parseInt(item.wholesale_threshold) || 999999;
+      const isWholesale = item.quantity >= threshold;
+
+      if (isWholesale) {
+        statusContent = `<strong class="opt-badge">ОПТ</strong>`;
+        priceClass = 'opt-price';
+      } else {
+        statusContent = formatType(item.selectedType);
+        if (threshold < 999999) {
+          statusContent += `<br><span class="opt-hint">Опт від ${threshold} шт</span>`;
+        }
       }
     }
-
-    const priceClass = isWholesale ? 'opt-price' : '';
 
     row.innerHTML = `
       <td class="cart-product-cell">
@@ -65,20 +90,21 @@ function renderCartPage() {
             <span>${item.name}</span>
         </a>
       </td>
-      <td class="${priceClass}">${price.toFixed(2)} грн</td>
+      <td class="${priceClass}">${price.toFixed(2)} грн / ${item.has_dynamic_pricing ? 'кг' : 'шт'}</td>
       <td>
-      <div class="quantity-controls">
-        <button class="qty-btn minus">-</button>
-        <input type="number" class="qty-input" value="${item.quantity}" min="1" step="1">
-        <button class="qty-btn plus">+</button>
+        <div class="quantity-controls">
+          <button class="qty-btn minus">-</button>
+          <input type="number" class="qty-input" value="${item.quantity}" min="1" step="1">
+          <button class="qty-btn plus">+</button>
         </div>
        </td>
-      <td>${total.toFixed(2)} грн</td>
-        <td>${statusContent}</td>
+      <td><strong>${total.toFixed(2)} грн</strong></td>
+      <td>${statusContent}</td>
       <td>
         <button class="delete-btn">❌</button>
       </td>
     `;
+
     const qtyInput = row.querySelector('.qty-input');
     const minusBtn = row.querySelector('.qty-btn.minus');
     const plusBtn = row.querySelector('.qty-btn.plus');
@@ -86,21 +112,16 @@ function renderCartPage() {
 
     qtyInput.addEventListener('change', () => {
       let newQty = parseInt(qtyInput.value);
-
-      if (isNaN(newQty) || newQty < 1) {
-        newQty = 1;
-      }
+      if (isNaN(newQty) || newQty < 1) newQty = 1;
       const diff = newQty - item.quantity;
-
       changeQuantity(index, diff);
       refreshCart();
     });
 
     qtyInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        qtyInput.blur(); // Прибираємо фокус, що викличе подію 'change'
-      }
+      if (e.key === 'Enter') qtyInput.blur();
     });
+
     minusBtn.addEventListener('click', () => {
       changeQuantity(index, -1);
       refreshCart();
@@ -117,8 +138,10 @@ function renderCartPage() {
         refreshCart();
       }
     });
+
     cartTableBody.appendChild(row);
   });
+
   document.getElementById('cart-page-total').textContent = getCartTotal();
 }
 
@@ -131,7 +154,7 @@ function formatType(type) {
     case 'wholesale':
       return 'Опт';
     default:
-      return type;
+      return type || 'ЧП';
   }
 }
 
@@ -142,27 +165,28 @@ function refreshCart() {
 
 const checkoutModal = document.getElementById('checkout-modal');
 const closeModalBtn = document.querySelector('.close-modal');
-const orderButton = document.querySelector('.order-button'); // Ваша кнопка "Підтвердити замовлення"
+const orderButton = document.querySelector('.order-button');
 const checkoutForm = document.getElementById('checkout-form');
 const modalTotalPrice = document.getElementById('modal-total-price');
 
-// Відкрити модалку
-orderButton.addEventListener('click', () => {
-  const cart = getCart();
-  if (cart.length === 0) {
-    alert('Ваша корзина порожня!');
-    return;
-  }
-  modalTotalPrice.textContent = getCartTotal();
-  checkoutModal.classList.remove('hidden');
-});
+if (orderButton) {
+  orderButton.addEventListener('click', () => {
+    const cart = getCart();
+    if (cart.length === 0) {
+      alert('Ваша корзина порожня!');
+      return;
+    }
+    modalTotalPrice.textContent = getCartTotal();
+    checkoutModal.classList.remove('hidden');
+  });
+}
 
-// Закрити модалку
-closeModalBtn.addEventListener('click', () => {
-  checkoutModal.classList.add('hidden');
-});
+if (closeModalBtn) {
+  closeModalBtn.addEventListener('click', () => {
+    checkoutModal.classList.add('hidden');
+  });
+}
 
-// Закрити при кліку поза вікном
 window.addEventListener('click', (e) => {
   if (e.target === checkoutModal) {
     checkoutModal.classList.add('hidden');
@@ -179,53 +203,54 @@ if (clearBtn) {
   });
 }
 
-checkoutForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+if (checkoutForm) {
+  checkoutForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  // Збираємо дані клієнта
-  const formData = new FormData(checkoutForm);
-  const customerData = Object.fromEntries(formData.entries());
+    const formData = new FormData(checkoutForm);
+    const customerData = Object.fromEntries(formData.entries());
 
-  const cartItems = getCart();
-  const totalSum = getCartTotal();
+    const cartItems = getCart();
+    const totalSum = getCartTotal();
 
-  const orderPayload = {
-    customer: customerData,
-    items: cartItems,
-    totalPrice: getCartTotal(),
-  };
+    const orderPayload = {
+      customer: customerData,
+      items: cartItems,
+      totalPrice: totalSum,
+    };
 
-  try {
-    const res = await fetch('/api/orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(orderPayload),
-    });
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderPayload),
+      });
 
-    if (res.ok) {
-      if (typeof window.gtag === 'function') {
-        window.gtag('event', 'conversion', {
-          send_to: 'AW-18487453527/lSUhCIqu-4wdENfOwO9E',
-          value: parseFloat(totalSum) || 1.0,
-          currency: 'UAH',
-          transaction_id: '',
-        });
+      if (res.ok) {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'conversion', {
+            send_to: 'AW-18487453527/lSUhCIqu-4wdENfOwO9E',
+            value: parseFloat(totalSum) || 1.0,
+            currency: 'UAH',
+            transaction_id: '',
+          });
+        }
+        alert("Дякуємо! Ваше замовлення успішно прийнято. Ми зв'яжемося з вами найближчим часом.");
+        clearCart();
+        refreshCart();
+        checkoutModal.classList.add('hidden');
+        checkoutForm.reset();
+      } else {
+        const errorData = await res.json();
+        alert('Помилка при оформленні: ' + (errorData.error || 'Спробуйте пізніше'));
       }
-      alert("Дякуємо! Ваше замовлення успішно прийнято. Ми зв'яжемося з вами найближчим часом.");
-      clearCart();
-      refreshCart();
-      checkoutModal.classList.add('hidden');
-      checkoutForm.reset();
-    } else {
-      const errorData = await res.json();
-      alert('Помилка при оформленні: ' + (errorData.error || 'Спробуйте пізніше'));
+    } catch (err) {
+      console.error('Order error:', err);
+      alert("Помилка з'єднання з сервером. Перевірте інтернет та спробуйте ще раз.");
     }
-  } catch (err) {
-    console.error('Order error:', err);
-    alert("Помилка з'єднання з сервером. Перевірте інтернет та спробуйте ще раз.");
-  }
-});
+  });
+}
 
 loadCategories();

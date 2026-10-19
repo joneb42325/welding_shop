@@ -145,7 +145,7 @@ function renderTable(product) {
     row.querySelector('.add-to-cart').addEventListener('click', () => {
       const price = product[`price_${selectedType}`];
       showToast(`${currentProduct.name} додано до кошика!`);
-
+      console.log('Данные товара с сервера:', product);
       addToCart({
         productId: product.id,
         name: product.name,
@@ -155,10 +155,16 @@ function renderTable(product) {
         weight: product.weight || '',
         selectedType,
         price,
-
         price_retail: product.price_retail,
         price_wholesale: product.price_wholesale,
         wholesale_threshold: product.wholesale_threshold,
+
+        // НОВІ ПОЛЯ, ЩОБ ПРАЦЮВАЛА ФОРМУЛА:
+        has_dynamic_pricing: product.has_dynamic_pricing,
+        markup_tier1: product.markup_tier1,
+        markup_tier2: product.markup_tier2,
+        markup_tier3: product.markup_tier3,
+        cut_fee: product.cut_fee,
       });
       updateCartUI();
     });

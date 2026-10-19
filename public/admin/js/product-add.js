@@ -74,5 +74,14 @@ window.addEventListener('load', async () => {
   }
 });
 
+const dynamicCheckbox = document.getElementById('has_dynamic_pricing');
+const dynamicSettings = document.getElementById('dynamic-pricing-settings');
+
+if (dynamicCheckbox && dynamicSettings) {
+  dynamicCheckbox.addEventListener('change', (e) => {
+    dynamicSettings.style.display = e.target.checked ? 'block' : 'none';
+  });
+}
+
 loadCategories();
 loadManufacturers();

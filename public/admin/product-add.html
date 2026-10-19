@@ -95,6 +95,34 @@
           </label>
         </div>
 
+        <div class="form-group checkbox-group">
+          <label>
+            <span>Розраховувати ціну від об'єму (порізка від 1 кг)</span>
+            <input type="checkbox" name="has_dynamic_pricing" id="has_dynamic_pricing" value="true" />
+          </label>
+        </div>
+
+        <!-- Новий блок з налаштуваннями формули -->
+        <div id="dynamic-pricing-settings" style="display: none; border: 1px solid #ddd; padding: 15px; margin-top: 10px; border-radius: 8px;">
+          <h4 style="margin-top:0;">Налаштування формули об'єму</h4>
+          <div class="form-group">
+            <label>Націнка 1-5 кг (напр. 0.75 = 75%)</label>
+            <input type="number" step="0.01" id="markup_tier1" name="markup_tier1" value="0.75" />
+          </div>
+          <div class="form-group">
+            <label>Націнка 5-10 кг (напр. 0.50 = 50%)</label>
+            <input type="number" step="0.01" id="markup_tier2" name="markup_tier2" value="0.50" />
+          </div>
+          <div class="form-group">
+            <label>Націнка 10-40 кг (напр. 0.25 = 25%)</label>
+            <input type="number" step="0.01" id="markup_tier3" name="markup_tier3" value="0.25" />
+          </div>
+          <div class="form-group">
+            <label>Вартість порізки (грн)</label>
+            <input type="number" id="cut_fee" name="cut_fee" value="40" />
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Зображення</label>
           <input type="file" id="image-input" name="image" required />

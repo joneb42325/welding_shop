@@ -480,6 +480,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     category_id,
     description,
     is_special,
+    has_dynamic_pricing,
     manufacturer_id,
     diameter,
     weight,
@@ -489,17 +490,21 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     unit,
     wholesale_threshold,
     stock,
+    markup_tier1,
+    markup_tier2,
+    markup_tier3,
+    cut_fee,
   } = req.body;
 
   const image = req.file ? req.file.path : null;
   const isSpecial = is_special ? 1 : 0;
-
+  const hasDynamic = has_dynamic_pricing ? 1 : 0;
   const productUnit = unit || 'шт';
 
   const sql = `
-    INSERT INTO products
-    (name, category_id, description, image, is_special, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO products
+      (name, category_id, description, image, is_special, has_dynamic_pricing, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock, markup_tier1, markup_tier2, markup_tier3, cut_fee)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -510,6 +515,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       description,
       image,
       isSpecial,
+      hasDynamic,
       manufacturer_id,
       diameter,
       weight,
@@ -519,6 +525,10 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       productUnit,
       wholesale_threshold || 50,
       stock || 0,
+      markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.75,
+      markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.5,
+      markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.25,
+      cut_fee !== undefined ? parseInt(cut_fee) : 40,
     ],
     (err) => {
       if (err) return res.status(500).json({ error: 'Помилка БД' });
@@ -556,31 +566,47 @@ app.put('/admin/products/reorder', adminAuth, async (req, res) => {
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {
   const productId = req.params.id;
 
-  // 1. Отримуємо всі поля з тіла запиту (включаючи unit)
+  // 1. Отримуємо всі поля з тіла запиту
   const {
     name,
     category_id,
     description,
     is_special,
+    has_dynamic_pricing,
     manufacturer_id,
     diameter,
     weight,
     price_retail,
     price_company,
     price_wholesale,
-    unit, // Дістаємо unit
+    unit,
     wholesale_threshold,
     stock,
+    markup_tier1,
+    markup_tier2,
+    markup_tier3,
+    cut_fee,
   } = req.body;
 
   // Форматування даних для БД
   const specialVal = is_special ? 1 : 0;
+  const hasDynamic =
+    has_dynamic_pricing === 'true' || has_dynamic_pricing === '1' || has_dynamic_pricing === 1
+      ? 1
+      : 0;
   const mId = manufacturer_id ? parseInt(manufacturer_id) : null;
   const pRetail = parseFloat(price_retail) || 0;
   const pCompany = parseFloat(price_company) || 0;
   const pWholesale = parseFloat(price_wholesale) || 0;
-  const productUnit = unit || 'шт'; // Фоллбек на 'шт'
+  const productUnit = unit || 'шт';
+  const wThreshold = parseInt(wholesale_threshold) || 50;
   const s = parseInt(stock) || 0;
+
+  // Парсинг полів формули
+  const mTier1 = markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.75;
+  const mTier2 = markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.5;
+  const mTier3 = markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.25;
+  const cFee = cut_fee !== undefined ? parseInt(cut_fee) : 40;
 
   // Пошук старої картинки для видалення з Cloudinary (якщо завантажено нову)
   db.query('SELECT image FROM products WHERE id = ?', [productId], async (err, results) => {
@@ -591,13 +617,14 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     let query;
     let params;
 
-    // 2. Формуємо єдиний запит UPDATE для таблиці products з урахуванням unit
+    // 2. Формуємо єдиний запит UPDATE з урахуванням нових полів формули
     if (req.file) {
       // Якщо завантажено нове фото
       query = `
         UPDATE products SET
-                          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?,
-                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?, image = ?
+          name = ?, category_id = ?, description = ?, is_special = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
+          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?, image = ?
         WHERE id = ?
       `;
       params = [
@@ -605,15 +632,20 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         category_id,
         description,
         specialVal,
+        hasDynamic,
         mId,
         diameter,
         weight,
         pRetail,
         pCompany,
         pWholesale,
-        productUnit, // Передаємо unit
-        wholesale_threshold,
+        productUnit,
+        wThreshold,
         s,
+        mTier1,
+        mTier2,
+        mTier3,
+        cFee,
         req.file.path,
         productId,
       ];
@@ -621,8 +653,9 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       // Якщо фото не змінювалось
       query = `
         UPDATE products SET
-                          name = ?, category_id = ?, description = ?, is_special = ?, manufacturer_id = ?,
-                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?
+          name = ?, category_id = ?, description = ?, is_special = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
+          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?
         WHERE id = ?
       `;
       params = [
@@ -630,20 +663,25 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         category_id,
         description,
         specialVal,
+        hasDynamic,
         mId,
         diameter,
         weight,
         pRetail,
         pCompany,
         pWholesale,
-        productUnit, // Передаємо unit
-        wholesale_threshold,
+        productUnit,
+        wThreshold,
         s,
+        mTier1,
+        mTier2,
+        mTier3,
+        cFee,
         productId,
       ];
     }
 
-    // 3. Виконуємо оновлення
+    // 3. Виконуємо оновлення в БД
     db.query(query, params, async (updateErr) => {
       if (updateErr) {
         console.error('Помилка оновлення:', updateErr);
@@ -871,7 +909,7 @@ app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = '8686983891:AAHvT8WtZoDYFy0E_TiP4q1LHNFfY7HXJYw';
 
-  const CHAT_IDS = ['1293237281', '5106522924'];
+  const CHAT_IDS = ['1293237281', '1293237281'];
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
@@ -884,17 +922,21 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   items.forEach((item, index) => {
     message += `${index + 1}. ${item.name} `;
     if (item.diameter) message += `(Ø ${item.diameter}) `;
-    if (item.weight) message += `[${item.weight}] `;
+    if (item.weight && !item.has_dynamic_pricing) message += `[${item.weight}] `;
 
-    const sum = (parseFloat(item.price) * parseInt(item.quantity)).toFixed(2);
-    message += `\n   К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
+    if (item.has_dynamic_pricing) {
+      const calc = calculateDynamicPriceServer(item, item.quantity);
+      message += `\n К-ть: ${item.quantity} кг (${calc.pricePerKg} грн/кг + порізка ${calc.cutFee} грн) | Сума: ${calc.totalPrice} грн\n`;
+    } else {
+      const sum = (parseFloat(item.price) * parseInt(item.quantity)).toFixed(2);
+      message += `\n   К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
+    }
   });
 
   message += `\n💰 <b>Всього до сплати: ${totalPrice} грн</b>`;
 
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
-  // Цикл для відправки повідомлення у всі вказані чати
   for (const chatId of CHAT_IDS) {
     try {
       await fetch(url, {
@@ -917,6 +959,31 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
 app.post('/api/orders', (req, res) => {
   const { customer, items, totalPrice } = req.body;
 
+  let calculatedTotalPrice = 0;
+
+  const validatedItems = items.map((item) => {
+    let finalItemPrice = parseFloat(item.price) || 0;
+
+    if (item.has_dynamic_pricing) {
+
+      const calc = calculateDynamicPriceServer(
+        item,
+        item.quantity,
+        item.price_retail || item.price
+      );
+
+      finalItemPrice = calc.pricePerKg; // цена за 1 кг с учетом наценки
+      calculatedTotalPrice += calc.totalPrice; // добавляем полную стоимость позиции (+40 грн резки)
+    } else {
+      calculatedTotalPrice += finalItemPrice * parseInt(item.quantity);
+    }
+
+    return {
+      ...item,
+      price: finalItemPrice,
+    };
+  });
+
   // 1. Спочатку створюємо запис у таблиці orders
   const insertOrderQuery = `
     INSERT INTO orders (customer_name, customer_phone, customer_email, delivery_address, comment, total_price) 
@@ -931,7 +998,7 @@ app.post('/api/orders', (req, res) => {
       customer.email || '',
       customer.delivery,
       customer.comment || '',
-      totalPrice,
+      calculatedTotalPrice,
     ],
     (err, orderResult) => {
       if (err) {
@@ -949,7 +1016,7 @@ app.post('/api/orders', (req, res) => {
     `;
 
       // Формуємо масив масивів для масової вставки (Bulk Insert) у MySQL
-      const itemsData = items.map((item) => [
+      const itemsData = validatedItems.map((item) => [
         orderId,
         item.productId,
         item.name,
@@ -967,7 +1034,7 @@ app.post('/api/orders', (req, res) => {
           return res.status(500).json({ error: 'Помилка збереження товарів' });
         }
 
-        sendTelegramNotification(customer, items, totalPrice, orderId);
+        sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId);
 
         res
           .status(201)
@@ -1021,5 +1088,40 @@ app.delete('/admin/orders/:id', adminAuth, (req, res) => {
     res.json({ success: true });
   });
 });
+
+function calculateDynamicPriceServer(item, quantity) {
+  const qty = parseFloat(quantity) || 1;
+  let base = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+
+  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
+  const t1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.75;
+  const t2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.5;
+  const t3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.25;
+
+  const threshold = parseInt(item.wholesale_threshold) || 50;
+
+  let markup = 0;
+
+  if (qty >= 1 && qty < 5) {
+    markup = t1;
+  } else if (qty >= 5 && qty < 10) {
+    markup = t2;
+  } else if (qty >= 10 && qty < 40) {
+    markup = t3;
+  } else if (qty >= 40 && qty < threshold) {
+    markup = 0.0;
+  } else if (qty >= threshold) {
+    markup = 0.0;
+    const wholesale = parseFloat(item.price_wholesale);
+    if (wholesale > 0) {
+      base = wholesale;
+    }
+  }
+
+  const pricePerKg = Number((base * (1 + markup)).toFixed(2));
+  const totalPrice = Number((qty * pricePerKg + cutFee).toFixed(2));
+
+  return { pricePerKg, totalPrice, cutFee };
+}
 
 

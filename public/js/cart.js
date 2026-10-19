@@ -8,6 +8,71 @@ export function saveCart(cart) {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
+export function calculateDynamicPrice(item, quantity) {
+  const qty = parseFloat(quantity) || 1;
+  let base = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+
+  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
+  const t1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.75;
+  const t2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.5;
+  const t3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.25;
+
+  const threshold = parseInt(item.wholesale_threshold) || 50;
+  let markup = 0;
+
+  if (qty >= 1 && qty < 5) {
+    markup = t1;
+  } else if (qty >= 5 && qty < 10) {
+    markup = t2;
+  } else if (qty >= 10 && qty < 40) {
+    markup = t3;
+  } else if (qty >= 40 && qty < threshold) {
+    markup = 0.0;
+  } else if (qty >= threshold) {
+    markup = 0.0;
+    const wholesale = parseFloat(item.price_wholesale);
+    if (wholesale > 0) {
+      base = wholesale;
+    }
+  }
+
+  // ПРИБРАНО Math.round, щоб не губилися копійки
+  const pricePerKg = Number((base * (1 + markup)).toFixed(2));
+  const totalPrice = Number((qty * pricePerKg + cutFee).toFixed(2));
+
+  return { pricePerKg, totalPrice, cutFee, markupPercent: markup * 100 };
+}
+
+export function getCartTotal() {
+  const cart = getCart();
+  const sum = cart.reduce((acc, item) => {
+    if (item.has_dynamic_pricing) {
+      const calc = calculateDynamicPrice(item, item.quantity);
+      return acc + calc.totalPrice;
+    }
+    return acc + (parseFloat(item.price) || 0) * item.quantity;
+  }, 0);
+
+  // Повертаємо загальну суму з копійками
+  return Number(sum.toFixed(2));
+}
+
+export function updateItemPrice(item) {
+  if (item.has_dynamic_pricing) {
+    const calc = calculateDynamicPrice(item, item.quantity);
+    return calc.pricePerKg;
+  }
+
+  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+  const wholesale = parseFloat(item.price_wholesale) || retail;
+  const threshold = parseInt(item.wholesale_threshold) || 999999;
+
+  if (item.quantity >= threshold) {
+    return wholesale;
+  }
+  return retail;
+}
+
 export function addToCart(item) {
   const cart = getCart();
 
@@ -25,7 +90,7 @@ export function addToCart(item) {
   } else {
     const newItem = {
       ...item,
-      quantity: 1,
+      quantity: item.quantity || 1,
     };
     newItem.price = updateItemPrice(newItem);
 
@@ -40,11 +105,6 @@ export function removeFromCart(index) {
   saveCart(cart);
 }
 
-export function getCartTotal() {
-  const cart = getCart();
-  return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-}
-
 export function getCartCount() {
   const cart = getCart();
   return cart.reduce((count, item) => count + item.quantity, 0);
@@ -52,19 +112,6 @@ export function getCartCount() {
 
 export function clearCart() {
   localStorage.removeItem(CART_KEY);
-}
-
-export function updateItemPrice(item) {
-  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
-  const wholesale = parseFloat(item.price_wholesale) || retail;
-  const threshold = parseInt(item.wholesale_threshold) || 999999;
-
-  console.log('Поріг:', threshold, 'Роздріб:', retail, 'Опт:', wholesale);
-
-  if (item.quantity >= threshold) {
-    return wholesale;
-  }
-  return retail;
 }
 
 export function changeQuantity(index, delta) {

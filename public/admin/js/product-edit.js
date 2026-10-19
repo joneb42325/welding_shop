@@ -87,6 +87,27 @@ async function loadProduct() {
     document.getElementById('unit').value = product.unit || 'шт';
     document.getElementById('stock').value = product.stock || 0;
 
+    const isDynamic = product.has_dynamic_pricing === 1;
+    document.getElementById('has_dynamic_pricing').checked = isDynamic;
+
+    if (product.markup_tier1 !== null && product.markup_tier1 !== undefined) {
+      document.getElementById('markup_tier1').value = product.markup_tier1;
+    }
+    if (product.markup_tier2 !== null && product.markup_tier2 !== undefined) {
+      document.getElementById('markup_tier2').value = product.markup_tier2;
+    }
+    if (product.markup_tier3 !== null && product.markup_tier3 !== undefined) {
+      document.getElementById('markup_tier3').value = product.markup_tier3;
+    }
+    if (product.cut_fee !== null && product.cut_fee !== undefined) {
+      document.getElementById('cut_fee').value = product.cut_fee;
+    }
+
+    const dynamicSettings = document.getElementById('dynamic-pricing-settings');
+    if (dynamicSettings) {
+      dynamicSettings.style.display = isDynamic ? 'block' : 'none';
+    }
+
     if (product.image) {
       currentImage.src = product.image;
       currentImage.classList.remove('hidden');
@@ -141,6 +162,15 @@ window.addEventListener('load', async () => {
     console.error(err);
   }
 });
+
+const dynamicCheckbox = document.getElementById('has_dynamic_pricing');
+const dynamicSettings = document.getElementById('dynamic-pricing-settings');
+
+if (dynamicCheckbox && dynamicSettings) {
+  dynamicCheckbox.addEventListener('change', (e) => {
+    dynamicSettings.style.display = e.target.checked ? 'block' : 'none';
+  });
+}
 
 (async function initPage() {
   await checkAuth();
