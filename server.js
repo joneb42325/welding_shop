@@ -909,7 +909,7 @@ app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = '8686983891:AAHvT8WtZoDYFy0E_TiP4q1LHNFfY7HXJYw';
 
-  const CHAT_IDS = ['1293237281', '1293237281'];
+  const CHAT_IDS = ['1293237281', '5106522924'];
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
