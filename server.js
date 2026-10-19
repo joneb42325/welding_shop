@@ -1125,3 +1125,84 @@ function calculateDynamicPriceServer(item, quantity) {
 }
 
 
+// GET - Генерація XML-фіду товарів для Google Merchant Center
+app.get('/feed.xml', (req, res) => {
+  const query = `
+    SELECT
+      p.*,
+      m.name AS manufacturer_name
+    FROM products p
+    LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Помилка генерації фіду:', err);
+      return res.status(500).send('Server error');
+    }
+
+    // Допоміжна функція для екранування спецсимволів (обов'язково для XML)
+    const escapeXml = (unsafe) => {
+      return (unsafe || '').toString().replace(/[<>&'"]/g, (c) => {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+          default: return c;
+        }
+      });
+    };
+
+    // Формуємо шапку XML-документа
+    let xml = '<?xml version="1.0" encoding="UTF-8" ?>\n';
+    xml += '<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">\n';
+    xml += '<channel>\n';
+    xml += '  <title>Wolfram Shop</title>\n';
+    xml += '  <link>https://wolfram-shop.com.ua/</link>\n';
+    xml += '  <description>Спеціалізовані зварювальні матеріали (дріт, електроди, прутки)</description>\n';
+
+    // Проходимось по кожному товару і додаємо його у фід
+    results.forEach((product) => {
+      // Беремо роздрібну ціну. Якщо ціни немає (0) — Гугл такий товар не пропустить, тому пропускаємо його
+      const price = parseFloat(product.price_retail) || 0;
+      if (price === 0) return;
+
+      const title = escapeXml(product.name);
+      // Якщо опису немає, дублюємо назву
+      const description = escapeXml(product.description || product.name);
+      const link = `https://wolfram-shop.com.ua/product.html?productId=${product.id}`;
+
+      // Формуємо оптимізоване посилання на картинку (як у вас на фронтенді)
+      let imageLink = escapeXml(product.image || '');
+      if (imageLink.includes('cloudinary.com') && imageLink.includes('/upload/')) {
+        imageLink = imageLink.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+      }
+
+      const availability = product.stock > 0 ? 'in_stock' : 'out_of_stock';
+      const brand = escapeXml(product.manufacturer_name || 'Wolfram');
+
+      xml += '  <item>\n';
+      xml += `    <g:id>${product.id}</g:id>\n`;
+      xml += `    <g:title>${title}</g:title>\n`;
+      xml += `    <g:description>${description}</g:description>\n`;
+      xml += `    <g:link>${link}</g:link>\n`;
+      xml += `    <g:image_link>${imageLink}</g:image_link>\n`;
+      xml += `    <g:condition>new</g:condition>\n`;
+      xml += `    <g:availability>${availability}</g:availability>\n`;
+      xml += `    <g:price>${price.toFixed(2)} UAH</g:price>\n`;
+      xml += `    <g:brand>${brand}</g:brand>\n`;
+      xml += '  </item>\n';
+    });
+
+    xml += '</channel>\n';
+    xml += '</rss>';
+
+    // Вказуємо браузеру та Гуглу, що це саме XML-документ
+    res.set('Content-Type', 'text/xml');
+    res.send(xml);
+  });
+});
+
+
