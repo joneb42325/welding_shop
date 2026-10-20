@@ -2375,4 +2375,100 @@ textarea:-webkit-autofill:focus {
     text-decoration: none;
     line-height: 1.3;
   }
+  /* 1. Захисний відступ знизу, щоб "Кнопка зв'язку" не перекривала текст */
+  .about-page {
+    padding-bottom: 90px;
+  }
+
+  /* 2. Головний заголовок сторінки (Hero-блок) */
+  .about-hero {
+    padding: 20px 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  .about-hero h1 {
+    font-size: 1.45rem;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+
+  .about-hero p {
+    font-size: 0.92rem;
+    line-height: 1.4;
+  }
+
+  /* 3. Заголовки розділів ("Способи доставки", "Способи оплати" тощо) */
+  .about-description h2,
+  .about-features h2,
+  .content h2 {
+    font-size: 1.25rem;
+    margin: 20px 0 12px 0;
+    padding-bottom: 8px;
+    text-align: center;
+  }
+
+  /* 4. Компактна сітка карточок доставки */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  /* 5. Самі карточки доставки */
+  .about-card {
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  .about-card h3 {
+    font-size: 1.05rem;
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
+
+  .about-card p {
+    font-size: 0.88rem;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .delivery-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .delivery-logo {
+    height: 22px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* 6. Блоки "Способи оплати" та "Обмін та повернення" */
+  .about-features {
+    padding: 16px 14px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+  }
+
+  .about-features p {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    margin-bottom: 12px;
+  }
+
+  /* Списки з зеленими галочками */
+  .features-list li {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    padding-left: 22px;
+  }
+
+  .features-list li::before {
+    font-size: 1rem;
+    top: 1px;
+  }
 }
