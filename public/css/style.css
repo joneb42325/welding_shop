@@ -1792,6 +1792,18 @@ textarea:-webkit-autofill:focus {
   border-color: #2563eb;
 }
 
+/* Базові стилі для нової структури (для десктопу) */
+.cart-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* На десктопі мобільну ціну ховаємо */
+.mobile-unit-price {
+  display: none;
+}
+
 @media (max-width: 576px) {
   .search-page-header {
     flex-direction: column;
@@ -2252,5 +2264,42 @@ textarea:-webkit-autofill:focus {
   .cart-section #cart-table tbody td .delete-btn:hover {
     background: #ff4d4d;
     color: white;
+  }
+
+  /* Показуємо ціну за одиницю під назвою товару */
+  .mobile-unit-price {
+    display: block;
+    font-size: 13px;
+    color: #94a3b8; /* Сірий відтінок для другорядної інформації */
+    margin-top: 2px;
+  }
+
+  /* Змінюємо колір, якщо діє оптова ціна */
+  .mobile-unit-price.opt-price {
+    color: #10b981;
+  }
+
+  /* Трохи піднімаємо кнопку "Підтвердити замовлення", щоб віджет не перекривав */
+  .cart-section {
+    padding-bottom: 80px; /* Збільшено відступ */
+  }
+
+  /* Коригуємо вирівнювання блоку товару */
+  .cart-section #cart-table tbody td:nth-child(1) {
+    grid-column: 1 / 3;
+    grid-row: 1;
+    align-items: flex-start;
+    padding-right: 30px;
+  }
+
+  /* Забезпечуємо, щоб текст не вилазив */
+  .cart-product-link span:first-child {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Обмеження в 2 рядки для назви */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }

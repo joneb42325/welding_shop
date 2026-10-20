@@ -45,6 +45,9 @@ function renderCartPage() {
     let statusContent = '';
     let priceClass = '';
 
+    // Отримуємо юніт з товару, якщо його немає (старі товари) — ставимо 'шт'
+    const unit = item.unit || 'шт';
+
     if (item.has_dynamic_pricing) {
       const calc = calculateDynamicPrice(item, item.quantity);
       price = calc.pricePerKg;
@@ -64,11 +67,13 @@ function renderCartPage() {
         // Якщо опт НЕ досягнуто, виводимо ЧП, порізку, і на новому рядку підказку
         statusContent = `${typeLabel} <span style="font-size: 0.9em; opacity: 0.8;">/ Порізка +${calc.cutFee} грн</span>`;
         if (threshold < 999999) {
-          statusContent += `<br><span class="opt-hint">Опт від ${threshold} кг</span>`;
+          statusContent += `<br><span class="opt-hint">Опт від ${threshold} ${unit}</span>`;
         }
       }
     } else {
+
       total = price * item.quantity;
+
       const threshold = parseInt(item.wholesale_threshold) || 999999;
       const isWholesale = item.quantity >= threshold;
 
@@ -78,7 +83,7 @@ function renderCartPage() {
       } else {
         statusContent = formatType(item.selectedType);
         if (threshold < 999999) {
-          statusContent += `<br><span class="opt-hint">Опт від ${threshold} шт</span>`;
+          statusContent += `<br><span class="opt-hint">Опт від ${threshold} ${unit}</span>`;
         }
       }
     }
@@ -87,10 +92,14 @@ function renderCartPage() {
       <td class="cart-product-cell">
         <a href="product.html?productId=${item.productId}" class="cart-product-link">
             <img src="${getOptimizedImg(item.image)}" alt="${item.name}">
+            <div class="cart-product-info">
             <span>${item.name}</span>
+              <!-- Новий блок ціни спеціально для мобілки -->
+              <span class="mobile-unit-price ${priceClass}">${price.toFixed(2)} грн / ${unit}</span>
+            </div>
         </a>
       </td>
-      <td class="${priceClass}">${price.toFixed(2)} грн / ${item.has_dynamic_pricing ? 'кг' : 'шт'}</td>
+      <td class="${priceClass}">${price.toFixed(2)} грн / ${unit}</td>
       <td>
         <div class="quantity-controls">
           <button class="qty-btn minus">-</button>
@@ -113,6 +122,8 @@ function renderCartPage() {
     qtyInput.addEventListener('change', () => {
       let newQty = parseInt(qtyInput.value);
       if (isNaN(newQty) || newQty < 1) newQty = 1;
+
+      // Виправлено помилку віднімання
       const diff = newQty - item.quantity;
       changeQuantity(index, diff);
       refreshCart();

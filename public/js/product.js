@@ -159,6 +159,8 @@ function renderTable(product) {
         price_wholesale: product.price_wholesale,
         wholesale_threshold: product.wholesale_threshold,
 
+        unit: product.unit || 'шт',
+
         // НОВІ ПОЛЯ, ЩОБ ПРАЦЮВАЛА ФОРМУЛА:
         has_dynamic_pricing: product.has_dynamic_pricing,
         markup_tier1: product.markup_tier1,
