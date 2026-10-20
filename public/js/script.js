@@ -108,8 +108,9 @@ export function createProductCard(product) {
 export async function loadCategories() {
   const catalogList = document.getElementById('catalog-list');
   const catalogContainer = document.getElementById('catalog-container');
+  const mobileCatList = document.getElementById('mobile-categories-list');
 
-  if (!catalogList && !catalogContainer) return;
+  if (!catalogList && !catalogContainer && !mobileCatList) return;
 
   try {
     const res = await fetch('/categories');
@@ -144,6 +145,15 @@ export async function loadCategories() {
 
         catalogContainer.appendChild(card);
       }
+      if (mobileCatList) {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <a href="category.html?categoryId=${category.id}">
+            • ${category.name}
+          </a>
+        `;
+        mobileCatList.appendChild(li);
+      }
     });
   } catch (err) {
     console.error(err);
@@ -163,9 +173,22 @@ function initMobileSidebar() {
   });
 }
 
-window.addEventListener('DOMContentLoaded', initMobileSidebar);
+function initMobileCategoriesToggle() {
+  const toggleBtn = document.getElementById('mobile-cat-toggle');
+  const catList = document.getElementById('mobile-categories-list');
 
-//loadCategories();
+  if (toggleBtn && catList) {
+    toggleBtn.addEventListener('click', () => {
+      catList.classList.toggle('collapsed');
+      toggleBtn.classList.toggle('open');
+    });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  initMobileSidebar();
+  initMobileCategoriesToggle();
+});
 
 updateCartUI();
 updateFavoritesUI();

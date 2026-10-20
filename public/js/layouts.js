@@ -64,6 +64,20 @@ export function injectHeader() {
       <hr>
       <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
       <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
+      
+      <!-- НОВИЙ БЛОК: Випадаючий список категорій -->
+  <div class="mobile-categories-section">
+    <div class="mobile-cat-toggle" id="mobile-cat-toggle">
+      <h4>📁 КАТАЛОГ ТОВАРІВ</h4>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <!-- Спочатку список прихований (клас collapsed) -->
+    <ul id="mobile-categories-list" class="mobile-categories-list collapsed">
+      <!-- Сюди JS додасть категорії -->
+    </ul>
+  </div>
+  
+  
       <div class="mobile-contacts">
         <h4>Контакти</h4>
         <!-- Клік по телефону у мобільному меню -->
