@@ -115,8 +115,8 @@ function renderTable(product) {
   if (!isAvailable) row.classList.add('out-of-stock-row');
 
   row.innerHTML = `
-      <td>${product.diameter || '-'}</td>
-      <td>${product.weight || '-'}</td>
+      <td>${product.diameter || '-'} мм</td>
+      <td>${product.weight || '-'} кг</td>
       <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">${product.price_retail} грн / ${product.unit}</td>
       <td class="price-cell" data-type="company">${product.price_company} грн / ${product.unit}</td>
       <!--<td class="price-cell" data-type="wholesale">${product.price_wholesale} грн</td> -->
