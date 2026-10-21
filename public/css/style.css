@@ -2471,4 +2471,13 @@ textarea:-webkit-autofill:focus {
     font-size: 1rem;
     top: 1px;
   }
+
+  .product-card,
+  .catalog-item,
+  .cart-box,
+  .catalog {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  }
 }
