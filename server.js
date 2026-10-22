@@ -201,9 +201,11 @@ app.get('/product/:id', (req, res) => {
     SELECT
       p.*,
       m.name AS manufacturer_name,
+      c.name AS category_name,
       p.stock AS total_stock  
     FROM products p
            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+           LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.id = ?
   `;
 
@@ -907,7 +909,7 @@ app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
 });
 
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
-  const TELEGRAM_TOKEN = '8686983891:AAHvT8WtZoDYFy0E_TiP4q1LHNFfY7HXJYw';
+  const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
   const CHAT_IDS = ['1293237281', '5106522924'];
 

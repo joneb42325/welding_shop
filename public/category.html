@@ -48,7 +48,76 @@
           </div>
         </section>
         <section class="category-products">
+          <!-- Панель управления (Кнопка фильтров и сортировка) -->
+          <div class="category-controls">
+            <button id="mobile-filter-btn" class="filter-toggle-btn">
+              Фільтри <span class="filter-icon">⇋</span>
+            </button>
+
+            <div class="sort-wrapper">
+              <select id="sort-select" class="sort-select">
+                <option value="default">за замовчуванням</option>
+                <option value="price-asc">за ціною ↑ (від дешевих)</option>
+                <option value="price-desc">за ціною ↓ (від дорогих)</option>
+              </select>
+
+              <select id="per-page-select" class="per-page-select">
+                <option value="16">16 ▾</option>
+                <option value="32">32 ▾</option>
+                <option value="60">60 ▾</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Затемняющий фон для модального окна фильтров -->
+          <div id="filter-overlay" class="filter-overlay"></div>
+
+          <!-- Всплывающее окно фильтров -->
+          <div id="filter-sidebar" class="filter-sidebar">
+            <div class="filter-header">
+              <h3>Фільтри</h3>
+              <button id="close-filter-btn" class="close-filter-btn">✕</button>
+            </div>
+
+            <div class="filter-group">
+              <label class="custom-checkbox">
+                <input type="checkbox" id="filter-instock" checked>
+                <span>Тільки в наявності</span>
+              </label>
+            </div>
+
+            <div class="filter-group collapsible active">
+              <div class="filter-group-header">
+                <h4 id="diameter-filter-title">Діаметр, мм</h4>
+                <span class="toggle-arrow">↓</span>
+              </div>
+              <div class="filter-options" id="filter-diameters">
+                <!-- JS добавит чекбоксы диаметров -->
+              </div>
+            </div>
+
+            <div class="filter-group collapsible active">
+              <div class="filter-group-header">
+                <h4>Бренд</h4>
+                <span class="toggle-arrow">↓</span>
+              </div>
+              <div class="filter-options" id="filter-brands">
+                <!-- JS добавит чекбоксы брендов -->
+              </div>
+            </div>
+
+            <div class="filter-actions">
+              <button id="apply-filters-btn" class="apply-filters-btn">Застосувати</button>
+              <button id="reset-filters" class="reset-filters-btn">Очистити</button>
+            </div>
+          </div>
+
           <div id="category-products-container" class="catalog-grid"></div>
+
+          <div id="pagination-controls" class="pagination-controls" style="display: none;">
+            <button id="load-more-btn" class="load-more-btn">Показати ще</button>
+            <p id="products-counter" class="products-counter">Відображено 0 з 0</p>
+          </div>
         </section>
       </div>
     </main>

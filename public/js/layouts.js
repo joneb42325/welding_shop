@@ -33,6 +33,9 @@ export function injectHeader() {
             <img src="/images/logo.webp" alt="Wolfram" />
           </div>
           <p>Wolfram</p>
+          <a href="tel:+380634383823" class="header-phone" onclick="return gtag_report_conversion('tel:+380634383823');">
+          +380 63 438 3823
+        </a>
         </a>
       </div>
       <nav class="nav">

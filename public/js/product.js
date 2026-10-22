@@ -40,6 +40,20 @@ function renderProductInfo(product) {
   document.title = `${displayName} — Купити в Wolfram Shop`;
   document.getElementById('product-name').textContent = displayName;
 
+  const breadcrumbs = document.getElementById('breadcrumbs');
+  if (breadcrumbs) {
+    const catId = product.category_id || '';
+    const catName = product.category_name || 'Категорія';
+
+    breadcrumbs.innerHTML = `
+      <a href="/index.html">Головна</a> 
+      <span class="separator">/</span> 
+      <a href="/category.html?categoryId=${catId}">${catName}</a>
+      <span class="separator">/</span> 
+      <span class="current">${product.name}</span>
+    `;
+  }
+
   // Опис
   if (product.description && product.description.trim() !== '') {
     descriptionElement.classList.add('product-description-text');
@@ -161,7 +175,6 @@ function renderTable(product) {
 
         unit: product.unit || 'шт',
 
-        // НОВІ ПОЛЯ, ЩОБ ПРАЦЮВАЛА ФОРМУЛА:
         has_dynamic_pricing: product.has_dynamic_pricing,
         markup_tier1: product.markup_tier1,
         markup_tier2: product.markup_tier2,
