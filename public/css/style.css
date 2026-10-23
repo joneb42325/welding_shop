@@ -395,19 +395,27 @@ body {
 .catalog ul {
   list-style: none;
   padding: 0;
+  margin: 0;
 }
 
 .catalog li {
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
+/* Ссылки категорий */
 .catalog li a {
+  display: block; /* Делаем ссылку блоком, чтобы кликалась вся область, а не только текст */
+  padding: 8px 12px; /* Внутренние отступы для удобного клика */
   color: #e0e0e0;
   text-decoration: none;
+  border-radius: 6px; /* Легкое скругление углов */
+  line-height: 1.35;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .catalog li a:hover {
   color: #FFD700;
+  background: rgba(255, 215, 0, 0.1); /* Мягкий золотистый фон под курсором */
 }
 
 .about-page {
