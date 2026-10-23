@@ -245,4 +245,3 @@ function showToast(message, type = 'success') {
 
 initProductPage();
 updateCartUI();
-loadCategories();

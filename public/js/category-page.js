@@ -21,7 +21,6 @@ async function init() {
   }
 
   updateCartUI();
-  loadCategories();
 }
 
 async function loadCategoryTitle(categoryId) {
