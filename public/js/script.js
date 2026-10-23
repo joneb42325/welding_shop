@@ -1,4 +1,4 @@
-import { updateCartUI, addToCart } from './cart.js';
+import { updateCartUI, addToCart, showToast } from './cart.js';
 import { updateFavoritesUI } from './favorites.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 
@@ -84,6 +84,13 @@ export function createProductCard(product) {
         cut_fee: product.cut_fee,
       });
       updateCartUI();
+
+      /*showToast(`${product.name} додано до кошика!`); */
+
+      showToast(
+        `${product.name} додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
+      );
+
       const originalText = cartBtn.innerHTML;
       cartBtn.innerHTML = '✅ Додано';
       cartBtn.classList.add('added');

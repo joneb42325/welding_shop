@@ -152,3 +152,33 @@ export function updateCartUI() {
   if (countEl) countEl.textContent = count;
   if (totalEl) totalEl.textContent = total;
 }
+
+export function showToast(message, type = 'success') {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.style.cursor = 'pointer';
+  toast.innerHTML = `
+    <span>🛒</span>
+    <span>${message}</span>
+  `;
+
+  toast.addEventListener('click', () => {
+    window.location.href = 'cart.html';
+  });
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('hiding');
+    toast.addEventListener('animationend', () => {
+      toast.remove();
+    });
+  }, 3000);
+}

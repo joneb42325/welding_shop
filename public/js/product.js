@@ -1,6 +1,6 @@
-import { addToCart, updateCartUI } from './cart.js';
+import { addToCart, updateCartUI, showToast } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { loadCategories, getOptimizedImg } from './script.js';
+import { getOptimizedImg } from './script.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -165,7 +165,11 @@ function renderTable(product) {
     // Додавання в кошик
     row.querySelector('.add-to-cart').addEventListener('click', () => {
       const price = product[`price_${selectedType}`];
-      showToast(`${currentProduct.name} додано до кошика!`);
+      /*showToast(`${currentProduct.name} додано до кошика!`); */
+
+      showToast(
+        `${product.name} додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
+      );
       console.log('Данные товара с сервера:', product);
       addToCart({
         productId: product.id,
@@ -246,36 +250,6 @@ function renderEmptyState() {
     </div>
   `;
   pricesSection.appendChild(emptyDiv);
-}
-
-function showToast(message, type = 'success') {
-  let container = document.getElementById('toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    document.body.appendChild(container);
-  }
-
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.style.cursor = 'pointer';
-  toast.innerHTML = `
-    <span>🛒</span>
-    <span>${message}</span>
-  `;
-
-  toast.addEventListener('click', () => {
-    window.location.href = 'cart.html';
-  });
-
-  container.appendChild(toast);
-
-  setTimeout(() => {
-    toast.classList.add('hiding');
-    toast.addEventListener('animationend', () => {
-      toast.remove();
-    });
-  }, 3000);
 }
 
 initProductPage();
