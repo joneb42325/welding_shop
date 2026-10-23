@@ -263,5 +263,3 @@ if (checkoutForm) {
     }
   });
 }
-
-loadCategories();

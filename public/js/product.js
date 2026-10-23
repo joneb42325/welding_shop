@@ -220,6 +220,12 @@ function renderTable(product) {
         <strong>Оплата:</strong> Оплата: Накладений платіж (при отриманні), Оплата на картку
       </div>
     </div>
+    <div class="delivery-item">
+      <span class="icon">🔄</span>
+      <div class="text">
+        <strong>Гарантія:</strong> Обмін та повернення товару протягом 14 днів
+      </div>
+    </div>
   `;
 
   manufacturerContainer.appendChild(deliverySection);
