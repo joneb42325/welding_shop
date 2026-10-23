@@ -78,7 +78,7 @@ export function injectHeader() {
         <a href="/delivery.html">Доставка і оплата</a>
       </nav>
       <div class="header-right">
-        <div class="search-container">
+        <div class="search-container" data-clarity-unmask="true">
             <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
             <div id="search-results" class="search-results-dropdown"></div>
         </div>

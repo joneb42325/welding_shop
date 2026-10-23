@@ -38,7 +38,12 @@ function renderProductInfo(product) {
     : product.name;
 
   document.title = `${displayName} — Купити в Wolfram Shop`;
-  document.getElementById('product-name').textContent = displayName;
+
+  const nameEl = document.getElementById('product-name');
+  if (nameEl) {
+    nameEl.textContent = displayName;
+    nameEl.setAttribute('data-clarity-unmask', 'true');
+  }
 
   const breadcrumbs = document.getElementById('breadcrumbs');
   if (breadcrumbs) {
@@ -58,6 +63,7 @@ function renderProductInfo(product) {
   if (product.description && product.description.trim() !== '') {
     descriptionElement.classList.add('product-description-text');
     descriptionElement.textContent = product.description;
+    descriptionElement.setAttribute('data-clarity-unmask', 'true');
     descriptionSection.style.display = 'block';
   } else {
     descriptionSection.style.display = 'none';
@@ -103,6 +109,7 @@ function renderTable(product) {
 
   const section = document.createElement('div');
   section.classList.add('manufacturer-block');
+  section.setAttribute('data-clarity-unmask', 'true');
 
   section.innerHTML = `
     <table>

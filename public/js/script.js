@@ -28,7 +28,8 @@ export function createProductCard(product) {
     : `<div class="product-price-empty">Ціна уточнюється</div>`;
 
   const card = document.createElement('div');
-  card.classList.add('product-card');
+  card.classList.add('product-card')
+  card.setAttribute('data-clarity-unmask', 'true');
 
   card.innerHTML = `
     <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
