@@ -194,6 +194,35 @@ function renderTable(product) {
   tbody.appendChild(row);
 
   manufacturerContainer.appendChild(section);
+
+  // --- НОВИЙ КОД: БЛОК ІНФОРМАЦІЇ ПРО ДОСТАВКУ ---
+  const deliverySection = document.createElement('div');
+  deliverySection.classList.add('product-delivery-info');
+  deliverySection.setAttribute('data-clarity-unmask', 'true'); // Відкриваємо для Clarity
+
+  deliverySection.innerHTML = `
+    <div class="delivery-item">
+      <span class="icon">🚚</span>
+      <div class="text">
+        <strong>Доставка:</strong> Нова Пошта, Делівері, Самовивіз у Харкові 
+        <a href="/delivery.html" target="_blank">Детальніше ➔</a>
+      </div>
+    </div>
+    <div class="delivery-item">
+      <span class="icon">📦</span>
+      <div class="text">
+        <strong>Відправка:</strong> У день замовлення (при оформленні до 14:00, крім вихідних)
+      </div>
+    </div>
+    <div class="delivery-item">
+      <span class="icon">💳</span>
+      <div class="text">
+        <strong>Оплата:</strong> Оплата: Накладений платіж (при отриманні), Оплата на картку
+      </div>
+    </div>
+  `;
+
+  manufacturerContainer.appendChild(deliverySection);
 }
 
 function renderEmptyState() {
