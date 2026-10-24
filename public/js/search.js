@@ -77,6 +77,15 @@ async function performSearch() {
         <div class="no-results-box">
           <p class="no-results-title">Нічого не знайдено за запитом "<strong>${query}</strong>" 🔍</p>
           <p class="no-results-hint">Перевірте правильність написання або спробуйте інші слова (наприклад: дріт, електроди).</p>
+          
+          <div class="search-cta-box">
+        <p>Не знайшли потрібну марку чи позицію?</p>
+        <p>Зателефонуйте нам — ми безкоштовно підберемо точний аналог під ваші задачі!</p>
+        <div class="search-cta-buttons">
+          <a href="tel:+380634383823" class="cta-btn phone-btn" onclick="return gtag_report_conversion('tel:+380634383823');">📞 Зателефонувати</a>
+          <a href="https://t.me/+380634383823" target="_blank" class="cta-btn tg-btn" onclick="return gtag_report_conversion('https://t.me/+380634383823');">💬 Написати в Telegram</a>
+        </div>
+          </div>
         </div>
       `;
       return;
