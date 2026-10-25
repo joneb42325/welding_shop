@@ -924,14 +924,19 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   items.forEach((item, index) => {
     message += `${index + 1}. ${item.name} `;
     if (item.diameter) message += `(Ø ${item.diameter}) `;
-    if (item.weight && !item.has_dynamic_pricing) message += `[${item.weight}] `;
+    if (item.weight && !item.has_dynamic_pricing) message += `[${item.weight} кг] `;
 
+    if (item.manufacturer) {
+      const brandName = item.manufacturer;
+      message += `\n  <b>Виробник:</b> ${brandName}`;
+    }
     if (item.has_dynamic_pricing) {
       const calc = calculateDynamicPriceServer(item, item.quantity);
       message += `\n К-ть: ${item.quantity} кг (${calc.pricePerKg} грн/кг + порізка ${calc.cutFee} грн) | Сума: ${calc.totalPrice} грн\n`;
     } else {
+      const unitPrice = parseFloat(item.price).toFixed(2);
       const sum = (parseFloat(item.price) * parseInt(item.quantity)).toFixed(2);
-      message += `\n   К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
+      message += `\n  Ціна: ${unitPrice} грн/шт.| К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
     }
   });
 
