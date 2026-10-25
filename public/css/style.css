@@ -2212,6 +2212,10 @@ textarea:-webkit-autofill:focus {
   pointer-events: none;
 }
 
+.cart-item-brand {
+  opacity: 0.75;
+}
+
 @media (max-width: 576px) {
   .search-page-header {
     flex-direction: column;
