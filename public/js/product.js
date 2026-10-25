@@ -39,10 +39,17 @@ function renderProductInfo(product) {
 
   document.title = `${displayName} — Купити в Wolfram Shop`;
 
+  const statusHTML =
+    product.stock > 0
+      ? `<p class="stock-status available">✓ В наявності</p>`
+      : `<p class="stock-status out-of-stock">✕ Немає в наявності</p>`;
+
   const nameEl = document.getElementById('product-name');
   if (nameEl) {
     nameEl.textContent = displayName;
     nameEl.setAttribute('data-clarity-unmask', 'true');
+
+    nameEl.insertAdjacentHTML('afterend', statusHTML);
   }
 
   const breadcrumbs = document.getElementById('breadcrumbs');

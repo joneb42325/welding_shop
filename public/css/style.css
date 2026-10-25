@@ -2221,6 +2221,21 @@ textarea:-webkit-autofill:focus {
   margin-bottom: 1px;
 }
 
+.stock-status {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 6px;
+  margin-bottom: 12px;
+}
+
+.stock-status.available {
+  color: #10b981; /* Зелёный */
+}
+
+.stock-status.out-of-stock {
+  color: #ef4444; /* Красный */
+}
+
 @media (max-width: 576px) {
   .search-page-header {
     flex-direction: column;
