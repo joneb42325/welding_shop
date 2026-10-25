@@ -2213,7 +2213,12 @@ textarea:-webkit-autofill:focus {
 }
 
 .cart-item-brand {
-  opacity: 0.75;
+  display: block;
+  font-size: 12px;
+  color: #94a3b8; /* Приємний жовтий/акцентний або #a0a0a0 сірий */
+  font-weight: 500;
+  margin-top: 3px;
+  margin-bottom: 1px;
 }
 
 @media (max-width: 576px) {

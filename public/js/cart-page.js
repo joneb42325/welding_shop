@@ -88,18 +88,19 @@ function renderCartPage() {
       }
     }
 
-    const displayName = item.manufacturer
-      ? `${item.name} <small class="cart-item-brand">(${item.manufacturer})</small>`
-      : item.name;
+    const brandName = item.manufacturer;
+    const brandHTML = brandName
+      ? `<span class="cart-item-brand">Виробник: ${brandName}</span>`
+      : '';
 
     row.innerHTML = `
       <td class="cart-product-cell">
         <a href="product.html?productId=${item.productId}" class="cart-product-link">
             <img src="${getOptimizedImg(item.image)}" alt="${item.name}">
             <div class="cart-product-info">
-           <!-- <span>${item.name}</span> -->
-           <span>${displayName}</span>
-              <!-- Новий блок ціни спеціально для мобілки -->
+           <span>${item.name}</span> 
+            ${brandHTML}
+              <!-- Блок ціни спеціально для мобілки -->
               <span class="mobile-unit-price ${priceClass}">${price.toFixed(2)} грн / ${unit}</span>
             </div>
         </a>
