@@ -1177,7 +1177,7 @@ app.post('/api/quick-order', (req, res) => {
 
             // 4. Формируем сообщение в Telegram с учетом порезки и единиц измерения
             const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-            const CHAT_IDS = ['1293237281', ''];
+            const CHAT_IDS = ['1293237281', '5106522924'];
 
             let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
             if (name && name.trim() !== '') message += `👤 <b>Клієнт:</b> ${name}\n`;
