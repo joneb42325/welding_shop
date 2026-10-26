@@ -38,7 +38,7 @@ export function calculateDynamicPrice(item, quantity) {
 
   // ПРИБРАНО Math.round, щоб не губилися копійки
   const pricePerKg = Number((base * (1 + markup)).toFixed(2));
-  const totalPrice = Number((qty * pricePerKg + cutFee).toFixed(2));
+  const totalPrice = Math.round(qty * pricePerKg + cutFee);
 
   return { pricePerKg, totalPrice, cutFee, markupPercent: markup * 100 };
 }

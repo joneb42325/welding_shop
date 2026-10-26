@@ -1096,6 +1096,143 @@ app.delete('/admin/orders/:id', adminAuth, (req, res) => {
   });
 });
 
+// POST - Быстрый заказ в 1 клик
+app.post('/api/quick-order', (req, res) => {
+  const { productId, productName, price, quantity = 1, phone, name } = req.body;
+
+  if (!phone || !productName) {
+    return res.status(400).json({ error: "Номер телефону є обов'язковим" });
+  }
+
+  // 1. Получаем полные данные о товаре из базы
+  const getProductQuery = 'SELECT * FROM products WHERE id = ?';
+  db.query(getProductQuery, [productId], (prodErr, results) => {
+    const product = results && results.length > 0 ? results[0] : null;
+
+    const qty = parseInt(quantity) || 1;
+    let finalItemPrice = parseFloat(price) || 0;
+    let totalPrice = finalItemPrice * qty;
+    let cutFee = 0;
+    let pricePerKg = finalItemPrice;
+
+    const unit = product ? (product.unit || 'шт') : 'шт';
+    const hasDynamic = product ? product.has_dynamic_pricing : false;
+
+    // Если у товара динамическая цена — считаем через вашу серверную функцию
+    if (product && hasDynamic) {
+      const calc = calculateDynamicPriceServer(
+        product,
+        qty,
+        product.price_retail || finalItemPrice
+      );
+      pricePerKg = calc.pricePerKg;
+      cutFee = calc.cutFee;
+      totalPrice = calc.totalPrice;
+      finalItemPrice = pricePerKg;
+    }
+
+    const customerName = name && name.trim() !== '' ? name : 'Швидке замовлення';
+    const deliveryAddress = 'Замовлення в 1 клік (уточнити по телефону)';
+
+    // 2. Создаем запись в orders
+    const insertOrderQuery = `
+      INSERT INTO orders (customer_name, customer_phone, customer_email, delivery_address, comment, total_price) 
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(
+      insertOrderQuery,
+      [customerName, phone, '', deliveryAddress, '⚡ Замовлення в 1 клік', totalPrice.toFixed(2)],
+      (err, orderResult) => {
+        if (err) {
+          console.error('Помилка при створенні швидкого замовлення:', err);
+          return res.status(500).json({ error: 'Помилка збереження замовлення' });
+        }
+
+        const orderId = orderResult.insertId;
+
+        // 3. Сохраняем товар с реальным количеством в order_items
+        const insertItemQuery = `
+          INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.query(
+          insertItemQuery,
+          [
+            orderId,
+            productId,
+            productName,
+            product ? product.manufacturer_name || '' : '',
+            product ? product.diameter || '' : '',
+            product ? product.weight || '' : '',
+            finalItemPrice,
+            qty,
+            'retail',
+          ],
+          async (itemErr) => {
+            if (itemErr) {
+              console.error('Помилка при збереженні товару швидкого замовлення:', itemErr);
+            }
+
+            // 4. Формируем сообщение в Telegram с учетом порезки и единиц измерения
+            const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+            const CHAT_IDS = ['1293237281', ''];
+
+            let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
+            if (name && name.trim() !== '') message += `👤 <b>Клієнт:</b> ${name}\n`;
+            message += `📞 <b>Телефон:</b> <code>${phone}</code>\n`;
+            message += `📍 <b>Доставка:</b> ${deliveryAddress}\n\n`;
+
+            message += `🛒 <b>ТОВАР:</b>\n`;
+            message += `1. ${productName} `;
+            if (product && product.diameter) message += `(Ø ${product.diameter} мм) `;
+            if (product && product.weight && !hasDynamic) message += `[${product.weight} кг] `;
+
+            if (product && product.manufacturer_name) {
+              message += `\n  <b>Виробник:</b> ${product.manufacturer_name}`;
+            }
+
+            if (hasDynamic) {
+              message += `\n  К-ть: ${qty} ${unit} (${pricePerKg} грн/${unit} + порізка ${cutFee} грн) | Сума: ${totalPrice.toFixed(2)} грн\n`;
+            } else {
+              message += `\n  Ціна: ${finalItemPrice.toFixed(2)} грн/${unit} | К-ть: ${qty} ${unit} | Сума: ${totalPrice.toFixed(2)} грн\n`;
+            }
+
+            message += `\n💰 <b>Всього до сплати: ${totalPrice.toFixed(2)} грн</b>\n\n`;
+            message += `🔔 <i>Терміново перетелефонуйте клієнту для уточнення доставки!</i>`;
+
+            const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
+
+            for (const chatId of CHAT_IDS) {
+              if (!chatId) continue;
+              try {
+                await fetch(url, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    chat_id: chatId,
+                    text: message,
+                    parse_mode: 'HTML',
+                  }),
+                });
+              } catch (tgErr) {
+                console.error(`Помилка відправки швидкого замовлення в ТГ (${chatId}):`, tgErr);
+              }
+            }
+
+            res.status(201).json({
+              success: true,
+              message: 'Швидке замовлення успішно створено',
+              orderId: orderId,
+            });
+          }
+        );
+      }
+    );
+  });
+});
+
 function calculateDynamicPriceServer(item, quantity) {
   const qty = parseFloat(quantity) || 1;
   let base = parseFloat(item.price_retail) || parseFloat(item.price) || 0;

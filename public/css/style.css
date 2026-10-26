@@ -921,7 +921,7 @@ body {
 .manufacturer-block td {
   padding: 8px;
   text-align: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .manufacturer-block td:nth-child(n + 3) {
@@ -1248,7 +1248,6 @@ body {
 #cart-table td {
   padding: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  vertical-align: middle;
   color: #e2e8f0;
   background: rgba(30, 34, 43, 0.4);
 }
@@ -2234,6 +2233,185 @@ textarea:-webkit-autofill:focus {
 
 .stock-status.out-of-stock {
   color: #ef4444; /* Красный */
+}
+
+/* ==========================================================================
+   МОДАЛКА "ЗАМОВИТИ В 1 КЛІК"
+   ========================================================================== */
+
+/* Темна підложка з фірмовим розмиттям */
+.quick-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+/* Карточка модалки в темному стилі сайту */
+.quick-modal-box {
+  background: #1e222b; /* Твій основний темний фон */
+  border: 1px solid rgba(255, 215, 0, 0.3); /* Золота рамка */
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 440px;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  font-family: inherit;
+  color: #ffffff;
+}
+
+/* Хрестик закриття */
+.quick-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  transition: 0.2s;
+}
+
+.quick-modal-close:hover {
+  color: #ff4d4d;
+}
+
+/* Заголовок модалки */
+.quick-modal-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #FFD700; /* Твій золотий акцент */
+}
+
+.quick-modal-box > p {
+  font-size: 13px;
+  color: #cbd5e1;
+  margin-bottom: 20px;
+}
+
+/* Блок з інформацією про товар */
+.quick-order-summary {
+  background: rgba(30, 34, 43, 0.8); /* Блок трохи світліший за фон */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.quick-order-summary .label {
+  font-size: 12px;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.quick-order-summary .product-title {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.quick-order-summary .product-price {
+  color: #10b981; /* Зелений колір ціни, як у тебе на сайті */
+  font-weight: 700;
+  font-size: 15px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* Поля вводу (як у твоїх стандартних формах) */
+.quick-form-group {
+  margin-bottom: 15px;
+}
+
+.quick-form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  transition: 0.3s;
+  box-sizing: border-box;
+}
+
+.quick-form-group input::placeholder {
+  color: #64748b;
+}
+
+.quick-form-group input:focus {
+  border-color: #2563eb;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Золота кнопка відправки, щоб привертала увагу */
+.quick-submit-btn {
+  width: 100%;
+  background: #FFD700;
+  color: #111;
+  border: none;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 5px;
+  text-transform: uppercase;
+}
+
+.quick-submit-btn:hover {
+  background: #e6b800;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+}
+
+.quick-submit-btn:active {
+  transform: translateY(0);
+}
+
+.quick-order-btn {
+  margin-top: 6px;
+  background-color: transparent;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #cbd5e1; /* Спокійний світло-сірий колір тексту */
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.2s ease-in-out;
+}
+
+.quick-order-btn:hover {
+  background-color: rgba(255, 215, 0, 0.1);
+  border-color: #FFD700;
+  color: #FFD700;
+  transform: translateY(-1px);
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 }
 
 @media (max-width: 576px) {
