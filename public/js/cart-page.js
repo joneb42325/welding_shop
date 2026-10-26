@@ -129,7 +129,6 @@ function renderCartPage() {
       let newQty = parseInt(qtyInput.value);
       if (isNaN(newQty) || newQty < 1) newQty = 1;
 
-      // Виправлено помилку віднімання
       const diff = newQty - item.quantity;
       changeQuantity(index, diff);
       refreshCart();

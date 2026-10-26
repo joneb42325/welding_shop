@@ -278,11 +278,26 @@ function renderTable(product) {
     });
 
     qtyInput.addEventListener('input', () => {
-      if (parseInt(qtyInput.value) < 1 || !qtyInput.value) {
-        qtyInput.value = 1;
+      const val = parseInt(qtyInput.value);
+
+      // Пересчитываем только если введено реальное число >= 1
+      if (!isNaN(val) && val >= 1) {
+        checkWholesaleThreshold();
+        updateTotalSum();
       }
-      checkWholesaleThreshold();
-      updateTotalSum();
+    });
+
+    qtyInput.addEventListener('blur', () => {
+      const val = parseInt(qtyInput.value);
+      if (isNaN(val) || val < 1) {
+        qtyInput.value = 1;
+        checkWholesaleThreshold();
+        updateTotalSum();
+      }
+    });
+
+    qtyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') qtyInput.blur();
     });
 
     row.querySelector('.add-to-cart').addEventListener('click', () => {
