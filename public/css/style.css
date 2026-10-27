@@ -2482,6 +2482,13 @@ textarea:-webkit-autofill:focus {
     will-change: transform;
   }
 
+  .main {
+    display: flex;
+    padding-top: 15px; /* Задаем аккуратный отступ вместо 0 */
+    flex-direction: column;
+    gap: 15px; /* Сбрасываем гигантский десктопный gap до комфортного мобильного */
+  }
+
   .header {
     display: flex;
     flex-direction: row;
