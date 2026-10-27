@@ -3194,4 +3194,8 @@ textarea:-webkit-autofill:focus {
     height: 38px;
     font-size: 16px;
   }
+
+  .special-banner {
+    margin-bottom: 0;
+  }
 }
