@@ -67,7 +67,7 @@ function renderCartPage() {
         // Якщо опт НЕ досягнуто, виводимо ЧП, порізку, і на новому рядку підказку
         statusContent = `${typeLabel} <span style="font-size: 0.9em; opacity: 0.8;">/ Порізка +${calc.cutFee} грн</span>`;
         if (threshold < 999999) {
-          statusContent += `<br><span class="opt-hint">Опт від ${threshold} ${unit}</span>`;
+          statusContent += `<br><span class="opt-hint">Опт ціна від ${threshold} ${unit}</span>`;
         }
       }
     } else {
@@ -83,7 +83,7 @@ function renderCartPage() {
       } else {
         statusContent = formatType(item.selectedType);
         if (threshold < 999999) {
-          statusContent += `<br><span class="opt-hint">Опт від ${threshold} ${unit}</span>`;
+          statusContent += `<br><span class="opt-hint">Опт ціна від ${threshold} ${unit}</span>`;
         }
       }
     }
