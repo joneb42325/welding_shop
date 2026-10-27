@@ -133,10 +133,12 @@ export function injectHeader() {
   burger.addEventListener('click', () => {
     menu.classList.add('active');
     overlay.classList.add('active');
+    document.body.classList.add('no-scroll');
   });
   overlay.addEventListener('click', () => {
     menu.classList.remove('active');
     overlay.classList.remove('active');
+    document.body.classList.remove('no-scroll');
   });
 
   initSearch();

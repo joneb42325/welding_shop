@@ -243,6 +243,14 @@ body {
   flex-direction: column;
   gap: 15px;
   border-right: 1px solid rgba(255, 255, 255, 0.1);
+
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Плавная прокрутка на iOS */
+  padding-bottom: 80px;
+}
+
+body.no-scroll {
+  overflow: hidden;
 }
 
 .mobile-menu.active {
