@@ -1349,4 +1349,67 @@ app.get('/feed.xml', (req, res) => {
   });
 });
 
+// GET - Динамічна генерація sitemap.xml для Google Search Console
+app.get('/sitemap.xml', (req, res) => {
+  const categoriesQuery = 'SELECT id FROM categories';
+  const productsQuery = 'SELECT id FROM products';
+
+  db.query(categoriesQuery, (err, categories) => {
+    if (err) {
+      console.error('Помилка sitemap (категорії):', err);
+      return res.status(500).send('Server error');
+    }
+
+    db.query(productsQuery, (pErr, products) => {
+      if (pErr) {
+        console.error('Помилка sitemap (товари):', pErr);
+        return res.status(500).send('Server error');
+      }
+
+      const baseUrl = 'https://wolfram-shop.com.ua';
+
+      let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+      xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+      // 1. Статичні сторінки
+      const staticPages = [
+        { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/about.html', priority: '0.8', changefreq: 'monthly' },
+        { url: '/delivery.html', priority: '0.8', changefreq: 'monthly' },
+      ];
+
+      staticPages.forEach((page) => {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}${page.url}</loc>\n`;
+        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+        xml += `    <priority>${page.priority}</priority>\n`;
+        xml += '  </url>\n';
+      });
+
+      // 2. Сторінки категорій
+      categories.forEach((cat) => {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}/category.html?categoryId=${cat.id}</loc>\n`;
+        xml += '    <changefreq>weekly</changefreq>\n';
+        xml += '    <priority>0.8</priority>\n';
+        xml += '  </url>\n';
+      });
+
+      // 3. Сторінки товарів
+      products.forEach((prod) => {
+        xml += '  <url>\n';
+        xml += `    <loc>${baseUrl}/product.html?productId=${prod.id}</loc>\n`;
+        xml += '    <changefreq>weekly</changefreq>\n';
+        xml += '    <priority>0.7</priority>\n';
+        xml += '  </url>\n';
+      });
+
+      xml += '</urlset>';
+
+      res.set('Content-Type', 'text/xml');
+      res.send(xml);
+    });
+  });
+});
+
 
