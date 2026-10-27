@@ -80,6 +80,8 @@ function renderProductInfo(product) {
   if (productImg) {
     productImg.src = getOptimizedImg(product.image, 600);
     productImg.alt = `Фото товару: ${displayName}`;
+    productImg.width = 600;
+    productImg.height = 600;
 
     productImg.removeAttribute('loading');
     productImg.setAttribute('fetchpriority', 'high');
