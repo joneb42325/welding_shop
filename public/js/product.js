@@ -80,6 +80,9 @@ function renderProductInfo(product) {
   if (productImg) {
     productImg.src = getOptimizedImg(product.image);
     productImg.alt = `Фото товару: ${displayName}`;
+
+    productImg.removeAttribute('loading');
+    productImg.setAttribute('fetchpriority', 'high');
   }
 
   setupFavoriteButton(product.id);

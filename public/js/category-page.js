@@ -162,8 +162,9 @@ function renderProductsChunk(append = false) {
   if (filteredProducts.length === 0 && !append) {
     container.innerHTML = `<div class="no-results-box" style="grid-column: 1 / -1; text-align: center; padding: 40px;"><p class="no-results-title">Товарів за вашим запитом не знайдено</p></div>`;
   } else {
-    chunk.forEach((product) => {
-      container.appendChild(createProductCard(product));
+    chunk.forEach((product, index) => {
+      const isEager = !append && index < 4;
+      container.appendChild(createProductCard(product, isEager));
     });
   }
 

@@ -11,7 +11,7 @@ export function getOptimizedImg(url) {
   return url;
 }
 
-export function createProductCard(product) {
+export function createProductCard(product, isEager = false) {
   const isAvailable = product.total_stock > 0;
   const inFav = isFavorite(product.id);
 
@@ -28,15 +28,17 @@ export function createProductCard(product) {
     : `<div class="product-price-empty">Ціна уточнюється</div>`;
 
   const card = document.createElement('div');
-  card.classList.add('product-card')
+  card.classList.add('product-card');
   card.setAttribute('data-clarity-unmask', 'true');
+
+  const imgAttributes = isEager ? 'fetchpriority="high"' : 'loading="lazy"';
 
   card.innerHTML = `
     <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
     
     <a href="product.html?productId=${product.id}">
      <!-- <img src="${product.image}" alt="${product.name}"> -->
-     <img src="${optimizedImg}" loading="lazy" width="250" height="250" alt="${product.name}">
+     <img src="${optimizedImg}" ${imgAttributes} width="250" height="250" alt="${product.name}">
       <h3>${displayName}</h3>
     </a>
     <!--<p class="price">${priceDisplay}</p> -->
