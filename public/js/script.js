@@ -2,11 +2,12 @@ import { updateCartUI, addToCart, showToast } from './cart.js';
 import { updateFavoritesUI } from './favorites.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 
-export function getOptimizedImg(url) {
+export function getOptimizedImg(url, width = 400) {
   if (!url) return '';
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     // Вшиваем трансформации авто-формата (webp), авто-качества и ограничение ширины в 800px
-    return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+   /* return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/'); */
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
   }
   return url;
 }

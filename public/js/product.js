@@ -78,7 +78,7 @@ function renderProductInfo(product) {
 
   const productImg = document.getElementById('product-image');
   if (productImg) {
-    productImg.src = getOptimizedImg(product.image);
+    productImg.src = getOptimizedImg(product.image, 600);
     productImg.alt = `Фото товару: ${displayName}`;
 
     productImg.removeAttribute('loading');
@@ -539,7 +539,7 @@ document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'product-image') {
     if (modal && modalImg) {
       modal.style.display = 'flex';
-      modalImg.src = e.target.src;
+      modalImg.src = getOptimizedImg(currentProduct.image, 1200);
     }
   }
 });
