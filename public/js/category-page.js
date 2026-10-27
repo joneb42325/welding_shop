@@ -1,4 +1,4 @@
-import { createProductCard, loadCategories } from './script.js';
+import { createProductCard, getOptimizedImg } from './script.js';
 import { updateCartUI } from './cart.js';
 
 let allProducts = [];
@@ -54,8 +54,13 @@ async function loadCategoryTitle(categoryId) {
       }
     }
 
-    const bgUrl = category.image.startsWith('http') ? category.image : `images/${category.image}`;
-    header.style.backgroundImage = `url('${bgUrl}')`;
+    if (header && category.image) {
+      const rawBgUrl = category.image.startsWith('http')
+        ? category.image
+        : `images/${category.image}`;
+      const bgUrl = getOptimizedImg(rawBgUrl, 1000);
+      header.style.backgroundImage = `url('${bgUrl}')`;
+    }
   } catch (err) {
     console.error('Error loading category info', err);
   }
