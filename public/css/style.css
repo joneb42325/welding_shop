@@ -1105,7 +1105,6 @@ body {
 }
 
 .product-description {
-  margin-top: 20px;
   background: white;
   padding: 20px;
   border-radius: 12px;
@@ -3156,5 +3155,28 @@ textarea:-webkit-autofill:focus {
     width: 100%;
     text-align: center;
     box-sizing: border-box;
+  }
+
+  .quick-order-btn {
+    margin: 6px auto 0 auto;
+    width: 100%;
+  }
+
+  .quantity-controls {
+    gap: 10px;
+  }
+
+  /* Кнопки + и - */
+  .quantity-controls .qty-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  /* Поле ввода цифры */
+  .quantity-controls .qty-input {
+    width: 55px;
+    height: 38px;
+    font-size: 16px;
   }
 }
