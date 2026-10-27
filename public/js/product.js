@@ -1,6 +1,6 @@
 import { addToCart, updateCartUI, showToast, calculateDynamicPrice } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { getOptimizedImg } from './script.js';
+import { getOptimizedImg, createProductCard } from './script.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -22,6 +22,8 @@ async function initProductPage() {
 
     renderProductInfo(currentProduct);
     renderTable(currentProduct);
+
+    initRelatedProducts(currentProduct);
   } catch (err) {
     console.error('Помилка завантаження сторінки:', err);
     renderEmptyState();
@@ -547,6 +549,48 @@ if (modal) {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') modal.style.display = 'none';
   });
+}
+
+async function initRelatedProducts(currentProduct) {
+  const relatedContainer = document.getElementById('related-products-grid');
+  if (!relatedContainer || !currentProduct || !currentProduct.category_id) return;
+
+  try {
+    const res = await fetch(`/products/category/${currentProduct.category_id}`);
+    if (!res.ok) throw new Error('Помилка завантаження схожих товарів');
+
+    const categoryProducts = await res.json();
+
+    // Берем до 8 похожих товаров (исключая открытый)
+    const related = categoryProducts.filter((p) => p.id !== currentProduct.id).slice(0, 8);
+
+    if (related.length === 0) {
+      const section = document.querySelector('.related-section');
+      if (section) section.style.display = 'none';
+      return;
+    }
+
+    relatedContainer.innerHTML = '';
+    related.forEach((item) => {
+      const card = createProductCard(item);
+      relatedContainer.appendChild(card);
+    });
+
+    // Привязываем стрелки прокрутки (влево / вправо)
+    const prevBtn = document.getElementById('related-prev');
+    const nextBtn = document.getElementById('related-next');
+
+    if (prevBtn && nextBtn) {
+      prevBtn.onclick = () => {
+        relatedContainer.scrollBy({ left: -250, behavior: 'smooth' });
+      };
+      nextBtn.onclick = () => {
+        relatedContainer.scrollBy({ left: 250, behavior: 'smooth' });
+      };
+    }
+  } catch (err) {
+    console.error('Ошибка загрузки похожих товаров:', err);
+  }
 }
 
 initProductPage();
