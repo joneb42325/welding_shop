@@ -508,5 +508,31 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   });
 }
 
+// ----------------------------------------------------
+// ЛОГІКА ЗУМУ КАРТИНКИ (Модальне вікно)
+// ----------------------------------------------------
+const modal = document.getElementById('image-modal');
+const modalImg = document.getElementById('full-image');
+
+// Делегування кліку на зображення товару
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'product-image') {
+    if (modal && modalImg) {
+      modal.style.display = 'flex';
+      modalImg.src = e.target.src;
+    }
+  }
+});
+
+if (modal) {
+  modal.addEventListener('click', () => {
+    modal.style.display = 'none';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') modal.style.display = 'none';
+  });
+}
+
 initProductPage();
 updateCartUI();

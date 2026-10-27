@@ -60,6 +60,12 @@
 
     <footer class="footer"></footer>
 
+    <!-- Полноэкранная модалка для зума фото -->
+    <div id="image-modal" class="image-modal">
+      <span class="close-modal-img">&times;</span>
+      <img class="modal-content-img" id="full-image" alt="Збільшене фото товару">
+    </div>
+
     <script type="module">
       import { injectSidebar, injectHeader, injectFooter } from './js/layouts.js';
       injectSidebar();
