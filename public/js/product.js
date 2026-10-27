@@ -168,9 +168,12 @@ function renderTable(product) {
         </div>
         ${
           isAvailable
-            ? `<span class="row-total-price" style="font-size: 13px; font-weight: bold; color: #FFD700; margin-top: 8px; display: block; text-align: center;">
-                  Разом: <span class="total-val">0</span> грн
-                </span>`
+            ? `<div class="total-price-wrapper" style="margin-top: 8px; text-align: center;">
+        <span class="row-total-price" style="font-size: 13px; font-weight: bold; color: #FFD700; display: block;">
+          Разом: <span class="total-val">0</span> грн
+        </span>
+        <span class="dynamic-pricing-hint" style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;"></span>
+       </div>`
             : ''
         }
       </td>
@@ -219,7 +222,19 @@ function renderTable(product) {
       if (totalValEl) {
         totalValEl.textContent = finalTotal.toFixed(0);
       }
-    };
+
+      // Додаємо підказку про порізку/націнку, якщо у товару є dynamic pricing
+      const hintEl = row.querySelector('.dynamic-pricing-hint');
+      if (hintEl && product.has_dynamic_pricing) {
+        if (qty < 50) {
+          hintEl.textContent = '(вкл. порізку та націнку — див. опис)';
+          hintEl.style.color = '#94a3b8';
+        } else {
+          hintEl.textContent = '✓ Базова ціна (без націнки)';
+          hintEl.style.color = '#4ade80'; // Зелений колір при опті
+        }
+      }
+    };;
 
     updateTotalSum();
 
