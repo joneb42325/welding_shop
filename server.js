@@ -496,9 +496,10 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     markup_tier2,
     markup_tier3,
     cut_fee,
+    existing_image,
   } = req.body;
 
-  const image = req.file ? req.file.path : null;
+  const image = req.file ? req.file.path : existing_image || null;
   const isSpecial = is_special ? 1 : 0;
   const hasDynamic = has_dynamic_pricing ? 1 : 0;
   const productUnit = unit || 'шт';

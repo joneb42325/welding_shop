@@ -73,6 +73,7 @@ async function loadProducts() {
         style="width: 60px; text-align: center;"></td>
         <td>
           <button class="edit-btn" onclick="location.href='${editUrl}'">Редагувати</button>
+          <button class="duplicate-btn" onclick="location.href='product-add.html?duplicateId=${prod.id}'" style="background-color: #f39c12; color: white;">Дублювати</button>
           <button class="delete-btn" data-id="${prod.id}">Видалити</button>
         </td>
       `;
