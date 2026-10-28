@@ -107,7 +107,8 @@ export function removeFromCart(index) {
 
 export function getCartCount() {
   const cart = getCart();
-  return cart.reduce((count, item) => count + item.quantity, 0);
+  return cart.length;
+ /* return cart.reduce((count, item) => count + item.quantity, 0); */
 }
 
 export function clearCart() {
