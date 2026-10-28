@@ -81,6 +81,7 @@ export function createProductCard(product, isEager = false) {
 
         // ПАРАМЕТРИ ДИНАМІЧНОГО ЦІНОУТВОРЕННЯ
         has_dynamic_pricing: product.has_dynamic_pricing,
+        is_wholesale: product.is_wholesale,
         markup_tier1: product.markup_tier1,
         markup_tier2: product.markup_tier2,
         markup_tier3: product.markup_tier3,

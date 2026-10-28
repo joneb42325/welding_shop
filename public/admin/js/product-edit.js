@@ -78,6 +78,10 @@ async function loadProduct() {
     document.getElementById('manufacturer-select').value = product.manufacturer_id;
     document.getElementById('is_special').checked = product.is_special === 1;
 
+    if (isWholesaleCheckbox) {
+      isWholesaleCheckbox.checked = product.is_wholesale === 1;
+    }
+
     document.getElementById('diameter').value = product.diameter || '';
     document.getElementById('weight').value = product.weight || '';
     document.getElementById('price_retail').value = product.price_retail || 0;
@@ -164,6 +168,7 @@ window.addEventListener('load', async () => {
 });
 
 const dynamicCheckbox = document.getElementById('has_dynamic_pricing');
+const isWholesaleCheckbox = document.getElementById('is_wholesale');
 const dynamicSettings = document.getElementById('dynamic-pricing-settings');
 
 if (dynamicCheckbox && dynamicSettings) {

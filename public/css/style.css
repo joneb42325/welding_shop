@@ -3401,4 +3401,49 @@ textarea:-webkit-autofill:focus {
     width: 34px;
     height: 34px;
   }
+
+  /* === ЗАЩИТА ТАБЛИЦЫ СКИДОК ОТ ОБЪЕМА НА МОБИЛЬНЫХ === */
+  #volume-discounts-block {
+    width: 100% !important;
+    box-sizing: border-box !important;
+
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding: 12px !important;
+  }
+
+  #volume-discounts-block table {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  #volume-discounts-block thead {
+    display: table-header-group !important;
+  }
+
+  #volume-discounts-block tbody {
+    display: table-row-group !important;
+  }
+
+  #volume-discounts-block tr {
+    display: table-row !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  #volume-discounts-block td,
+  #volume-discounts-block th {
+    display: table-cell !important;
+    width: auto !important;
+    padding: 8px 4px !important;
+    font-size: 12px !important;
+    text-align: left !important;
+  }
+
+  #volume-discounts-block td::before {
+    content: none !important; /* Убираем подставление фейковых заголовков */
+  }
 }

@@ -46,6 +46,44 @@ const storage = multer.diskStorage({
 });
  */
 
+function calculateDynamicPrice(item, quantity) {
+  const qty = parseFloat(quantity) || 1;
+  const threshold = parseInt(item.wholesale_threshold) || 50;
+  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+  const wholesale = parseFloat(item.price_wholesale) || 0;
+  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
+
+  const d1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.0;
+  const d2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.15;
+  const d3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.35;
+
+  let discount = 0;
+
+  if (qty >= 1 && qty < 5) {
+    discount = d1;
+  } else if (qty >= 5 && qty < 10) {
+    discount = d2;
+  } else if (qty >= 10 && qty < threshold) {
+    discount = d3;
+  } else if (qty >= 50) {
+    if (wholesale > 0 && wholesale < retail) {
+      discount = (retail - wholesale) / retail;
+    } else {
+      discount = 0.5;
+    }
+  }
+
+  const pricePerKg = Number((retail * (1 - discount)).toFixed(2));
+  const totalPrice = Math.round(qty * pricePerKg + cutFee);
+
+  return {
+    pricePerKg,
+    totalPrice,
+    cutFee,
+    discountPercent: Math.round(discount * 100),
+  };
+}
+
 const upload = multer({ storage: storage });
 
 app.get('/products/special', (req, res) => {
@@ -482,6 +520,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     category_id,
     description,
     is_special,
+    is_wholesale,
     has_dynamic_pricing,
     manufacturer_id,
     diameter,
@@ -501,13 +540,15 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
 
   const image = req.file ? req.file.path : existing_image || null;
   const isSpecial = is_special ? 1 : 0;
+  const isWholesale =
+    is_wholesale === '1' || is_wholesale === 'true' || is_wholesale === true ? 1 : 0;
   const hasDynamic = has_dynamic_pricing ? 1 : 0;
   const productUnit = unit || 'шт';
 
   const sql = `
       INSERT INTO products
-      (name, category_id, description, image, is_special, has_dynamic_pricing, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock, markup_tier1, markup_tier2, markup_tier3, cut_fee)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (name, category_id, description, image, is_special, is_wholesale, has_dynamic_pricing, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock, markup_tier1, markup_tier2, markup_tier3, cut_fee)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -518,6 +559,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       description,
       image,
       isSpecial,
+      isWholesale,
       hasDynamic,
       manufacturer_id,
       diameter,
@@ -528,9 +570,9 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       productUnit,
       wholesale_threshold || 50,
       stock || 0,
-      markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.75,
-      markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.5,
-      markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.25,
+      markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.00,
+      markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.15,
+      markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.35,
       cut_fee !== undefined ? parseInt(cut_fee) : 40,
     ],
     (err) => {
@@ -791,124 +833,6 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
   });
 });
 
-// GET all options for a product
-app.get('/admin/product-options/product/:productId', adminAuth, (req, res) => {
-  const productId = req.params.productId;
-  const query = `
-    SELECT
-      po.id,
-      po.product_id,
-      po.diameter,
-      po.weight,
-      po.price_retail,
-      po.price_company,
-      po.price_wholesale,
-      po.stock
-    FROM product_options po
-    WHERE po.product_id = ?
-  `;
-  db.query(query, [productId], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Помилка БД' });
-    res.json(results);
-  });
-});
-
-//GET BY ID
-
-app.get('/admin/product-options/edit/:id', adminAuth, (req, res) => {
-  const id = req.params.id;
-  const query = `
-    SELECT * FROM product_options WHERE id = ?
-  `;
-  db.query(query, [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
-    if (results.length === 0) return res.status(404).json({ error: 'Опцію не знайдено' });
-    res.json(results[0]);
-  });
-});
-
-// GET all product-options
-app.get('/admin/product-options/all', adminAuth, (req, res) => {
-  const query = `
-    SELECT 
-      po.*, 
-      p.name AS product_name,
-      m.name AS manufacturer
-    FROM product_options po
-    JOIN products p ON po.product_id = p.id
-    JOIN manufacturers m ON po.manufacturer_id = m.id
-  `;
-  db.query(query, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
-    res.json(results);
-  });
-});
-// POST new product option
-app.post('/admin/product-options', adminAuth, (req, res) => {
-  const {
-    product_id,
-    manufacturer_id,
-    diameter,
-    weight,
-    price_retail,
-    price_company,
-    price_wholesale,
-    stock,
-  } = req.body;
-  const query = `
-    INSERT INTO product_options
-    (product_id, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `;
-  db.query(
-    query,
-    [
-      product_id,
-      manufacturer_id,
-      diameter,
-      weight,
-      price_retail,
-      price_company,
-      price_wholesale,
-      stock,
-    ],
-    (err) => {
-      if (err) return res.status(500).json({ error: 'Помилка БД' });
-      res.json({ success: true });
-    }
-  );
-});
-
-// PUT update product option
-app.put('/admin/product-options/:id', adminAuth, (req, res) => {
-  const id = req.params.id;
-  const { manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock } =
-    req.body;
-  const query = `
-    UPDATE product_options
-    SET manufacturer_id = ?, diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, stock = ?
-    WHERE id = ?
-  `;
-  db.query(
-    query,
-    [manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, stock, id],
-    (err) => {
-      if (err) return res.status(500).json({ error: 'Помилка БД' });
-      res.json({ success: true });
-    }
-  );
-});
-
-// DELETE product option
-app.delete('/admin/product-options/:id', adminAuth, (req, res) => {
-  const id = req.params.id;
-  const query = 'DELETE FROM product_options WHERE id = ?';
-  db.query(query, [id], (err) => {
-    if (err) return res.status(500).json({ error: 'Помилка БД' });
-    res.json({ success: true });
-  });
-});
-
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -932,7 +856,7 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
       message += `\n  <b>Виробник:</b> ${brandName}`;
     }
     if (item.has_dynamic_pricing) {
-      const calc = calculateDynamicPriceServer(item, item.quantity);
+      const calc = calculateDynamicPrice(item, item.quantity);
       message += `\n К-ть: ${item.quantity} кг (${calc.pricePerKg} грн/кг + порізка ${calc.cutFee} грн) | Сума: ${calc.totalPrice} грн\n`;
     } else {
       const unitPrice = parseFloat(item.price).toFixed(2);
@@ -974,7 +898,7 @@ app.post('/api/orders', (req, res) => {
 
     if (item.has_dynamic_pricing) {
 
-      const calc = calculateDynamicPriceServer(
+      const calc = calculateDynamicPrice(
         item,
         item.quantity,
         item.price_retail || item.price
@@ -1121,7 +1045,7 @@ app.post('/api/quick-order', (req, res) => {
 
     // Если у товара динамическая цена — считаем через вашу серверную функцию
     if (product && hasDynamic) {
-      const calc = calculateDynamicPriceServer(
+      const calc = calculateDynamicPrice(
         product,
         qty,
         product.price_retail || finalItemPrice
@@ -1234,42 +1158,6 @@ app.post('/api/quick-order', (req, res) => {
   });
 });
 
-function calculateDynamicPriceServer(item, quantity) {
-  const qty = parseFloat(quantity) || 1;
-  let base = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
-
-  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
-  const t1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.75;
-  const t2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.5;
-  const t3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.25;
-
-  const threshold = parseInt(item.wholesale_threshold) || 50;
-
-  let markup = 0;
-
-  if (qty >= 1 && qty < 5) {
-    markup = t1;
-  } else if (qty >= 5 && qty < 10) {
-    markup = t2;
-  } else if (qty >= 10 && qty < 50) {
-    markup = t3;
-  } else if (qty >= 50 && qty < threshold) {
-    markup = 0.0;
-  } else if (qty >= threshold) {
-    markup = 0.0;
-    const wholesale = parseFloat(item.price_wholesale);
-    if (wholesale > 0) {
-      base = wholesale;
-    }
-  }
-
-  const pricePerKg = Number((base * (1 + markup)).toFixed(2));
-  const totalPrice = Number((qty * pricePerKg + cutFee).toFixed(2));
-
-  return { pricePerKg, totalPrice, cutFee };
-}
-
-
 // GET - Генерація XML-фіду товарів для Google Merchant Center
 app.get('/feed.xml', (req, res) => {
   const query = `
@@ -1310,8 +1198,11 @@ app.get('/feed.xml', (req, res) => {
 
     // Проходимось по кожному товару і додаємо його у фід
     results.forEach((product) => {
-      // Беремо роздрібну ціну. Якщо ціни немає (0) — Гугл такий товар не пропустить, тому пропускаємо його
-      const price = parseFloat(product.price_retail) || 0;
+
+      const price = product.is_wholesale
+        ? parseFloat(product.price_wholesale) || parseFloat(product.price) || 0
+        : parseFloat(product.price_retail) || parseFloat(product.price) || 0;
+
       if (price === 0) return;
 
       const title = escapeXml(product.name);

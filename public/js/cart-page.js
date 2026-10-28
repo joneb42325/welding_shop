@@ -5,9 +5,9 @@ import {
   changeQuantity,
   updateCartUI,
   clearCart,
-  calculateDynamicPrice,
 } from './cart.js';
-import { loadCategories, getOptimizedImg } from './script.js';
+import { getOptimizedImg } from './script.js';
+import { calculateDynamicPrice } from './pricing.js';
 
 refreshCart();
 
@@ -47,6 +47,7 @@ function renderCartPage() {
 
     // Отримуємо юніт з товару, якщо його немає (старі товари) — ставимо 'шт'
     const unit = item.unit || 'шт';
+    const isWholesaleOnly = Boolean(item.is_wholesale);
 
     if (item.has_dynamic_pricing) {
       const calc = calculateDynamicPrice(item, item.quantity);
@@ -77,12 +78,12 @@ function renderCartPage() {
       const threshold = parseInt(item.wholesale_threshold) || 999999;
       const isWholesale = item.quantity >= threshold;
 
-      if (isWholesale) {
+      if (isWholesale || isWholesaleOnly) {
         statusContent = `<strong class="opt-badge">ОПТ</strong>`;
         priceClass = 'opt-price';
       } else {
         statusContent = formatType(item.selectedType);
-        if (threshold < 999999) {
+        if (!isWholesaleOnly && threshold < 999999) {
           statusContent += `<br><span class="opt-hint">Опт ціна від ${threshold} ${unit}</span>`;
         }
       }

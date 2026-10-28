@@ -1,6 +1,7 @@
-import { addToCart, updateCartUI, showToast, calculateDynamicPrice } from './cart.js';
+import { addToCart, updateCartUI, showToast} from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 import { getOptimizedImg, createProductCard } from './script.js';
+import { calculateDynamicPrice } from './pricing.js';
 
 const params = new URLSearchParams(window.location.search);
 const productId = params.get('productId');
@@ -22,6 +23,7 @@ async function initProductPage() {
 
     renderProductInfo(currentProduct);
     renderTable(currentProduct);
+    renderVolumeDiscountTable(currentProduct);
 
     initRelatedProducts(currentProduct);
   } catch (err) {
@@ -147,25 +149,38 @@ function renderTable(product) {
 
   const tbody = section.querySelector('tbody');
   const isAvailable = product.stock > 0;
-  let selectedType = 'retail';
+  const isWholesaleOnly = Boolean(product.is_wholesale);
+  let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
 
   const row = document.createElement('tr');
   if (!isAvailable) row.classList.add('out-of-stock-row');
 
+  const retailCellHTML = isWholesaleOnly
+    ? `<span style="text-decoration: line-through;">${product.price_retail} грн</span><br>`
+    : `${product.price_retail} грн / ${product.unit || 'шт'}`;
+
+  const companyCellHTML = isWholesaleOnly
+    ? `<span style="text-decoration: line-through;">${product.price_company || product.price_retail} грн</span>`
+    : `${product.price_company || product.price_retail} грн / ${product.unit || 'шт'}`;
+
+  const wholesaleCellHTML = isWholesaleOnly
+    ? `<span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>`
+    : `<div class="wholesale-info" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>
+        <span class="threshold-text">від ${product.wholesale_threshold || 50} ${product.unit || 'шт'}</span>
+       </div>`;
+
   row.innerHTML = `
       <td>${product.diameter || '-'} мм</td>
       <td>${product.weight || '-'} кг</td>
-      <td class="price-cell ${isAvailable ? 'active' : ''}" data-type="retail">
-        ${product.price_retail} грн / ${product.unit || 'шт'}
+      <td class="price-cell ${!isWholesaleOnly && isAvailable ? 'active' : ''} ${isWholesaleOnly ? 'disabled-cell' : ''}" data-type="retail" style="${isWholesaleOnly ? 'pointer-events: none; opacity: 0.5;' : ''}">
+        ${retailCellHTML}
       </td>
-      <td class="price-cell" data-type="company">
-        ${product.price_company || product.price_retail} грн / ${product.unit || 'шт'}
+      <td class="price-cell ${isWholesaleOnly ? 'disabled-cell' : ''}" data-type="company" style="${isWholesaleOnly ? 'pointer-events: none; opacity: 0.5;' : ''}">
+        ${companyCellHTML}
       </td>
       <td class="price-cell" data-type="wholesale">
-        <div class="wholesale-info" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-          <span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>
-          <span class="threshold-text">від ${product.wholesale_threshold || 50} ${product.unit || 'шт'}</span>
-        </div>
+       ${wholesaleCellHTML}
       </td>
       <td>
         <div class="quantity-controls">
@@ -223,6 +238,7 @@ function renderTable(product) {
     };
 
     // Оновлення підсумкової суми в таблиці
+    // Оновлення підсумкової суми в таблиці
     const updateTotalSum = () => {
       const qty = parseInt(qtyInput.value) || 1;
       const finalTotal = calculateTotal(qty);
@@ -230,22 +246,44 @@ function renderTable(product) {
         totalValEl.textContent = finalTotal.toFixed(0);
       }
 
-      // Додаємо підказку про порізку/націнку, якщо у товару є dynamic pricing
+      // Підказка про знижку та порізку
       const hintEl = row.querySelector('.dynamic-pricing-hint');
       if (hintEl && product.has_dynamic_pricing) {
-        if (qty < 50) {
-          hintEl.textContent = '(вкл. порізку та націнку — див. опис)';
-          hintEl.style.color = '#94a3b8';
+        const threshold = parseInt(product.wholesale_threshold) || 50;
+        const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) : 40;
+
+        // Визначаємо процент знижки
+        let discountPercent = 0;
+        if (qty >= 5 && qty < 10) {
+          discountPercent = Math.round((parseFloat(product.markup_tier2) || 0.15) * 100);
+        } else if (qty >= 10 && qty < threshold) {
+          discountPercent = Math.round((parseFloat(product.markup_tier3) || 0.3) * 100);
+        }
+
+        if (qty >= threshold) {
+          hintEl.textContent = '✓ Застосовано оптову ціну';
+          hintEl.style.color = '#4ade80'; // Зеленый цвет при опте
         } else {
-          hintEl.textContent = '✓ Базова ціна (без націнки)';
-          hintEl.style.color = '#4ade80'; // Зелений колір при опті
+          let text = '';
+          if (discountPercent > 0) {
+            text = `(знижка -${discountPercent}%`;
+            if (cutFee > 0) text += `, вкл. порізку ${cutFee} грн`;
+            text += ')';
+          } else {
+            if (cutFee > 0) {
+              text = `(вкл. порізку ${cutFee} грн)`;
+            }
+          }
+          hintEl.textContent = text;
+          hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
         }
       }
-    };;
+    };
 
     updateTotalSum();
 
     const checkWholesaleThreshold = () => {
+      if (isWholesaleOnly) return;
       const qty = parseInt(qtyInput.value) || 1;
       const threshold = product.wholesale_threshold || 50;
 
@@ -268,6 +306,8 @@ function renderTable(product) {
 
     row.querySelectorAll('.price-cell').forEach((cell) => {
       cell.addEventListener('click', () => {
+        if (isWholesaleOnly) return;
+
         selectedType = cell.dataset.type;
         row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
         cell.classList.add('active');
@@ -344,6 +384,7 @@ function renderTable(product) {
         wholesale_threshold: product.wholesale_threshold,
         unit: product.unit || 'шт',
         has_dynamic_pricing: product.has_dynamic_pricing,
+        is_wholesale: product.is_wholesale,
         markup_tier1: product.markup_tier1,
         markup_tier2: product.markup_tier2,
         markup_tier3: product.markup_tier3,
@@ -597,6 +638,79 @@ async function initRelatedProducts(currentProduct) {
     console.error('Ошибка загрузки похожих товаров:', err);
   }
 }
+function renderVolumeDiscountTable(product) {
+  if (!product.has_dynamic_pricing || product.is_wholesale) return;
 
+  // Ищем блок доставки
+  const deliverySection = document.querySelector('.product-delivery-info');
+  if (!deliverySection) return;
+
+  const existingBlock = document.getElementById('volume-discounts-block');
+  if (existingBlock) existingBlock.remove();
+
+  const retail = parseFloat(product.price_retail) || 0;
+  const wholesale = parseFloat(product.price_wholesale) || 0;
+  const threshold = parseInt(product.wholesale_threshold) || 50;
+  const unit = product.unit || 'кг';
+  const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) : 40;
+
+  const t1 = parseFloat(product.markup_tier1) || 0.0;
+  const t2 = parseFloat(product.markup_tier2) || 0.15;
+  const t3 = parseFloat(product.markup_tier3) || 0.3;
+
+  // Расчёт цены за 1 кг
+  const p1 = (retail * (1 - t1)).toFixed(2);
+  const p2 = (retail * (1 - t2)).toFixed(2);
+  const p3 = (retail * (1 - t3)).toFixed(2);
+
+  const tableHTML = `
+    <div id="volume-discounts-block" style="margin: 24px auto; background: #1e293b; padding: 18px; border-radius: 10px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
+      <h4 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+        📊 Знижки від об'єму (порізка від 1 ${unit}):
+      </h4>
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; color: #e2e8f0;">
+        <thead>
+          <tr style="border-bottom: 1px solid #475569; color: #94a3b8; font-size: 12px; text-transform: uppercase;">
+            <th style="padding: 8px;">Об'єм</th>
+            <th style="padding: 8px;">Знижка</th>
+            <th style="padding: 8px;">Ціна за 1 ${unit}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px;">1 – 5 ${unit}</td>
+            <td style="padding: 8px; color: #94a3b8;">0% (база)</td>
+            <td style="padding: 8px; font-weight: bold;">${p1} грн</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px;">5 – 10 ${unit}</td>
+            <td style="padding: 8px; color: #4ade80; font-weight: bold;">-${Math.round(t2 * 100)}%</td>
+            <td style="padding: 8px; font-weight: bold;">${p2} грн</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 8px;">10 – ${threshold} ${unit}</td>
+            <td style="padding: 8px; color: #4ade80; font-weight: bold;">-${Math.round(t3 * 100)}%</td>
+            <td style="padding: 8px; font-weight: bold;">${p3} грн</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; color: #ffd700; font-weight: bold;">від ${threshold} ${unit} (Опт)</td>
+            <td style="padding: 8px; color: #ffd700; font-weight: bold;">Оптова ціна</td>
+            <td style="padding: 8px; font-weight: bold; color: #ffd700;">${wholesale.toFixed(2)} грн</td>
+          </tr>
+        </tbody>
+      </table>
+      ${
+        cutFee > 0
+          ? `<p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; border-top: 1px dashed #334155; padding-top: 8px;">
+              * До роздрібних замовлень (до ${threshold} ${unit}) додається разовий збір за порізку/фасування — <strong>${cutFee} грн</strong> на позицію.
+            </p>`
+          : ''
+      }
+    </div>
+  `;
+
+  // Вставляем строго перед блоком с условиями доставки
+  deliverySection.insertAdjacentHTML('beforebegin', tableHTML);
+}
 initProductPage();
 updateCartUI();

@@ -1,3 +1,5 @@
+import { calculateDynamicPrice } from './pricing.js';
+
 const CART_KEY = 'cart';
 
 export function getCart() {
@@ -6,41 +8,6 @@ export function getCart() {
 
 export function saveCart(cart) {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
-}
-
-export function calculateDynamicPrice(item, quantity) {
-  const qty = parseFloat(quantity) || 1;
-  let base = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
-
-  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
-  const t1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.75;
-  const t2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.5;
-  const t3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.25;
-
-  const threshold = parseInt(item.wholesale_threshold) || 50;
-  let markup = 0;
-
-  if (qty >= 1 && qty < 5) {
-    markup = t1;
-  } else if (qty >= 5 && qty < 10) {
-    markup = t2;
-  } else if (qty >= 10 && qty < 50) {
-    markup = t3;
-  } else if (qty >= 50 && qty < threshold) {
-    markup = 0.0;
-  } else if (qty >= threshold) {
-    markup = 0.0;
-    const wholesale = parseFloat(item.price_wholesale);
-    if (wholesale > 0) {
-      base = wholesale;
-    }
-  }
-
-  // ПРИБРАНО Math.round, щоб не губилися копійки
-  const pricePerKg = Number((base * (1 + markup)).toFixed(2));
-  const totalPrice = Math.round(qty * pricePerKg + cutFee);
-
-  return { pricePerKg, totalPrice, cutFee, markupPercent: markup * 100 };
 }
 
 export function getCartTotal() {
