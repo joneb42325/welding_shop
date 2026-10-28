@@ -608,6 +608,44 @@ app.put('/admin/products/reorder', adminAuth, async (req, res) => {
   }
 });
 
+
+app.put('/admin/products/update-prices', adminAuth, (req, res) => {
+  const { items } = req.body;
+
+  if (!items || !Array.isArray(items)) {
+    return res.status(400).json({ error: 'Некоректний формат даних' });
+  }
+
+  // Створюємо масив промісів для кожного товару
+  const promises = items.map((item) => {
+    return new Promise((resolve, reject) => {
+      const pRetail = parseFloat(item.price_retail) || 0;
+      const pCompany = parseFloat(item.price_company) || 0;
+      const pWholesale = parseFloat(item.price_wholesale) || 0;
+
+      db.query(
+        `UPDATE products 
+         SET price_retail = ?, price_company = ?, price_wholesale = ? 
+         WHERE id = ?`,
+        [pRetail, pCompany, pWholesale, item.id],
+        (err, result) => {
+          if (err) reject(err);
+          else resolve(result);
+        }
+      );
+    });
+  });
+
+  Promise.all(promises)
+    .then(() => {
+      res.json({ success: true, message: 'Ціни успішно оновлено' });
+    })
+    .catch((err) => {
+      console.error('Помилка масового оновлення цін:', err);
+      res.status(500).json({ error: 'Помилка бази даних' });
+    });
+});
+
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {
   const productId = req.params.id;
 
@@ -1303,5 +1341,6 @@ app.get('/sitemap.xml', (req, res) => {
     });
   });
 });
+
 
 

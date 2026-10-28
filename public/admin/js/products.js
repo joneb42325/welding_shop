@@ -63,9 +63,15 @@ async function loadProducts() {
         <td class="description-cell" title="${prod.description}">
             ${prod.description || 'Немає опису'}
         </td>
-       <td> ${pRetail} </td>
-       <td> ${pCompany} </td>
-       <td> ${pWholesale} </td>
+       <td> 
+       <input type="number" class="price-input" data-id="${prod.id}" data-field="price_retail" value="${pRetail}" step="0.01" style="width: 75px; text-align: center;">
+        </td>
+       <td>
+          <input type="number" class="price-input" data-id="${prod.id}" data-field="price_company" value="${pCompany}" step="0.01" style="width: 75px; text-align: center;">
+      </td>
+       <td>
+            <input type="number" class="price-input" data-id="${prod.id}" data-field="price_wholesale" value="${pWholesale}" step="0.01" style="width: 75px; text-align: center;">
+        </td>
        <td> ${stock} ${unit}</td>
         <td>${prod.wholesale_threshold}</td>
         <td>${prod.is_special ? '✅' : '-'}</td>
@@ -122,6 +128,44 @@ document.getElementById('save-order-btn').addEventListener('click', async() => {
       alert('Server error');
     }
 })
+
+document.getElementById('save-prices-btn').addEventListener('click', async () => {
+  const inputs = document.querySelectorAll('.price-input');
+
+  // Группируем изменения по id товара
+  const priceUpdates = {};
+
+  inputs.forEach((input) => {
+    const id = input.dataset.id;
+    const field = input.dataset.field;
+    const value = parseFloat(input.value) || 0;
+
+    if (!priceUpdates[id]) {
+      priceUpdates[id] = { id };
+    }
+    priceUpdates[id][field] = value;
+  });
+
+  const items = Object.values(priceUpdates);
+
+  try {
+    const response = await fetch('/admin/products/update-prices', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ items }),
+    });
+
+    if (response.ok) {
+      alert('Ціни успішно оновлено!');
+    } else {
+      alert('Помилка при збереженні цін.');
+    }
+  } catch (err) {
+    console.error('Помилка мережі:', err);
+    alert('Server error');
+  }
+});
 
 window.addEventListener('load', async () => {
   try {
