@@ -655,6 +655,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     category_id,
     description,
     is_special,
+    is_wholesale,
     has_dynamic_pricing,
     manufacturer_id,
     diameter,
@@ -671,12 +672,16 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     cut_fee,
   } = req.body;
 
-  // Форматування даних для БД
-  const specialVal = is_special ? 1 : 0;
+  // Форматування булевих прапорів (аналогічно до POST)
+  const isSpecial = is_special === '1' || is_special === 'true' || is_special === true ? 1 : 0;
+  const isWholesale =
+    is_wholesale === '1' || is_wholesale === 'true' || is_wholesale === true ? 1 : 0;
   const hasDynamic =
-    has_dynamic_pricing === 'true' || has_dynamic_pricing === '1' || has_dynamic_pricing === 1
+    has_dynamic_pricing === '1' || has_dynamic_pricing === 'true' || has_dynamic_pricing === true
       ? 1
       : 0;
+
+  // Форматування типів даних для БД
   const mId = manufacturer_id ? parseInt(manufacturer_id) : null;
   const pRetail = parseFloat(price_retail) || 0;
   const pCompany = parseFloat(price_company) || 0;
@@ -686,9 +691,9 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
   const s = parseInt(stock) || 0;
 
   // Парсинг полів формули
-  const mTier1 = markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.75;
-  const mTier2 = markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.5;
-  const mTier3 = markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.25;
+  const mTier1 = markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.0;
+  const mTier2 = markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.15;
+  const mTier3 = markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.35;
   const cFee = cut_fee !== undefined ? parseInt(cut_fee) : 40;
 
   // Пошук старої картинки для видалення з Cloudinary (якщо завантажено нову)
@@ -700,21 +705,22 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
     let query;
     let params;
 
-    // 2. Формуємо єдиний запит UPDATE з урахуванням нових полів формули
+    // 2. Формуємо єдиний запит UPDATE з урахуванням is_wholesale
     if (req.file) {
       // Якщо завантажено нове фото
       query = `
         UPDATE products SET
-          name = ?, category_id = ?, description = ?, is_special = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
-          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?, image = ?
+                          name = ?, category_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
+                          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?, image = ?
         WHERE id = ?
       `;
       params = [
         name,
         category_id,
         description,
-        specialVal,
+        isSpecial,
+        isWholesale,
         hasDynamic,
         mId,
         diameter,
@@ -736,16 +742,17 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       // Якщо фото не змінювалось
       query = `
         UPDATE products SET
-          name = ?, category_id = ?, description = ?, is_special = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
-          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
-          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?
+                          name = ?, category_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+                          diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
+                          markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?
         WHERE id = ?
       `;
       params = [
         name,
         category_id,
         description,
-        specialVal,
+        isSpecial,
+        isWholesale,
         hasDynamic,
         mId,
         diameter,

@@ -163,9 +163,8 @@ function renderTable(product) {
     ? `<span style="text-decoration: line-through;">${product.price_company || product.price_retail} грн</span>`
     : `${product.price_company || product.price_retail} грн / ${product.unit || 'шт'}`;
 
-  const wholesaleCellHTML = isWholesaleOnly
-    ? `<span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>`
-    : `<div class="wholesale-info" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+  const wholesaleCellHTML =
+    `<div class="wholesale-info" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>
         <span class="threshold-text">від ${product.wholesale_threshold || 50} ${product.unit || 'шт'}</span>
        </div>`;

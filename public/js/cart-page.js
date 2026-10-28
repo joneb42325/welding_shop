@@ -83,7 +83,7 @@ function renderCartPage() {
         priceClass = 'opt-price';
       } else {
         statusContent = formatType(item.selectedType);
-        if (!isWholesaleOnly && threshold < 999999) {
+        if (threshold < 999999) {
           statusContent += `<br><span class="opt-hint">Опт ціна від ${threshold} ${unit}</span>`;
         }
       }
