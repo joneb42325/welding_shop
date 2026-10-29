@@ -186,6 +186,40 @@ const orderButton = document.querySelector('.order-button');
 const checkoutForm = document.getElementById('checkout-form');
 const modalTotalPrice = document.getElementById('modal-total-price');
 
+// Функция управления подсказкой скролла
+function initModalScrollHint() {
+  const modalContent = document.querySelector('.modal-content');
+  const checkoutForm = document.getElementById('checkout-form');
+  if (!modalContent || !checkoutForm) return;
+
+  // Удаляем старую подсказку, если она была
+  const oldHint = document.getElementById('modal-scroll-hint');
+  if (oldHint) oldHint.remove();
+
+  // Создаем элемент подсказки
+  const hint = document.createElement('div');
+  hint.id = 'modal-scroll-hint';
+  hint.className = 'scroll-hint';
+  hint.innerHTML = 'Прокрутіть вниз ⬇';
+
+  checkoutForm.appendChild(hint);
+
+  // Слушатель события скролла
+  const handleScroll = () => {
+    // Если пользователь проскроллил больше чем на 40px
+    if (modalContent.scrollTop > 40) {
+      hint.classList.add('hidden-hint');
+    } else {
+      hint.classList.remove('hidden-hint');
+    }
+  };
+
+  // Сбрасываем скролл модалки в самый верх при открытии
+  modalContent.scrollTop = 0;
+  modalContent.removeEventListener('scroll', handleScroll);
+  modalContent.addEventListener('scroll', handleScroll);
+}
+
 if (orderButton) {
   orderButton.addEventListener('click', () => {
     const cart = getCart();
@@ -195,6 +229,8 @@ if (orderButton) {
     }
     modalTotalPrice.textContent = getCartTotal();
     checkoutModal.classList.remove('hidden');
+
+    initModalScrollHint();
   });
 }
 
@@ -225,7 +261,20 @@ if (checkoutForm) {
     e.preventDefault();
 
     const formData = new FormData(checkoutForm);
-    const customerData = Object.fromEntries(formData.entries());
+    const rawData = Object.fromEntries(formData.entries());
+
+    // Собираем разрозненные поля доставки в удобную строку для БД и Telegram
+    const fullDelivery = `${rawData.delivery_service || 'Нова Пошта'}: ${rawData.city}, ${rawData.warehouse}`;
+
+    const customerData = {
+      name: rawData.name,
+      phone: rawData.phone,
+      email: rawData.email || '',
+      delivery: fullDelivery,
+      comment: rawData.comment
+        ? `[Оплата: ${rawData.payment_method}] ${rawData.comment}`
+        : `[Оплата: ${rawData.payment_method}]`,
+    };
 
     const cartItems = getCart();
     const totalSum = getCartTotal();

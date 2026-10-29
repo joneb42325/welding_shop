@@ -1453,17 +1453,24 @@ body.no-scroll {
   color: #FFD700;
 }
 
+/* ==========================================================================
+   МОДАЛЬНЕ ВІКНО (ОФОРМЛЕННЯ ЗАМОВЛЕННЯ)
+   ========================================================================== */
+
 .modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
   display: flex;
   justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  align-items: center; /* На ПК по центру */
+  z-index: 9999;
+  padding: 15px;
+  box-sizing: border-box;
   opacity: 1;
   transition: opacity 0.3s ease;
 }
@@ -1476,72 +1483,106 @@ body.no-scroll {
 .modal-content {
   background-color: #1e222b;
   color: #ffffff;
-  padding: 30px;
   border-radius: 12px;
-  width: 90%;
+  width: 100%;
   max-width: 500px;
+  max-height: 90vh; /* Залишаємо відступи зверху і знизу */
+  overflow-y: auto; /* Плавний скролл всього контенту */
+  -webkit-overflow-scrolling: touch; /* Для ідеального скролу на iPhone */
   position: relative;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  padding: 30px;
+  box-sizing: border-box;
 }
 
-.modal-content h2 {
-  color: #FFD700;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+/* Красивий тонкий скролбар для модалки */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin: 10px 0;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #FFD700;
 }
 
+/* Хрестик закриття */
 .close-modal {
   position: absolute;
-  top: 15px;
-  right: 20px;
-  font-size: 24px;
+  top: 20px;
+  right: 25px;
+  font-size: 28px;
+  line-height: 1;
   font-weight: bold;
   cursor: pointer;
-  color: #aaa;
+  color: #94a3b8;
+  transition: color 0.2s ease;
+  z-index: 10;
 }
 
 .close-modal:hover {
-  color: red;
+  color: #ef4444;
 }
 
+/* Заголовок */
+.modal-content h2 {
+  color: #FFD700;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 15px;
+  margin: 0 0 25px 0;
+  font-size: 22px;
+}
+
+/* Поля вводу */
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
   display: flex;
   flex-direction: column;
 }
 
 .form-group label {
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 500;
+  margin-bottom: 6px;
   color: #cbd5e1;
+  font-size: 14px;
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.25);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
   font-family: inherit;
-  font-size: 14px;
-  transition: 0.3s;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus {
-  /* Цей хак замінює колір фону на дуже повільну анімацію внутрішньої тіні */
-  -webkit-box-shadow: 0 0 0px 1000px rgba(30, 34, 43, 0.9) inset !important;
-  /* Колір тексту */
-  -webkit-text-fill-color: #ffffff !important;
-  /* Плавність переходу */
-  transition: background-color 5000s ease-in-out 0s;
+/* Стилізація Select (випадаючого списку) */
+.form-group select {
+  cursor: pointer;
+  appearance: none; /* Прибираємо стандартну стрілку браузера */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.form-group select option {
+  background: #1e222b;
+  color: #ffffff;
 }
 
 .form-group input::placeholder,
@@ -1550,15 +1591,29 @@ textarea:-webkit-autofill:focus {
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   border-color: #2563eb;
   background: rgba(0, 0, 0, 0.4);
   outline: none;
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+/* Вирішення проблеми з автозаповненням в Chrome (білий фон) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(30, 34, 43, 0.9) inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Підвал з кнопкою і сумою */
 .modal-footer {
-  margin-top: 20px;
+  margin-top: 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 20px;
   display: flex;
@@ -1566,19 +1621,66 @@ textarea:-webkit-autofill:focus {
   align-items: center;
 }
 
-.submit-order-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
+.modal-footer h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #e2e8f0;
+}
+
+.modal-footer #modal-total-price {
+  color: #FFD700;
   font-weight: bold;
 }
 
+/* Кнопка відправки */
+.submit-order-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+  transition: all 0.3s ease;
+}
+
 .submit-order-btn:hover {
-  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* Подсказка прокрутки для модалки */
+.scroll-hint {
+  position: sticky;
+  bottom: 20px;
+  display: block;
+  width: 170px;
+  margin: 10px auto 0 auto;
+  padding: 8px 14px;
+  background: rgba(37, 99, 235, 0.95);
+  color: #ffffff;
+  text-align: center;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  animation: bounceHint 2s infinite ease-in-out;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.scroll-hint.hidden-hint {
+  opacity: 0;
+  visibility: hidden;
+}
+
+@keyframes bounceHint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 /* Контейнер віджета */
@@ -3445,5 +3547,33 @@ textarea:-webkit-autofill:focus {
 
   #volume-discounts-block td::before {
     content: none !important; /* Убираем подставление фейковых заголовков */
+  }
+  .modal {
+    align-items: flex-start; /* На мобільному модалка притискається вище */
+    padding: 10px;
+  }
+
+  .modal-content {
+    padding: 20px 15px;
+    max-height: 95vh; /* Максимум висоти */
+  }
+
+  .close-modal {
+    top: 15px;
+    right: 15px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+    text-align: center;
+    padding-top: 15px;
+  }
+
+  .submit-order-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
   }
 }

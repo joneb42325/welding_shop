@@ -1,138 +1,159 @@
 <!doctype html>
 <html lang="uk">
-  <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+    gtag('js', new Date());
 
-      gtag('config', 'G-X4VLDJJ2XJ');
-      gtag('config', 'AW-18487453527');
-    </script>
-    <!-- Вставляти у <head> після gtag.js -->
-    <script>
-      function gtag_report_conversion(url) {
-        var callback = function () {
-          if (typeof(url) != 'undefined') {
-            window.location = url;
-          }
-        };
-        gtag('event', 'conversion', {
-          'send_to': 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
-          'value': 1.0,
-          'currency': 'UAH',
-          'event_callback': callback
-        });
-        return false;
-      }
-    </script>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wolfram Shop</title>
-    <link rel="icon" type="image/png" href="images/logo.webp" />
-    <link rel="stylesheet" href="/css/style.css" />
-  </head>
-  <body>
-    <header class="header"></header>
-    <main class="main">
-      <aside class="sidebar"></aside>
-      <div class="content">
-        <section class="cart-section">
-          <div class="cart-header-actions">
-            <h1>Ваш кошик</h1>
-            <button id="clear-cart-btn" class="btn-outline-danger">Очистити кошик</button>
-          </div>
-          <div class="cart-container">
-            <table id="cart-table">
-              <thead>
-                <tr>
-                  <th>Товар</th>
-                  <th>Ціна</th>
-                  <th>Кількість</th>
-                  <th>Сума</th>
-                  <th>Тип</th>
-                  <th>Дія</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-          <div class="cart-summary">
-            <h3>Разом: <span id="cart-page-total">0</span> грн</h3>
-            <button class="order-button">Підтвердити замовлення</button>
-          </div>
-        </section>
+    gtag('config', 'G-X4VLDJJ2XJ');
+    gtag('config', 'AW-18487453527');
+  </script>
+  <!-- Вставляти у <head> після gtag.js -->
+  <script>
+    function gtag_report_conversion(url) {
+      var callback = function () {
+        if (typeof(url) != 'undefined') {
+          window.location = url;
+        }
+      };
+      gtag('event', 'conversion', {
+        'send_to': 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
+        'value': 1.0,
+        'currency': 'UAH',
+        'event_callback': callback
+      });
+      return false;
+    }
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wolfram Shop</title>
+  <link rel="icon" type="image/png" href="images/logo.webp" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="header"></header>
+<main class="main">
+  <aside class="sidebar"></aside>
+  <div class="content">
+    <section class="cart-section">
+      <div class="cart-header-actions">
+        <h1>Ваш кошик</h1>
+        <button id="clear-cart-btn" class="btn-outline-danger">Очистити кошик</button>
       </div>
+      <div class="cart-container">
+        <table id="cart-table">
+          <thead>
+          <tr>
+            <th>Товар</th>
+            <th>Ціна</th>
+            <th>Кількість</th>
+            <th>Сума</th>
+            <th>Тип</th>
+            <th>Дія</th>
+          </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="cart-summary">
+        <h3>Разом: <span id="cart-page-total">0</span> грн</h3>
+        <button class="order-button">Підтвердити замовлення</button>
+      </div>
+    </section>
+  </div>
 
-      <div id="checkout-modal" class="modal hidden">
-        <div class="modal-content">
-          <span class="close-modal">&times;</span>
-          <h2>Оформлення замовлення</h2>
-          <form id="checkout-form">
-            <div class="form-group">
-              <label for="client-name">ПІБ отримувача *</label>
-              <input
-                type="text"
-                id="client-name"
-                name="name"
-                required
-                placeholder="Іванов Іван Іванович"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="client-phone">Телефон *</label>
-              <input type="tel" id="client-phone" name="phone" required placeholder="+380..." />
-            </div>
-
-            <div class="form-group">
-              <label for="client-email">Email</label>
-              <input type="email" id="client-email" name="email" placeholder="taras@example.com" />
-            </div>
-
-            <div class="form-group">
-              <label for="client-delivery">Місто та відділення (наприклад, Нова Пошта) *</label>
-              <input
-                type="text"
-                id="client-delivery"
-                name="delivery"
-                required
-                placeholder="м. Київ, НП №1 або Делівері"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="client-comment">Коментар до замовлення</label>
-              <textarea
-                id="client-comment"
-                name="comment"
-                rows="3"
-                placeholder="Додаткові побажання..."
-              ></textarea>
-            </div>
-
-            <div class="modal-footer">
-              <h3>До сплати: <span id="modal-total-price">0</span> грн</h3>
-              <button type="submit" class="submit-order-btn">Відправити замовлення</button>
-            </div>
-          </form>
+  <div id="checkout-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Оформлення замовлення</h2>
+      <form id="checkout-form">
+        <div class="form-group">
+          <label for="client-name">ПІБ отримувача *</label>
+          <input
+            type="text"
+            id="client-name"
+            name="name"
+            required
+            placeholder="Іванов Іван Іванович"
+          />
         </div>
-      </div>
-    </main>
 
-    <footer class="footer"></footer>
+        <div class="form-group">
+          <label for="client-phone">Телефон *</label>
+          <input type="tel" id="client-phone" name="phone" required placeholder="+380..." />
+        </div>
 
-    <script type="module">
-      import { injectSidebar, injectHeader, injectFooter } from './js/layouts.js';
-      injectSidebar();
-      injectHeader();
-      injectFooter();
-    </script>
-    <script type="module" src="js/script.js"></script>
-    <script type="module" src="js/cart-page.js"></script>
-  </body>
+        <div class="form-group">
+          <label for="client-email">Email (за бажанням)</label>
+          <input type="email" id="client-email" name="email" placeholder="taras@example.com" />
+        </div>
+
+        <!-- Спосіб оплати -->
+        <div class="form-group">
+          <label for="payment-method">Спосіб оплати *</label>
+          <select id="payment-method" name="payment_method" required>
+            <option value="Накладений платіж (при отриманні)">Накладений платіж (при отриманні)</option>
+            <option value="Оплата на рахунок ФОП (IBAN)">Оплата на рахунок ФОП (IBAN)</option>
+            <option value="Оплата на картку">Оплата на картку</option>
+          </select>
+        </div>
+
+        <!-- Служба доставки -->
+        <div class="form-group">
+          <label for="delivery-service">Служба доставки *</label>
+          <select id="delivery-service" name="delivery_service" required>
+            <option value="Нова Пошта">Нова Пошта</option>
+            <option value="Делівері">Делівері</option>
+            <option value="Самовивіз у Харкові">Самовивіз у Харкові</option>
+          </select>
+        </div>
+
+        <!-- Місто / Область -->
+        <div class="form-group">
+          <label for="city">Місто / Населений пункт *</label>
+          <input type="text" id="city" name="city" placeholder="Наприклад: м. Миргород, Полтавська обл." required>
+        </div>
+
+        <!-- Відділення -->
+        <div class="form-group">
+          <label for="warehouse">№ Відділення або поштомату *</label>
+          <input type="text" id="warehouse" name="warehouse" placeholder="Наприклад: Відділення №1 або Поштомат №3456" required>
+        </div>
+
+        <div class="form-group">
+          <label for="client-comment">Коментар до замовлення</label>
+          <textarea
+            id="client-comment"
+            name="comment"
+            rows="3"
+            placeholder="Додаткові побажання..."
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <h3>До сплати: <span id="modal-total-price">0</span> грн</h3>
+          <button type="submit" class="submit-order-btn">Відправити замовлення</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="footer"></footer>
+
+<script type="module">
+  import { injectSidebar, injectHeader, injectFooter } from './js/layouts.js';
+  injectSidebar();
+  injectHeader();
+  injectFooter();
+</script>
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/cart-page.js"></script>
+</body>
 </html>
