@@ -152,6 +152,9 @@ function renderTable(product) {
   const isWholesaleOnly = Boolean(product.is_wholesale);
   let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
 
+  const minWholesaleQty = parseInt(product.wholesale_threshold) || 50;
+  const initialQty = isWholesaleOnly ? minWholesaleQty : 1;
+
   const row = document.createElement('tr');
   if (!isAvailable) row.classList.add('out-of-stock-row');
 
@@ -184,7 +187,13 @@ function renderTable(product) {
       <td>
         <div class="quantity-controls">
           <button class="qty-btn minus" ${!isAvailable ? 'disabled' : ''}>-</button>
-          <input type="number" class="qty-input" value="1" min="1" ${!isAvailable ? 'disabled' : ''}>
+          <input 
+          type="number" 
+        class="qty-input" 
+          value="${initialQty}" 
+          min="${isWholesaleOnly ? minWholesaleQty : 1}" 
+         ${!isAvailable ? 'disabled' : ''}
+          > 
           <button class="qty-btn plus" ${!isAvailable ? 'disabled' : ''}>+</button>
         </div>
         ${
@@ -239,7 +248,7 @@ function renderTable(product) {
     // Оновлення підсумкової суми в таблиці
     // Оновлення підсумкової суми в таблиці
     const updateTotalSum = () => {
-      const qty = parseInt(qtyInput.value) || 1;
+      const qty = parseInt(qtyInput.value) || initialQty;
       const finalTotal = calculateTotal(qty);
       if (totalValEl) {
         totalValEl.textContent = finalTotal.toFixed(0);
@@ -323,8 +332,9 @@ function renderTable(product) {
     });
 
     row.querySelector('.minus').addEventListener('click', () => {
-      let val = parseInt(qtyInput.value) || 1;
-      if (val > 1) {
+      let val = parseInt(qtyInput.value) || initialQty;
+      const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
+      if (val > minAllowed) {
         qtyInput.value = val - 1;
         checkWholesaleThreshold();
         updateTotalSum();
@@ -332,7 +342,7 @@ function renderTable(product) {
     });
 
     row.querySelector('.plus').addEventListener('click', () => {
-      let val = parseInt(qtyInput.value) || 1;
+      let val = parseInt(qtyInput.value) || initialQty;
       qtyInput.value = val + 1;
       checkWholesaleThreshold();
       updateTotalSum();
@@ -349,9 +359,10 @@ function renderTable(product) {
     });
 
     qtyInput.addEventListener('blur', () => {
+      const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
       const val = parseInt(qtyInput.value);
-      if (isNaN(val) || val < 1) {
-        qtyInput.value = 1;
+      if (isNaN(val) || val < minAllowed) {
+        qtyInput.value = minAllowed;
         checkWholesaleThreshold();
         updateTotalSum();
       }
@@ -363,7 +374,7 @@ function renderTable(product) {
 
     row.querySelector('.add-to-cart').addEventListener('click', () => {
       const price = product[`price_${selectedType}`] || product.price_retail;
-      const selectedQuantity = parseInt(qtyInput.value) || 1;
+      const selectedQuantity = parseInt(qtyInput.value) || initialQty;
 
       showToast(
         `${product.name} (${selectedQuantity} ${product.unit || 'шт'}) додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
@@ -396,7 +407,7 @@ function renderTable(product) {
     const quickBtn = row.querySelector('.quick-order-btn');
     if (quickBtn) {
       quickBtn.addEventListener('click', () => {
-        const selectedQuantity = parseInt(qtyInput.value) || 1;
+        const selectedQuantity = parseInt(qtyInput.value) || initialQty;
         const calculatedTotal = calculateTotal(selectedQuantity);
         openQuickOrderModal(product, calculatedTotal, selectedQuantity, selectedType);
       });
