@@ -502,7 +502,7 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
       <div class="quick-modal-box">
         <button class="quick-modal-close">&times;</button>
         <h3>Купити в 1 клік</h3>
-        <p>Заповніть форму, і ми якнайшвидше зв'яжемося з вами для уточнення деталей доставки.</p>
+        <p>Заповніть форму, і менеджер зателефонує вам для уточнення деталей (обробка замовлень: щодня з 10:00 до 17:00)</p>
 
         <div class="quick-order-summary">
           <span class="label">Ваше замовлення:</span>

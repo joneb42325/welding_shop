@@ -27,6 +27,9 @@ async function loadOrders() {
       if (order.status === 'В обробці') statusClass = 'status-process';
       if (order.status === 'Відправлено') statusClass = 'status-sent';
       if (order.status === 'Виконано') statusClass = 'status-done';
+      if (order.status === 'Виконано' || order.status === 'Виконано 💰') {
+        statusClass = 'status-done';
+      }
       if (order.status === 'Скасовано') statusClass = 'status-cancel';
 
       tr.innerHTML = `
@@ -41,6 +44,9 @@ async function loadOrders() {
             <option value="В обробці" ${order.status === 'В обробці' ? 'selected' : ''}>В обробці</option>
             <option value="Відправлено" ${order.status === 'Відправлено' ? 'selected' : ''}>Відправлено</option>
             <option value="Виконано" ${order.status === 'Виконано' ? 'selected' : ''}>Виконано</option>
+            <option value="Виконано 💰" ${
+              order.status === 'Виконано 💰' ? 'selected' : ''
+            }>Виконано 💰</option>
             <option value="Скасовано" ${order.status === 'Скасовано' ? 'selected' : ''}>Скасовано</option>
           </select>
         </td>
