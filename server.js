@@ -1075,7 +1075,13 @@ app.post('/api/quick-order', (req, res) => {
   }
 
   // 1. Получаем полные данные о товаре из базы
-  const getProductQuery = 'SELECT * FROM products WHERE id = ?';
+  const getProductQuery = `
+    SELECT p.*, m.name AS manufacturer_name 
+    FROM products p 
+    LEFT JOIN manufacturers m ON p.manufacturer_id = m.id 
+    WHERE p.id = ?
+  `;
+
   db.query(getProductQuery, [productId], (prodErr, results) => {
     const product = results && results.length > 0 ? results[0] : null;
 
@@ -1087,6 +1093,7 @@ app.post('/api/quick-order', (req, res) => {
 
     const unit = product ? (product.unit || 'шт') : 'шт';
     const hasDynamic = product ? product.has_dynamic_pricing : false;
+    const manufacturerName = product ? product.manufacturer_name || '' : '';
 
     // Если у товара динамическая цена — считаем через вашу серверную функцию
     if (product && hasDynamic) {
@@ -1123,7 +1130,7 @@ app.post('/api/quick-order', (req, res) => {
 
         // 3. Сохраняем товар с реальным количеством в order_items
         const insertItemQuery = `
-          INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type) 
+          INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
@@ -1133,7 +1140,7 @@ app.post('/api/quick-order', (req, res) => {
             orderId,
             productId,
             productName,
-            product ? product.manufacturer_name || '' : '',
+            manufacturerName,
             product ? product.diameter || '' : '',
             product ? product.weight || '' : '',
             finalItemPrice,
@@ -1159,8 +1166,8 @@ app.post('/api/quick-order', (req, res) => {
             if (product && product.diameter) message += `(Ø ${product.diameter} мм) `;
             if (product && product.weight && !hasDynamic) message += `[${product.weight} кг] `;
 
-            if (product && product.manufacturer_name) {
-              message += `\n  <b>Виробник:</b> ${product.manufacturer_name}`;
+            if (manufacturerName) {
+              message += `\n  <b>Виробник:</b> ${manufacturerName}`;
             }
 
             if (hasDynamic) {
