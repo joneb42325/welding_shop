@@ -75,7 +75,7 @@ export function removeFromCart(index) {
 export function getCartCount() {
   const cart = getCart();
   return cart.length;
- /* return cart.reduce((count, item) => count + item.quantity, 0); */
+  /* return cart.reduce((count, item) => count + item.quantity, 0); */
 }
 
 export function clearCart() {
@@ -138,7 +138,7 @@ export function showToast(message, type = 'success') {
   `;
 
   toast.addEventListener('click', () => {
-    window.location.href = 'cart.html';
+    window.location.href = '/cart.html';
   });
 
   container.appendChild(toast);
