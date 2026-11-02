@@ -6,13 +6,65 @@ export function getOptimizedImg(url, width = 400) {
   if (!url) return '';
   if (url.includes('cloudinary.com') && url.includes('/upload/')) {
     // Вшиваем трансформации авто-формата (webp), авто-качества и ограничение ширины в 800px
-   /* return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/'); */
+    /* return url.replace('/upload/', '/upload/f_auto,q_auto,w_800/'); */
     return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
   }
   return url;
 }
 
+function createSlug(text) {
+  const transliteration = {
+    а: 'a',
+    б: 'b',
+    в: 'v',
+    г: 'h',
+    ґ: 'g',
+    д: 'd',
+    е: 'e',
+    є: 'ye',
+    ж: 'zh',
+    з: 'z',
+    и: 'y',
+    і: 'i',
+    ї: 'yi',
+    й: 'y',
+    к: 'k',
+    л: 'l',
+    м: 'm',
+    н: 'n',
+    о: 'o',
+    п: 'p',
+    р: 'r',
+    с: 's',
+    т: 't',
+    у: 'u',
+    ф: 'f',
+    х: 'kh',
+    ц: 'ts',
+    ч: 'ch',
+    ш: 'sh',
+    щ: 'shch',
+    ь: '',
+    ю: 'yu',
+    я: 'ya',
+    ы: 'y',
+    э: 'e',
+    ё: 'yo',
+    ъ: '',
+  };
+
+  return (
+    String(text || 'product')
+      .toLowerCase()
+      .trim()
+      .replace(/[а-яёіїєґыэъь]/g, (char) => transliteration[char] ?? char)
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'product'
+  );
+}
+
 export function createProductCard(product, isEager = false) {
+  const slug = createSlug(product.name);
   const isAvailable = product.total_stock > 0;
   const inFav = isFavorite(product.id);
 
@@ -37,7 +89,7 @@ export function createProductCard(product, isEager = false) {
   card.innerHTML = `
     <div class="fav-btn" data-id="${product.id}">${inFav ? '❤️' : '🤍'}</div>
     
-    <a href="product.html?productId=${product.id}">
+    <a href="/product/${slug}-${product.id}">
      <!-- <img src="${product.image}" alt="${product.name}"> -->
      <img src="${optimizedImg}" ${imgAttributes} width="250" height="250" alt="${product.name}">
       <h3>${displayName}</h3>

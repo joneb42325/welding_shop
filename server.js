@@ -2,14 +2,41 @@ require('dotenv').config();
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const { createSlug } = require('./utils/slugify');
 const db = require('./db');
 const fs = require('fs');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const { sendOrderEmail } = require('./services/email');
 const cloudinary = require('./cloudinaryConfig');
 
 const app = express();
+app.get('/product.html', (req, res, next) => {
+  const productId = req.query.productId;
+
+  if (!productId || !/^\d+$/.test(productId)) {
+    return next();
+  }
+
+  getProductById(productId, (err, results) => {
+    if (err) {
+      console.error('Помилка завантаження товару:', err);
+      return res.status(500).send('Помилка сервера');
+    }
+
+    if (!results || results.length === 0) {
+      return res.status(404).send('Товар не знайдено');
+    }
+
+    const product = results[0];
+    const slug = createSlug(product.name);
+
+    return res.redirect(301, `/product/${slug}-${product.id}`);
+  });
+});
 app.use(express.json());
 app.use(express.static('public'));
+app.set('view engine', 'ejs');
+app.set('views', './views');
 
 app.get('/', (req, res) => {
   res.send('Server is working');
@@ -34,53 +61,54 @@ const storage = new CloudinaryStorage({
   },
 });
 
-/*
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/images');
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = Date.now() + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
-});
- */
-
 function calculateDynamicPrice(item, quantity) {
-  const qty = parseFloat(quantity) || 1;
-  const threshold = parseInt(item.wholesale_threshold) || 50;
-  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
-  const wholesale = parseFloat(item.price_wholesale) || 0;
-  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
+  const qty = Math.max(1, parseFloat(quantity) || 1);
 
+  const threshold = Math.max(1, parseInt(item.wholesale_threshold, 10) || 50);
+
+  // Базовые цены
+  const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+
+  const wholesale = parseFloat(item.price_wholesale) || 0;
+
+  const cutFee =
+    item.cut_fee !== undefined && item.cut_fee !== null
+      ? Math.max(0, parseFloat(item.cut_fee) || 0)
+      : 40;
+
+  // Скидки по количеству
   const d1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.0;
+
   const d2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.15;
+
   const d3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.35;
 
+  let pricePerUnit = retail;
   let discount = 0;
+  let appliedCutFee = cutFee;
 
-  if (qty >= 1 && qty < 5) {
-    discount = d1;
-  } else if (qty >= 5 && qty < 10) {
-    discount = d2;
-  } else if (qty >= 10 && qty < threshold) {
+  if (qty >= threshold) {
+    pricePerUnit = wholesale > 0 ? wholesale : retail;
+    appliedCutFee = 0;
+  } else if (qty >= 10) {
     discount = d3;
-  } else if (qty >= 50) {
-    if (wholesale > 0 && wholesale < retail) {
-      discount = (retail - wholesale) / retail;
-    } else {
-      discount = 0.5;
-    }
+  } else if (qty >= 5) {
+    discount = d2;
+  } else {
+    discount = d1;
   }
 
-  const pricePerKg = Number((retail * (1 - discount)).toFixed(2));
-  const totalPrice = Math.round(qty * pricePerKg + cutFee);
+  if (qty < threshold) {
+    pricePerUnit = Number((retail * (1 - discount)).toFixed(2));
+  }
+
+  const totalPrice = Math.round(qty * pricePerUnit + appliedCutFee);
 
   return {
-    pricePerKg,
+    pricePerKg: pricePerUnit,
     totalPrice,
-    cutFee,
-    discountPercent: Math.round(discount * 100),
+    cutFee: appliedCutFee,
+    discountPercent: retail > 0 ? Math.round((1 - pricePerUnit / retail) * 100) : 0,
   };
 }
 
@@ -232,23 +260,127 @@ app.get('/api/search', (req, res) => {
   });
 });
 
-app.get('/product/:id', (req, res) => {
-  const productId = req.params.id;
+// app.get('/product/:id', (req, res) => {
+//   const productId = req.params.id;
+//
+//   const sql = `
+//     SELECT
+//       p.*,
+//       m.name AS manufacturer_name,
+//       c.name AS category_name,
+//       p.stock AS total_stock
+//     FROM products p
+//            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+//            LEFT JOIN categories c ON p.category_id = c.id
+//     WHERE p.id = ?
+//   `;
+//
+//   db.query(sql, [productId], (err, results) => {
+//     if (err) return res.status(500).json({ error: 'Server error' });
+//
+//     if (results.length === 0) {
+//       return res.status(404).json({ error: 'Товар не знайдено' });
+//     }
+//
+//     res.json(results[0]);
+//   });
+// });
 
+function getProductById(productId, callback) {
   const sql = `
     SELECT
       p.*,
       m.name AS manufacturer_name,
       c.name AS category_name,
-      p.stock AS total_stock  
+      p.stock AS total_stock
     FROM products p
-           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
-           LEFT JOIN categories c ON p.category_id = c.id
+    LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+    LEFT JOIN categories c ON p.category_id = c.id
     WHERE p.id = ?
   `;
 
-  db.query(sql, [productId], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+  db.query(sql, [productId], callback);
+}
+
+// HTML-страница товара для браузера и поисковых систем
+
+app.get('/product/:slugAndId', (req, res) => {
+  const param = req.params.slugAndId;
+
+  // Поддерживаем и старый /product/36,
+  // и новый /product/nazvanie-tovara-36.
+  const match = param.match(/(?:^|-)(\d+)$/);
+
+  if (!match) {
+    return res.status(404).send('Товар не знайдено');
+  }
+
+  const productId = match[1];
+
+  getProductById(productId, (err, results) => {
+    if (err) {
+      console.error('Помилка завантаження товару:', err);
+      return res.status(500).send('Помилка сервера');
+    }
+
+    if (!results || results.length === 0) {
+      return res.status(404).send('Товар не знайдено');
+    }
+
+    const product = results[0];
+    const correctSlug = createSlug(product.name);
+    const correctUrl = `/product/${correctSlug}-${product.id}`;
+
+    // Направляем старые адреса и неправильные slug
+    // на один канонический URL.
+    if (param !== `${correctSlug}-${product.id}`) {
+      return res.redirect(301, correctUrl);
+    }
+
+    const relatedSql = `
+  SELECT
+    p.*,
+    m.name AS manufacturer_name,
+    c.name AS category_name
+  FROM products p
+  LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+  LEFT JOIN categories c ON p.category_id = c.id
+  WHERE p.category_id = ?
+    AND p.id != ?
+  ORDER BY p.id DESC
+  LIMIT 8
+`;
+
+    db.query(relatedSql, [product.category_id, product.id], (relatedErr, relatedResults) => {
+      if (relatedErr) {
+        console.error('Помилка завантаження схожих товарів:', relatedErr);
+
+        // Основная страница всё равно должна открыться
+        return res.render('product', {
+          product,
+          relatedProducts: [],
+          createSlug,
+        });
+      }
+
+      res.render('product', {
+        product,
+        relatedProducts: relatedResults,
+        createSlug,
+      });
+    });
+  });
+});
+
+// API для JavaScript: возвращает JSON
+app.get('/api/products/:id', (req, res) => {
+  const productId = req.params.id;
+
+  getProductById(productId, (err, results) => {
+    if (err) {
+      console.error('Помилка завантаження товару:', err);
+      return res.status(500).json({ error: 'Server error' });
+    }
 
     if (results.length === 0) {
       return res.status(404).json({ error: 'Товар не знайдено' });
@@ -570,7 +702,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
       productUnit,
       wholesale_threshold || 50,
       stock || 0,
-      markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.00,
+      markup_tier1 !== undefined ? parseFloat(markup_tier1) : 0.0,
       markup_tier2 !== undefined ? parseFloat(markup_tier2) : 0.15,
       markup_tier3 !== undefined ? parseFloat(markup_tier3) : 0.35,
       cut_fee !== undefined ? parseInt(cut_fee) : 40,
@@ -607,7 +739,6 @@ app.put('/admin/products/reorder', adminAuth, async (req, res) => {
     res.status(500).json({ error: 'Помилка бази даних' });
   }
 });
-
 
 app.put('/admin/products/update-prices', adminAuth, (req, res) => {
   const { items } = req.body;
@@ -881,7 +1012,7 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-  const CHAT_IDS = ['1293237281', '5106522924'];
+  const CHAT_IDS = ['1293237281', ''];
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
@@ -942,12 +1073,7 @@ app.post('/api/orders', (req, res) => {
     let finalItemPrice = parseFloat(item.price) || 0;
 
     if (item.has_dynamic_pricing) {
-
-      const calc = calculateDynamicPrice(
-        item,
-        item.quantity,
-        item.price_retail || item.price
-      );
+      const calc = calculateDynamicPrice(item, item.quantity, item.price_retail || item.price);
 
       finalItemPrice = calc.pricePerKg; // цена за 1 кг с учетом наценки
       calculatedTotalPrice += calc.totalPrice; // добавляем полную стоимость позиции (+40 грн резки)
@@ -1012,6 +1138,12 @@ app.post('/api/orders', (req, res) => {
         }
 
         sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId);
+
+        if (customer.email) {
+          sendOrderEmail(customer, validatedItems, calculatedTotalPrice, orderId).catch((err) => {
+            console.error(`Не удалось отправить email для заказа №${orderId}:`, err.message);
+          });
+        }
 
         res
           .status(201)
@@ -1091,17 +1223,13 @@ app.post('/api/quick-order', (req, res) => {
     let cutFee = 0;
     let pricePerKg = finalItemPrice;
 
-    const unit = product ? (product.unit || 'шт') : 'шт';
+    const unit = product ? product.unit || 'шт' : 'шт';
     const hasDynamic = product ? product.has_dynamic_pricing : false;
     const manufacturerName = product ? product.manufacturer_name || '' : '';
 
     // Если у товара динамическая цена — считаем через вашу серверную функцию
     if (product && hasDynamic) {
-      const calc = calculateDynamicPrice(
-        product,
-        qty,
-        product.price_retail || finalItemPrice
-      );
+      const calc = calculateDynamicPrice(product, qty, product.price_retail || finalItemPrice);
       pricePerKg = calc.pricePerKg;
       cutFee = calc.cutFee;
       totalPrice = calc.totalPrice;
@@ -1154,7 +1282,7 @@ app.post('/api/quick-order', (req, res) => {
 
             // 4. Формируем сообщение в Telegram с учетом порезки и единиц измерения
             const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-            const CHAT_IDS = ['1293237281', '5106522924'];
+            const CHAT_IDS = ['1293237281', ''];
 
             let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
             if (name && name.trim() !== '') message += `👤 <b>Клієнт:</b> ${name}\n`;
@@ -1230,12 +1358,18 @@ app.get('/feed.xml', (req, res) => {
     const escapeXml = (unsafe) => {
       return (unsafe || '').toString().replace(/[<>&'"]/g, (c) => {
         switch (c) {
-          case '<': return '&lt;';
-          case '>': return '&gt;';
-          case '&': return '&amp;';
-          case '\'': return '&apos;';
-          case '"': return '&quot;';
-          default: return c;
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case '&':
+            return '&amp;';
+          case "'":
+            return '&apos;';
+          case '"':
+            return '&quot;';
+          default:
+            return c;
         }
       });
     };
@@ -1246,11 +1380,11 @@ app.get('/feed.xml', (req, res) => {
     xml += '<channel>\n';
     xml += '  <title>Wolfram Shop</title>\n';
     xml += '  <link>https://wolfram-shop.com.ua/</link>\n';
-    xml += '  <description>Спеціалізовані зварювальні матеріали (дріт, електроди, прутки)</description>\n';
+    xml +=
+      '  <description>Спеціалізовані зварювальні матеріали (дріт, електроди, прутки)</description>\n';
 
     // Проходимось по кожному товару і додаємо його у фід
     results.forEach((product) => {
-
       const price = product.is_wholesale
         ? parseFloat(product.price_wholesale) || parseFloat(product.price) || 0
         : parseFloat(product.price_retail) || parseFloat(product.price) || 0;
@@ -1260,7 +1394,7 @@ app.get('/feed.xml', (req, res) => {
       const title = escapeXml(product.name);
       // Якщо опису немає, дублюємо назву
       const description = escapeXml(product.description || product.name);
-      const link = `https://wolfram-shop.com.ua/product.html?productId=${product.id}`;
+      const link = `https://wolfram-shop.com.ua/product/${createSlug(product.name)}-${product.id}`;
 
       // Формуємо оптимізоване посилання на картинку (як у вас на фронтенді)
       let imageLink = escapeXml(product.image || '');
@@ -1296,7 +1430,7 @@ app.get('/feed.xml', (req, res) => {
 // GET - Динамічна генерація sitemap.xml для Google Search Console
 app.get('/sitemap.xml', (req, res) => {
   const categoriesQuery = 'SELECT id FROM categories';
-  const productsQuery = 'SELECT id FROM products';
+  const productsQuery = 'SELECT id, name FROM products';
 
   db.query(categoriesQuery, (err, categories) => {
     if (err) {
@@ -1341,8 +1475,10 @@ app.get('/sitemap.xml', (req, res) => {
 
       // 3. Сторінки товарів
       products.forEach((prod) => {
+        const productUrl = `${baseUrl}/product/${createSlug(prod.name)}-${prod.id}`;
+
         xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/product.html?productId=${prod.id}</loc>\n`;
+        xml += `    <loc>${productUrl}</loc>\n`;
         xml += '    <changefreq>weekly</changefreq>\n';
         xml += '    <priority>0.7</priority>\n';
         xml += '  </url>\n';
@@ -1355,6 +1491,3 @@ app.get('/sitemap.xml', (req, res) => {
     });
   });
 });
-
-
-

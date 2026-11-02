@@ -1,95 +1,34 @@
-import { addToCart, updateCartUI, showToast} from './cart.js';
+import { addToCart, updateCartUI, showToast } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
 import { getOptimizedImg, createProductCard } from './script.js';
 import { calculateDynamicPrice } from './pricing.js';
 
 const params = new URLSearchParams(window.location.search);
-const productId = params.get('productId');
+const productId =
+  params.get('productId') || window.location.pathname.match(/^\/product\/(?:.*-)?(\d+)\/?$/)?.[1];
 
 const manufacturerContainer = document.getElementById('manufacturer-tables');
-const descriptionSection = document.querySelector('.product-description');
-const descriptionElement = document.getElementById('product-description');
-
 let currentProduct = null;
 
 async function initProductPage() {
-  if (!productId || !manufacturerContainer) return;
+  if (!manufacturerContainer) return;
 
   try {
-    const productRes = await fetch(`/product/${productId}`);
-    if (!productRes.ok) throw new Error('Товар не знайдено');
+    if (window.INITIAL_PRODUCT_DATA) {
+      currentProduct = window.INITIAL_PRODUCT_DATA;
+    } else {
+      if (!productId) return;
+      const productRes = await fetch(`/api/products/${productId}`);
+      if (!productRes.ok) throw new Error('Товар не знайдено');
+      currentProduct = await productRes.json();
+    }
 
-    currentProduct = await productRes.json();
-
-    renderProductInfo(currentProduct);
     renderTable(currentProduct);
-    renderVolumeDiscountTable(currentProduct);
-
-    initRelatedProducts(currentProduct);
+    setupFavoriteButton(currentProduct.id);
+    initSliderControls();
   } catch (err) {
     console.error('Помилка завантаження сторінки:', err);
-    renderEmptyState();
   }
-}
-
-function renderProductInfo(product) {
-  const displayName = product.manufacturer_name
-    ? `${product.name} ${product.manufacturer_name}`
-    : product.name;
-
-  document.title = `${displayName} — Купити в Wolfram Shop`;
-
-  const statusHTML =
-    product.stock > 0
-      ? `<p class="stock-status available">✓ В наявності</p>`
-      : `<p class="stock-status out-of-stock">✕ Немає в наявності</p>`;
-
-  const nameEl = document.getElementById('product-name');
-  if (nameEl) {
-    nameEl.textContent = displayName;
-    nameEl.setAttribute('data-clarity-unmask', 'true');
-
-    const oldStatus = nameEl.parentNode.querySelector('.stock-status');
-    if (oldStatus) oldStatus.remove();
-
-    nameEl.insertAdjacentHTML('afterend', statusHTML);
-  }
-
-  const breadcrumbs = document.getElementById('breadcrumbs');
-  if (breadcrumbs) {
-    const catId = product.category_id || '';
-    const catName = product.category_name || 'Категорія';
-
-    breadcrumbs.innerHTML = `
-      <a href="/index.html">Головна</a> 
-      <span class="separator">/</span> 
-      <a href="/category.html?categoryId=${catId}">${catName}</a>
-      <span class="separator">/</span> 
-      <span class="current">${product.name}</span>
-    `;
-  }
-
-  if (product.description && product.description.trim() !== '') {
-    descriptionElement.classList.add('product-description-text');
-    descriptionElement.textContent = product.description;
-    descriptionElement.setAttribute('data-clarity-unmask', 'true');
-    descriptionSection.style.display = 'block';
-  } else {
-    descriptionSection.style.display = 'none';
-  }
-
-  const productImg = document.getElementById('product-image');
-  if (productImg) {
-    productImg.src = getOptimizedImg(product.image, 600);
-    productImg.alt = `Фото товару: ${displayName}`;
-    productImg.width = 600;
-    productImg.height = 600;
-
-    productImg.removeAttribute('loading');
-    productImg.setAttribute('fetchpriority', 'high');
-  }
-
-  setupFavoriteButton(product.id);
 }
 
 function setupFavoriteButton(id) {
@@ -110,365 +49,202 @@ function setupFavoriteButton(id) {
     favBtn.style.transform = 'scale(1.2)';
     setTimeout(() => (favBtn.style.transform = 'scale(1)'), 200);
   });
-
   productInfo.appendChild(favBtn);
 }
 
 function renderTable(product) {
   const pricesSection = document.querySelector('.product-prices');
-  manufacturerContainer.innerHTML = '';
-
-  if (!product || !product.price_retail) {
-    renderEmptyState();
-    return;
-  }
+  const row = manufacturerContainer?.querySelector('tbody tr');
+  if (!product || !row || !pricesSection) return;
 
   pricesSection.classList.remove('is-empty');
   manufacturerContainer.style.display = '';
 
-  const section = document.createElement('div');
-  section.classList.add('manufacturer-block');
-  section.setAttribute('data-clarity-unmask', 'true');
-
-  section.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Діаметр</th>
-          <th>Вага</th>
-          <th>Роздріб</th>
-          <th>ФОП</th>
-          <th>Опт</th>
-          <th>Кількість</th>
-          <th>Дія</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  `;
-
-  const tbody = section.querySelector('tbody');
-  const isAvailable = product.stock > 0;
+  const isAvailable = Number(product.stock) > 0;
   const isWholesaleOnly = Boolean(product.is_wholesale);
-  let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
-
-  const minWholesaleQty = parseInt(product.wholesale_threshold) || 50;
+  const minWholesaleQty = parseInt(product.wholesale_threshold, 10) || 50;
   const initialQty = isWholesaleOnly ? minWholesaleQty : 1;
+  const qtyInput = row.querySelector('.qty-input');
+  const totalValEl = row.querySelector('.total-val');
+  const unit = product.unit || 'шт';
 
-  const row = document.createElement('tr');
-  if (!isAvailable) row.classList.add('out-of-stock-row');
+  if (!qtyInput) return;
 
-  const retailCellHTML = isWholesaleOnly
-    ? `<span style="text-decoration: line-through;">${product.price_retail} грн</span><br>`
-    : `${product.price_retail} грн / ${product.unit || 'шт'}`;
+  let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
+  const priceCells = row.querySelectorAll('.price-cell');
 
-  const companyCellHTML = isWholesaleOnly
-    ? `<span style="text-decoration: line-through;">${product.price_company || product.price_retail} грн</span>`
-    : `${product.price_company || product.price_retail} грн / ${product.unit || 'шт'}`;
+  priceCells.forEach((cell) => {
+    cell.classList.toggle('active', cell.dataset.type === selectedType && isAvailable);
+    if (isWholesaleOnly && cell.dataset.type !== 'wholesale') {
+      cell.style.pointerEvents = 'none';
+      cell.style.opacity = '0.5';
+    }
+  });
 
-  const wholesaleCellHTML =
-    `<div class="wholesale-info" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <span class="price-val">${product.price_wholesale} грн / ${product.unit || 'шт'}</span>
-        <span class="threshold-text">від ${product.wholesale_threshold || 50} ${product.unit || 'шт'}</span>
-       </div>`;
+  const getBasePrice = () =>
+    parseFloat(product[`price_${selectedType}`] ?? product.price_retail) || 0;
 
-  row.innerHTML = `
-      <td>${product.diameter || '-'} мм</td>
-      <td>${product.weight || '-'} кг</td>
-      <td class="price-cell ${!isWholesaleOnly && isAvailable ? 'active' : ''} ${isWholesaleOnly ? 'disabled-cell' : ''}" data-type="retail" style="${isWholesaleOnly ? 'pointer-events: none; opacity: 0.5;' : ''}">
-        ${retailCellHTML}
-      </td>
-      <td class="price-cell ${isWholesaleOnly ? 'disabled-cell' : ''}" data-type="company" style="${isWholesaleOnly ? 'pointer-events: none; opacity: 0.5;' : ''}">
-        ${companyCellHTML}
-      </td>
-      <td class="price-cell" data-type="wholesale">
-       ${wholesaleCellHTML}
-      </td>
-      <td>
-        <div class="quantity-controls">
-          <button class="qty-btn minus" ${!isAvailable ? 'disabled' : ''}>-</button>
-          <input 
-          type="number" 
-        class="qty-input" 
-          value="${initialQty}" 
-          min="${isWholesaleOnly ? minWholesaleQty : 1}" 
-         ${!isAvailable ? 'disabled' : ''}
-          > 
-          <button class="qty-btn plus" ${!isAvailable ? 'disabled' : ''}>+</button>
-        </div>
-        ${
-          isAvailable
-            ? `<div class="total-price-wrapper" style="margin-top: 8px; text-align: center;">
-        <span class="row-total-price" style="font-size: 13px; font-weight: bold; color: #FFD700; display: block;">
-          Разом: <span class="total-val">0</span> грн
-        </span>
-        <span class="dynamic-pricing-hint" style="font-size: 11px; color: #94a3b8; display: block; margin-top: 2px;"></span>
-       </div>`
-            : ''
-        }
-      </td>
-      <td>
-        <div class="action-controls">
-          <div class="action-buttons">
-            <button class="add-to-cart" ${!isAvailable ? 'disabled' : ''}>
-              ${isAvailable ? 'В кошик' : 'Немає'}
-            </button>
-            ${isAvailable ? '<button class="quick-order-btn">Швидке замовлення</button>' : ''}
-          </div>
-        </div>
-      </td>
-    `;
-
-  if (isAvailable) {
-    const qtyInput = row.querySelector('.qty-input');
-    const totalValEl = row.querySelector('.total-val');
-
-    // Функція розрахунку повної вартості
-    const calculateTotal = (qty) => {
-      const basePrice = parseFloat(product[`price_${selectedType}`] || product.price_retail);
-      if (product.has_dynamic_pricing) {
-        const tempItem = {
-          selectedType,
-          price: basePrice,
-          price_retail: product.price_retail,
-          price_wholesale: product.price_wholesale,
-          wholesale_threshold: product.wholesale_threshold,
-          markup_tier1: product.markup_tier1,
-          markup_tier2: product.markup_tier2,
-          markup_tier3: product.markup_tier3,
-          cut_fee: product.cut_fee,
-        };
-        const calc = calculateDynamicPrice(tempItem, qty);
-        return calc.totalPrice;
-      } else {
-        return basePrice * qty;
-      }
-    };
-
-    // Оновлення підсумкової суми в таблиці
-    // Оновлення підсумкової суми в таблиці
-    const updateTotalSum = () => {
-      const qty = parseInt(qtyInput.value) || initialQty;
-      const finalTotal = calculateTotal(qty);
-      if (totalValEl) {
-        totalValEl.textContent = finalTotal.toFixed(0);
-      }
-
-      // Підказка про знижку та порізку
-      const hintEl = row.querySelector('.dynamic-pricing-hint');
-      if (hintEl && product.has_dynamic_pricing) {
-        const threshold = parseInt(product.wholesale_threshold) || 50;
-        const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) : 40;
-
-        // Визначаємо процент знижки
-        let discountPercent = 0;
-        if (qty >= 5 && qty < 10) {
-          discountPercent = Math.round((parseFloat(product.markup_tier2) || 0.15) * 100);
-        } else if (qty >= 10 && qty < threshold) {
-          discountPercent = Math.round((parseFloat(product.markup_tier3) || 0.3) * 100);
-        }
-
-        if (qty >= threshold) {
-          hintEl.textContent = '✓ Застосовано оптову ціну';
-          hintEl.style.color = '#4ade80'; // Зеленый цвет при опте
-        } else {
-          let text = '';
-          if (discountPercent > 0) {
-            text = `(знижка -${discountPercent}%`;
-            if (cutFee > 0) text += `, вкл. порізку ${cutFee} грн`;
-            text += ')';
-          } else {
-            if (cutFee > 0) {
-              text = `(вкл. порізку ${cutFee} грн)`;
-            }
-          }
-          hintEl.textContent = text;
-          hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
-        }
-      }
-    };
-
-    updateTotalSum();
-
-    const checkWholesaleThreshold = () => {
-      if (isWholesaleOnly) return;
-      const qty = parseInt(qtyInput.value) || 1;
-      const threshold = product.wholesale_threshold || 50;
-
-      // Если ввели больше или равно порогу, но опт еще не выбран — переключаем на опт
-      if (qty >= threshold && selectedType !== 'wholesale') {
-        selectedType = 'wholesale';
-        row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
-        const wholesaleCell = row.querySelector('.price-cell[data-type="wholesale"]');
-        if (wholesaleCell) wholesaleCell.classList.add('active');
-        showToast(`Застосовано оптову ціну (від ${threshold} ${product.unit || 'шт'})! ✨`);
-      }
-      // Если снизили количество ниже порога, а стоял опт — возвращаем на розницу
-      else if (qty < threshold && selectedType === 'wholesale') {
-        selectedType = 'retail';
-        row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
-        const retailCell = row.querySelector('.price-cell[data-type="retail"]');
-        if (retailCell) retailCell.classList.add('active');
-      }
-    };
-
-    row.querySelectorAll('.price-cell').forEach((cell) => {
-      cell.addEventListener('click', () => {
-        if (isWholesaleOnly) return;
-
-        selectedType = cell.dataset.type;
-        row.querySelectorAll('.price-cell').forEach((c) => c.classList.remove('active'));
-        cell.classList.add('active');
-
-        if (selectedType === 'wholesale') {
-          const minWholesale = product.wholesale_threshold || 50;
-          if (qtyInput && parseInt(qtyInput.value) < minWholesale) {
-            qtyInput.value = minWholesale;
-            showToast(`Встановлено оптову кількість: ${minWholesale} ${product.unit || 'шт'}`);
-          }
-        }
-        updateTotalSum();
-      });
-    });
-
-    row.querySelector('.minus').addEventListener('click', () => {
-      let val = parseInt(qtyInput.value) || initialQty;
-      const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
-      if (val > minAllowed) {
-        qtyInput.value = val - 1;
-        checkWholesaleThreshold();
-        updateTotalSum();
-      }
-    });
-
-    row.querySelector('.plus').addEventListener('click', () => {
-      let val = parseInt(qtyInput.value) || initialQty;
-      qtyInput.value = val + 1;
-      checkWholesaleThreshold();
-      updateTotalSum();
-    });
-
-    qtyInput.addEventListener('input', () => {
-      const val = parseInt(qtyInput.value);
-
-      // Пересчитываем только если введено реальное число >= 1
-      if (!isNaN(val) && val >= 1) {
-        checkWholesaleThreshold();
-        updateTotalSum();
-      }
-    });
-
-    qtyInput.addEventListener('blur', () => {
-      const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
-      const val = parseInt(qtyInput.value);
-      if (isNaN(val) || val < minAllowed) {
-        qtyInput.value = minAllowed;
-        checkWholesaleThreshold();
-        updateTotalSum();
-      }
-    });
-
-    qtyInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') qtyInput.blur();
-    });
-
-    row.querySelector('.add-to-cart').addEventListener('click', () => {
-      const price = product[`price_${selectedType}`] || product.price_retail;
-      const selectedQuantity = parseInt(qtyInput.value) || initialQty;
-
-      showToast(
-        `${product.name} (${selectedQuantity} ${product.unit || 'шт'}) додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
-      );
-
-      addToCart({
-        productId: product.id,
-        name: product.name,
-        image: getOptimizedImg(product.image),
-        manufacturer: product.manufacturer_name || '',
-        diameter: product.diameter || '',
-        weight: product.weight || '',
+  const calculateTotal = (qty) => {
+    const basePrice = getBasePrice();
+    if (product.has_dynamic_pricing) {
+      const tempItem = {
         selectedType,
-        price,
+        price: basePrice,
         price_retail: product.price_retail,
         price_wholesale: product.price_wholesale,
         wholesale_threshold: product.wholesale_threshold,
-        unit: product.unit || 'шт',
-        has_dynamic_pricing: product.has_dynamic_pricing,
-        is_wholesale: product.is_wholesale,
         markup_tier1: product.markup_tier1,
         markup_tier2: product.markup_tier2,
         markup_tier3: product.markup_tier3,
         cut_fee: product.cut_fee,
-        quantity: selectedQuantity,
-      });
-      updateCartUI();
-    });
-
-    const quickBtn = row.querySelector('.quick-order-btn');
-    if (quickBtn) {
-      quickBtn.addEventListener('click', () => {
-        const selectedQuantity = parseInt(qtyInput.value) || initialQty;
-        const calculatedTotal = calculateTotal(selectedQuantity);
-        openQuickOrderModal(product, calculatedTotal, selectedQuantity, selectedType);
-      });
+      };
+      return calculateDynamicPrice(tempItem, qty).totalPrice;
     }
-  }
+    return basePrice * qty;
+  };
 
-  tbody.appendChild(row);
-  manufacturerContainer.appendChild(section);
+  const updateTotalSum = () => {
+    const qty = parseInt(qtyInput.value, 10) || initialQty;
+    const finalTotal = calculateTotal(qty);
+    if (totalValEl) totalValEl.textContent = Number(finalTotal).toFixed(0);
 
-  const deliverySection = document.createElement('div');
-  deliverySection.classList.add('product-delivery-info');
-  deliverySection.setAttribute('data-clarity-unmask', 'true');
+    const hintEl = row.querySelector('.dynamic-pricing-hint');
+    if (!hintEl) return;
+    if (!product.has_dynamic_pricing) {
+      hintEl.textContent = '';
+      return;
+    }
 
-  deliverySection.innerHTML = `
-    <div class="delivery-item">
-      <span class="icon">🚚</span>
-      <div class="text">
-        <strong>Доставка:</strong> Нова Пошта, Делівері, Самовивіз у Харкові 
-        <a href="/delivery.html" target="_blank">Детальніше ➔</a>
-      </div>
-    </div>
-    <div class="delivery-item">
-      <span class="icon">📦</span>
-      <div class="text">
-        <strong>Відправка:</strong> У день замовлення (при оформленні до 14:00, крім вихідних)
-      </div>
-    </div>
-    <div class="delivery-item">
-      <span class="icon">💳</span>
-      <div class="text">
-        <strong>Оплата:</strong> Накладений платіж (при отриманні), Оплата на картку / IBAN
-      </div>
-    </div>
-    <div class="delivery-item">
-      <span class="icon">🔄</span>
-      <div class="text">
-        <strong>Гарантія:</strong> Обмін та повернення товару протягом 14 днів
-      </div>
-    </div>
-  `;
+    const threshold = minWholesaleQty;
+    const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) || 0 : 40;
+    let discountPercent = 0;
 
-  manufacturerContainer.appendChild(deliverySection);
-}
+    if (qty >= 10 && qty < threshold)
+      discountPercent = Math.round((parseFloat(product.markup_tier3) || 0.3) * 100);
+    else if (qty >= 5 && qty < 10)
+      discountPercent = Math.round((parseFloat(product.markup_tier2) || 0.15) * 100);
 
-function renderEmptyState() {
-  const pricesSection = document.querySelector('.product-prices');
-  if (!pricesSection) return;
+    if (qty >= threshold) {
+      hintEl.textContent = '✓ Застосовано оптову ціну';
+      hintEl.style.color = '#4ade80';
+    } else {
+      let text = '';
+      if (discountPercent > 0) {
+        text = `(знижка -${discountPercent}%`;
+        if (cutFee > 0) text += `, вкл. порізку ${cutFee} грн`;
+        text += ')';
+      } else if (cutFee > 0) text = `(вкл. порізку ${cutFee} грн)`;
+      hintEl.textContent = text;
+      hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
+    }
+  };
 
-  manufacturerContainer.style.display = 'none';
-  pricesSection.classList.add('is-empty');
+  const checkWholesaleThreshold = () => {
+    if (isWholesaleOnly) return;
+    const qty = parseInt(qtyInput.value, 10) || 1;
+    if (qty >= minWholesaleQty && selectedType !== 'wholesale') {
+      selectedType = 'wholesale';
+      priceCells.forEach((cell) =>
+        cell.classList.toggle('active', cell.dataset.type === 'wholesale')
+      );
+      showToast(`Застосовано оптову ціну (від ${minWholesaleQty} ${unit})! ✨`);
+    } else if (qty < minWholesaleQty && selectedType === 'wholesale') {
+      selectedType = 'retail';
+      priceCells.forEach((cell) => cell.classList.toggle('active', cell.dataset.type === 'retail'));
+    }
+  };
 
-  const emptyDiv = document.createElement('div');
-  emptyDiv.className = 'empty-state-wrapper';
-  emptyDiv.innerHTML = `
-    <div class="empty-message">
-      <h2>Ціни наразі оновлюються 🛠️</h2>
-      <p>Ми вже працюємо над їх наповненням.</p>
-      <a href="/index.html" class="btn-back">Повернутися на головну</a>
-    </div>
-  `;
-  pricesSection.appendChild(emptyDiv);
+  priceCells.forEach((cell) => {
+    cell.addEventListener('click', () => {
+      if (isWholesaleOnly || !isAvailable) return;
+      selectedType = cell.dataset.type;
+      priceCells.forEach((item) => item.classList.toggle('active', item === cell));
+      if (selectedType === 'wholesale') {
+        const qty = parseInt(qtyInput.value, 10) || 1;
+        if (qty < minWholesaleQty) {
+          qtyInput.value = minWholesaleQty;
+          showToast(`Встановлено оптову кількість: ${minWholesaleQty} ${unit}`);
+        }
+      }
+      updateTotalSum();
+    });
+  });
+
+  row.querySelector('.minus')?.addEventListener('click', () => {
+    const qty = parseInt(qtyInput.value, 10) || initialQty;
+    const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
+    if (qty > minAllowed) {
+      qtyInput.value = qty - 1;
+      checkWholesaleThreshold();
+      updateTotalSum();
+    }
+  });
+
+  row.querySelector('.plus')?.addEventListener('click', () => {
+    const qty = parseInt(qtyInput.value, 10) || initialQty;
+    if (qty < 999) {
+      qtyInput.value = qty + 1;
+      checkWholesaleThreshold();
+      updateTotalSum();
+    }
+  });
+
+  qtyInput.addEventListener('input', () => {
+    const qty = parseInt(qtyInput.value, 10);
+    if (!Number.isNaN(qty) && qty >= 1 && qty <= 999) {
+      checkWholesaleThreshold();
+      updateTotalSum();
+    }
+  });
+
+  qtyInput.addEventListener('blur', () => {
+    const minAllowed = isWholesaleOnly ? minWholesaleQty : 1;
+    let qty = parseInt(qtyInput.value, 10);
+    if (Number.isNaN(qty) || qty < minAllowed) qty = minAllowed;
+    qty = Math.min(qty, 999);
+    qtyInput.value = qty;
+    checkWholesaleThreshold();
+    updateTotalSum();
+  });
+
+  row.querySelector('.add-to-cart')?.addEventListener('click', () => {
+    if (!isAvailable) return;
+    const quantity = parseInt(qtyInput.value, 10) || initialQty;
+    const price = getBasePrice();
+    showToast(`${product.name} (${quantity} ${unit}) додано до кошика!`);
+
+    addToCart({
+      productId: product.id,
+      name: product.name,
+      image: getOptimizedImg(product.image),
+      manufacturer: product.manufacturer_name || '',
+      diameter: product.diameter || '',
+      weight: product.weight || '',
+      selectedType,
+      price,
+      price_retail: product.price_retail,
+      price_company: product.price_company,
+      price_wholesale: product.price_wholesale,
+      wholesale_threshold: product.wholesale_threshold,
+      unit,
+      has_dynamic_pricing: product.has_dynamic_pricing,
+      is_wholesale: product.is_wholesale,
+      markup_tier1: product.markup_tier1,
+      markup_tier2: product.markup_tier2,
+      markup_tier3: product.markup_tier3,
+      cut_fee: product.cut_fee,
+      quantity,
+    });
+    updateCartUI();
+  });
+
+  row.querySelector('.quick-order-btn')?.addEventListener('click', () => {
+    if (!isAvailable) return;
+    const quantity = parseInt(qtyInput.value, 10) || initialQty;
+    openQuickOrderModal(product, calculateTotal(quantity), quantity, selectedType);
+  });
+
+  if (isAvailable) updateTotalSum();
 }
 
 function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = 'retail') {
@@ -476,25 +252,13 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   if (existingModal) existingModal.remove();
 
   const formattedTotal = typeof totalPrice === 'number' ? totalPrice.toFixed(0) : totalPrice;
-
   let cutFeeText = '';
+
   if (product.has_dynamic_pricing) {
     const basePrice = parseFloat(product[`price_${selectedType}`] || product.price_retail);
-    const tempItem = {
-      selectedType,
-      price: basePrice,
-      price_retail: product.price_retail,
-      price_wholesale: product.price_wholesale,
-      wholesale_threshold: product.wholesale_threshold,
-      markup_tier1: product.markup_tier1,
-      markup_tier2: product.markup_tier2,
-      markup_tier3: product.markup_tier3,
-      cut_fee: product.cut_fee,
-    };
-    const calc = calculateDynamicPrice(tempItem, quantity);
-    if (calc.cutFee > 0) {
+    const calc = calculateDynamicPrice({ ...product, price: basePrice, selectedType }, quantity);
+    if (calc.cutFee > 0)
       cutFeeText = `<span style="font-size: 12px; opacity: 0.85; display: block; margin-top: 2px;">(включно з порізкою ${calc.cutFee} грн)</span>`;
-    }
   }
 
   const modalHTML = `
@@ -503,13 +267,11 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
         <button class="quick-modal-close">&times;</button>
         <h3>Купити в 1 клік</h3>
         <p>Заповніть форму, і менеджер зателефонує вам для уточнення деталей (обробка замовлень: щодня з 10:00 до 17:00)</p>
-
         <div class="quick-order-summary">
           <span class="label">Ваше замовлення:</span>
           <span class="product-title">${product.name} (${quantity} ${product.unit || 'шт'})</span>
           <span class="product-price">${formattedTotal} грн ${cutFeeText}</span>
         </div>
-        
         <form id="quick-order-form">
           <div class="quick-form-group">
             <input type="text" id="quick-name" placeholder="Ім'я (необов'язково)">
@@ -524,7 +286,6 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   `;
 
   document.body.insertAdjacentHTML('beforeend', modalHTML);
-
   const modal = document.getElementById('quick-order-modal');
   const closeBtn = modal.querySelector('.quick-modal-close');
 
@@ -532,7 +293,6 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
     modal.style.opacity = '0';
     setTimeout(() => modal.remove(), 250);
   };
-
   closeBtn.addEventListener('click', closeModal);
   modal.addEventListener('click', (e) => {
     if (e.target === modal) closeModal();
@@ -542,12 +302,10 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
     e.preventDefault();
     const phone = document.getElementById('quick-phone').value;
     const name = document.getElementById('quick-name').value;
-
     const submitBtn = modal.querySelector('.quick-submit-btn');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Відправка...';
 
-    // Получаем чистую цену за 1 шт/кг для отправки на сервер
     const unitPrice = parseFloat(product[`price_${selectedType}`] || product.price_retail);
 
     try {
@@ -557,170 +315,53 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
         body: JSON.stringify({
           productId: product.id,
           productName: product.name,
-          price: unitPrice, // ИСПРАВЛЕНО: передаем цену за 1 шт, а не итоговую сумму
-          quantity: quantity,
-          name: name,
-          phone: phone,
+          price: unitPrice,
+          quantity,
+          name,
+          phone,
         }),
       });
-
       if (res.ok) {
         showToast('Дякуємо! Менеджер зателефонує вам найближчим часом.');
         closeModal();
       } else {
-        showToast('Помилка при оформленні. Спробуйте ще раз.');
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Підтвердити замовлення';
+        throw new Error();
       }
     } catch (err) {
-      console.error(err);
-      showToast("Помилка з'єднання з сервером.");
+      showToast('Помилка при оформленні. Спробуйте ще раз.');
       submitBtn.disabled = false;
       submitBtn.textContent = 'Підтвердити замовлення';
     }
   });
 }
 
-// ----------------------------------------------------
-// ЛОГІКА ЗУМУ КАРТИНКИ (Модальне вікно)
-// ----------------------------------------------------
+// Управління слайдером схожих товарів (EJS рендерить, JS тільки крутить стрілки)
+function initSliderControls() {
+  const relatedContainer = document.getElementById('related-products-grid');
+  const prevBtn = document.getElementById('related-prev');
+  const nextBtn = document.getElementById('related-next');
+
+  if (relatedContainer && prevBtn && nextBtn) {
+    prevBtn.onclick = () => relatedContainer.scrollBy({ left: -250, behavior: 'smooth' });
+    nextBtn.onclick = () => relatedContainer.scrollBy({ left: 250, behavior: 'smooth' });
+  }
+}
+
 const modal = document.getElementById('image-modal');
 const modalImg = document.getElementById('full-image');
 
-// Делегування кліку на зображення товару
 document.addEventListener('click', (e) => {
-  if (e.target && e.target.id === 'product-image') {
-    if (modal && modalImg) {
-      modal.style.display = 'flex';
-      modalImg.src = getOptimizedImg(currentProduct.image, 1200);
-    }
+  if (e.target && e.target.id === 'product-image' && modal && modalImg) {
+    modal.style.display = 'flex';
+    modalImg.src = getOptimizedImg(currentProduct.image, 1200);
   }
 });
 
 if (modal) {
-  modal.addEventListener('click', () => {
-    modal.style.display = 'none';
-  });
-
+  modal.addEventListener('click', () => (modal.style.display = 'none'));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') modal.style.display = 'none';
   });
 }
 
-async function initRelatedProducts(currentProduct) {
-  const relatedContainer = document.getElementById('related-products-grid');
-  if (!relatedContainer || !currentProduct || !currentProduct.category_id) return;
-
-  try {
-    const res = await fetch(`/products/category/${currentProduct.category_id}`);
-    if (!res.ok) throw new Error('Помилка завантаження схожих товарів');
-
-    const categoryProducts = await res.json();
-
-    // Берем до 8 похожих товаров (исключая открытый)
-    const related = categoryProducts.filter((p) => p.id !== currentProduct.id).slice(0, 8);
-
-    if (related.length === 0) {
-      const section = document.querySelector('.related-section');
-      if (section) section.style.display = 'none';
-      return;
-    }
-
-    relatedContainer.innerHTML = '';
-    related.forEach((item) => {
-      const card = createProductCard(item);
-      relatedContainer.appendChild(card);
-    });
-
-    // Привязываем стрелки прокрутки (влево / вправо)
-    const prevBtn = document.getElementById('related-prev');
-    const nextBtn = document.getElementById('related-next');
-
-    if (prevBtn && nextBtn) {
-      prevBtn.onclick = () => {
-        relatedContainer.scrollBy({ left: -250, behavior: 'smooth' });
-      };
-      nextBtn.onclick = () => {
-        relatedContainer.scrollBy({ left: 250, behavior: 'smooth' });
-      };
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки похожих товаров:', err);
-  }
-}
-function renderVolumeDiscountTable(product) {
-  if (!product.has_dynamic_pricing || product.is_wholesale) return;
-
-  // Ищем блок доставки
-  const deliverySection = document.querySelector('.product-delivery-info');
-  if (!deliverySection) return;
-
-  const existingBlock = document.getElementById('volume-discounts-block');
-  if (existingBlock) existingBlock.remove();
-
-  const retail = parseFloat(product.price_retail) || 0;
-  const wholesale = parseFloat(product.price_wholesale) || 0;
-  const threshold = parseInt(product.wholesale_threshold) || 50;
-  const unit = product.unit || 'кг';
-  const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) : 40;
-
-  const t1 = parseFloat(product.markup_tier1) || 0.0;
-  const t2 = parseFloat(product.markup_tier2) || 0.15;
-  const t3 = parseFloat(product.markup_tier3) || 0.3;
-
-  // Расчёт цены за 1 кг
-  const p1 = (retail * (1 - t1)).toFixed(2);
-  const p2 = (retail * (1 - t2)).toFixed(2);
-  const p3 = (retail * (1 - t3)).toFixed(2);
-
-  const tableHTML = `
-    <div id="volume-discounts-block" style="margin: 24px auto; background: #1e293b; padding: 18px; border-radius: 10px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
-      <h4 style="margin: 0 0 12px 0; color: #f8fafc; font-size: 15px; display: flex; align-items: center; gap: 8px;">
-        📊 Знижки від об'єму (порізка від 1 ${unit}):
-      </h4>
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; color: #e2e8f0;">
-        <thead>
-          <tr style="border-bottom: 1px solid #475569; color: #94a3b8; font-size: 12px; text-transform: uppercase;">
-            <th style="padding: 8px;">Об'єм</th>
-            <th style="padding: 8px;">Знижка</th>
-            <th style="padding: 8px;">Ціна за 1 ${unit}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="border-bottom: 1px solid #334155;">
-            <td style="padding: 8px;">1 – 5 ${unit}</td>
-            <td style="padding: 8px; color: #94a3b8;">0% (база)</td>
-            <td style="padding: 8px; font-weight: bold;">${p1} грн</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #334155;">
-            <td style="padding: 8px;">5 – 10 ${unit}</td>
-            <td style="padding: 8px; color: #4ade80; font-weight: bold;">-${Math.round(t2 * 100)}%</td>
-            <td style="padding: 8px; font-weight: bold;">${p2} грн</td>
-          </tr>
-          <tr style="border-bottom: 1px solid #334155;">
-            <td style="padding: 8px;">10 – ${threshold} ${unit}</td>
-            <td style="padding: 8px; color: #4ade80; font-weight: bold;">-${Math.round(t3 * 100)}%</td>
-            <td style="padding: 8px; font-weight: bold;">${p3} грн</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px; color: #ffd700; font-weight: bold;">від ${threshold} ${unit} (Опт)</td>
-            <td style="padding: 8px; color: #ffd700; font-weight: bold;">Оптова ціна</td>
-            <td style="padding: 8px; font-weight: bold; color: #ffd700;">${wholesale.toFixed(2)} грн</td>
-          </tr>
-        </tbody>
-      </table>
-      ${
-        cutFee > 0
-          ? `<p style="margin: 10px 0 0 0; font-size: 12px; color: #94a3b8; border-top: 1px dashed #334155; padding-top: 8px;">
-              * До роздрібних замовлень (до ${threshold} ${unit}) додається разовий збір за порізку/фасування — <strong>${cutFee} грн</strong> на позицію.
-            </p>`
-          : ''
-      }
-    </div>
-  `;
-
-  // Вставляем строго перед блоком с условиями доставки
-  deliverySection.insertAdjacentHTML('beforebegin', tableHTML);
-}
 initProductPage();
-updateCartUI();

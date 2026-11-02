@@ -2726,6 +2726,99 @@ textarea:-webkit-autofill:focus {
   color: #FFD700; /* Золотий колір при наведенні */
 }
 
+/* ==========================================================================
+   ТОТАЛ СУМА В КАРТЦІ ТОВАРУ
+   ========================================================================== */
+.total-price-wrapper {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.row-total-price {
+  font-size: 13px;
+  font-weight: bold;
+  color: #FFD700;
+  display: block;
+}
+
+.dynamic-pricing-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   ТАБЛИЦЯ ЗНИЖОК ВІД ОБ'ЄМУ
+   ========================================================================== */
+.volume-discounts-box {
+  margin: 24px auto;
+  background: #1e293b;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+}
+
+.volume-title {
+  margin: 0 0 12px 0;
+  color: #f8fafc;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+.volume-table thead tr {
+  border-bottom: 1px solid #475569;
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.volume-table th,
+.volume-table td {
+  padding: 8px;
+}
+
+.volume-table tbody tr {
+  border-bottom: 1px solid #334155;
+}
+
+.volume-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.volume-table .muted {
+  color: #94a3b8;
+}
+
+.volume-table .highlight {
+  color: #4ade80;
+  font-weight: bold;
+}
+
+.volume-table .gold {
+  color: #FFD700;
+  font-weight: bold;
+}
+
+.cut-fee-note {
+  margin: 10px 0 0 0;
+  font-size: 12px;
+  color: #94a3b8;
+  border-top: 1px dashed #334155;
+  padding-top: 8px;
+}
+
 @media (max-width: 480px) {
   .contact-widget {
     bottom: 100px;

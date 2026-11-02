@@ -1,40 +1,45 @@
 export function calculateDynamicPrice(item, quantity) {
-  const qty = parseFloat(quantity) || 1;
-  const threshold = parseInt(item.wholesale_threshold) || 50;
+  const qty = Math.max(1, parseFloat(quantity) || 1);
+
+  const threshold = Math.max(1, parseInt(item.wholesale_threshold, 10) || 50);
   // Базовая розничная цена
   const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
   const wholesale = parseFloat(item.price_wholesale) || 0;
-  const cutFee = item.cut_fee !== undefined ? parseFloat(item.cut_fee) : 40;
+  const cutFee =
+    item.cut_fee !== undefined && item.cut_fee !== null
+      ? Math.max(0, parseFloat(item.cut_fee) || 0)
+      : 40;
 
   // Поля markup_tier считываем как процент скидки
   const d1 = item.markup_tier1 !== undefined ? parseFloat(item.markup_tier1) : 0.0;
   const d2 = item.markup_tier2 !== undefined ? parseFloat(item.markup_tier2) : 0.15;
   const d3 = item.markup_tier3 !== undefined ? parseFloat(item.markup_tier3) : 0.35;
 
+  let pricePerUnit = retail;
   let discount = 0;
+  let appliedCutFee = cutFee;
 
-  if (qty >= 1 && qty < 5) {
-    discount = d1;
-  } else if (qty >= 5 && qty < 10) {
-    discount = d2;
-  } else if (qty >= 10 && qty < threshold) {
+  if (qty >= threshold) {
+    pricePerUnit = wholesale > 0 ? wholesale : retail;
+    appliedCutFee = 0;
+  } else if (qty >= 10) {
     discount = d3;
-  } else if (qty >= 50) {
-    if (wholesale > 0 && wholesale < retail) {
-      discount = (retail - wholesale) / retail;
-    } else {
-      discount = 0.5;
-    }
+  } else if (qty >= 5) {
+    discount = d2;
+  } else {
+    discount = d1;
   }
 
-  // Скидочная формула
-  const pricePerKg = Number((retail * (1 - discount)).toFixed(2));
-  const totalPrice = Math.round(qty * pricePerKg + cutFee);
+  if (qty < threshold) {
+    pricePerUnit = Number((retail * (1 - discount)).toFixed(2));
+  }
+
+  const totalPrice = Math.round(qty * pricePerUnit + appliedCutFee);
 
   return {
-    pricePerKg,
+    pricePerKg: pricePerUnit,
     totalPrice,
-    cutFee,
-    discountPercent: Math.round(discount * 100),
+    cutFee: appliedCutFee,
+    discountPercent: retail > 0 ? Math.round((1 - pricePerUnit / retail) * 100) : 0,
   };
 }

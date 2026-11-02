@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <!-- Google Analytics и Google Ads -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-X4VLDJJ2XJ');
+      gtag('config', 'AW-18487453527');
+
+      function gtag_report_conversion(url) {
+        const callback = function () {
+          if (typeof url !== 'undefined') window.location = url;
+        };
+        gtag('event', 'conversion', {
+          send_to: 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
+          value: 1.0,
+          currency: 'UAH',
+          event_callback: callback
+        });
+        return false;
+      }
+    </script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <% const productName = product.name || 'Товар'; %>
+    <% const productDescription = product.description || 'Зварювальні матеріали високої якості.'; %>
+    <% const productImage = product.image || product.image_url || product.imageUrl || ''; %>
+    <%
+    const productSlug = createSlug ? createSlug(product.name) : '';
+    const canonicalUrl = `https://wolfram-shop.com.ua/product/${productSlug}-${product.id}`;
+    %>
+
+    <title><%= productName %> — Wolfram Shop</title>
+    <meta name="description" content="<%= productDescription %>">
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="<%= canonicalUrl %>">
+
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="Wolfram Shop">
+    <meta property="og:title" content="<%= productName %> — Wolfram Shop">
+    <meta property="og:description" content="<%= productDescription %>">
+    <meta property="og:url" content="<%= canonicalUrl %>">
+    <% if (productImage) { %>
+        <meta property="og:image" content="<%= productImage %>">
+    <% } %>
+
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org/",
+          "@type": "Product",
+          "name": "<%= productName %>",
+          "image": "<%= productImage %>",
+          "description": "<%= productDescription %>",
+          "sku": "<%= product.id %>",
+          "brand": {
+            "@type": "Brand",
+            "name": "<%= product.manufacturer_name || 'Wolfram' %>"
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": "<%= canonicalUrl %>",
+            "priceCurrency": "UAH",
+            "price": "<%= product.price_retail || product.price_wholesale || 0 %>",
+            "availability": "<%= product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' %>",
+            "itemCondition": "https://schema.org/NewCondition"
+          }
+        }
+    </script>
+
+    <link rel="icon" type="image/png" href="/images/logo.webp">
+    <link rel="stylesheet" href="/css/style.css">
+
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="dns-prefetch" href="https://res.cloudinary.com">
+</head>
+
+<body>
+<header class="header"></header>
+
+<main class="main">
+    <aside class="sidebar"></aside>
+
+    <div class="content">
+        <section class="product-header">
+            <nav id="breadcrumbs" class="breadcrumbs" aria-label="Хлібні крихти">
+                <a href="/">Головна</a>
+                <span class="separator">/</span>
+                <% if (product.category_name) { %>
+                    <a href="/category.html?categoryId=<%= product.category_id %>"><%= product.category_name %></a>
+                    <span class="separator">/</span>
+                <% } %>
+                <span class="current"><%= productName %></span>
+            </nav>
+
+            <div class="product-info">
+                <h1 id="product-name"><%= productName %></h1>
+                <img
+                        id="product-image"
+                        <% if (productImage) { %>src="<%= productImage %>"<% } %>
+                        alt="<%= productName %>"
+                        width="600"
+                        height="600"
+                        fetchpriority="high"
+                >
+            </div>
+        </section>
+
+        <section class="product-prices">
+            <%
+            const unit = product.unit || 'шт';
+            const threshold = Number(product.wholesale_threshold) || 50;
+            const wholesaleOnly = Boolean(product.is_wholesale);
+            const available = Number(product.stock) > 0;
+            %>
+
+            <% if (product.price_retail != null) { %>
+                <div id="manufacturer-tables">
+                    <div class="manufacturer-block">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Діаметр</th>
+                                <th>Вага</th>
+                                <th>Роздріб</th>
+                                <th>ФОП</th>
+                                <th>Опт</th>
+                                <th>Кількість</th>
+                                <th>Дія</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr class="<%= available ? '' : 'out-of-stock-row' %>" data-product-id="<%= product.id %>">
+                                <td><%= product.diameter ?? '-' %> мм</td>
+                                <td><%= product.weight ?? '-' %> кг</td>
+
+                                <td class="price-cell <%= !wholesaleOnly && available ? 'active' : '' %> <%= wholesaleOnly ? 'disabled-cell' : '' %>" data-type="retail">
+                                    <%= product.price_retail %> грн / <%= unit %>
+                                </td>
+
+                                <td class="price-cell <%= wholesaleOnly ? 'disabled-cell' : '' %>" data-type="company">
+                                    <%= product.price_company ?? product.price_retail %> грн / <%= unit %>
+                                </td>
+
+                                <td class="price-cell <%= wholesaleOnly ? 'active' : '' %>" data-type="wholesale">
+                                    <div class="wholesale-info">
+                                        <span class="price-val">
+                                            <%= product.price_wholesale ?? 'Уточнюйте' %>
+                                            <%= product.price_wholesale != null ? ' грн / ' + unit : '' %>
+                                        </span>
+                                        <span class="threshold-text">від <%= threshold %> <%= unit %></span>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="quantity-controls">
+                                        <button type="button" class="qty-btn minus" <%= !available ? 'disabled' : '' %>>−</button>
+                                        <input type="number" class="qty-input" value="<%= wholesaleOnly ? threshold : 1 %>" min="<%= wholesaleOnly ? threshold : 1 %>" max="999" <%= !available ? 'disabled' : '' %>>
+                                        <button type="button" class="qty-btn plus" <%= !available ? 'disabled' : '' %>>+</button>
+                                    </div>
+
+                                    <% if (available) { %>
+                                        <div class="total-price-wrapper">
+                                            <span class="row-total-price">Разом: <span class="total-val">0</span> грн</span>
+                                            <span class="dynamic-pricing-hint"></span>
+                                        </div>
+                                    <% } %>
+                                </td>
+
+                                <td>
+                                    <div class="action-controls">
+                                        <div class="action-buttons">
+                                            <button type="button" class="add-to-cart" <%= !available ? 'disabled' : '' %>>
+                                                <%= available ? 'В кошик' : 'Немає' %>
+                                            </button>
+                                            <% if (available) { %>
+                                                <button type="button" class="quick-order-btn">Швидке замовлення</button>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Таблиця знижок від об'єму -->
+                    <% if (product.has_dynamic_pricing && !product.is_wholesale) {
+                        const retail = parseFloat(product.price_retail) || 0;
+                        const wholesale = parseFloat(product.price_wholesale) || 0;
+                        const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) : 40;
+                        const t1 = parseFloat(product.markup_tier1) || 0.0;
+                        const t2 = parseFloat(product.markup_tier2) || 0.15;
+                        const t3 = parseFloat(product.markup_tier3) || 0.3;
+                        const p1 = (retail * (1 - t1)).toFixed(2);
+                        const p2 = (retail * (1 - t2)).toFixed(2);
+                        const p3 = (retail * (1 - t3)).toFixed(2);
+                    %>
+                    <div id="volume-discounts-block" class="volume-discounts-box">
+                        <h4 class="volume-title">📊 Знижки від об'єму (порізка від 1 <%= unit %>):</h4>
+                        <table class="volume-table">
+                            <thead>
+                            <tr>
+                                <th>Об'єм</th>
+                                <th>Знижка</th>
+                                <th>Ціна за 1 <%= unit %></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>1 – 5 <%= unit %></td>
+                                <td class="muted">0% (база)</td>
+                                <td><strong><%= p1 %> грн</strong></td>
+                            </tr>
+                            <tr>
+                                <td>5 – 10 <%= unit %></td>
+                                <td class="highlight"> -<%= Math.round(t2 * 100) %>%</td>
+                                <td><strong><%= p2 %> грн</strong></td>
+                            </tr>
+                            <tr>
+                                <td>10 – <%= threshold %> <%= unit %></td>
+                                <td class="highlight"> -<%= Math.round(t3 * 100) %>%</td>
+                                <td><strong><%= p3 %> грн</strong></td>
+                            </tr>
+                            <tr>
+                                <td class="gold">від <%= threshold %> <%= unit %> (Опт)</td>
+                                <td class="gold">Оптова ціна</td>
+                                <td class="gold"><strong><%= wholesale.toFixed(2) %> грн</strong></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <% if (cutFee > 0) { %>
+                            <p class="cut-fee-note">
+                                До роздрібних замовлень (до <%= threshold %> <%= unit %>) додається разовий збір за порізку/фасування — <strong><%= cutFee %> грн</strong> на позицію.
+                            </p>
+                        <% } %>
+                    </div>
+                    <% } %>
+
+                    <!-- Блок інформації про доставку -->
+                    <div class="product-delivery-info">
+                        <div class="delivery-item">
+                            <span class="icon">🚚</span>
+                            <div class="text"><strong>Доставка:</strong> Нова Пошта, Делівері, Самовивіз у Харкові <a href="/delivery.html">Детальніше ➔</a></div>
+                        </div>
+                        <div class="delivery-item">
+                            <span class="icon">📦</span>
+                            <div class="text"><strong>Відправка:</strong> У день замовлення при оформленні до 14:00, крім вихідних</div>
+                        </div>
+                        <div class="delivery-item">
+                            <span class="icon">💳</span>
+                            <div class="text"><strong>Оплата:</strong> Накладений платіж, оплата на картку або IBAN</div>
+                        </div>
+                        <div class="delivery-item">
+                            <span class="icon">🔄</span>
+                            <div class="text"><strong>Гарантія:</strong> Обмін та повернення протягом 14 днів</div>
+                        </div>
+                    </div>
+                </div>
+            <% } else { %>
+                <div class="empty-message">
+                    <h2>Ціни наразі оновлюються 🛠️</h2>
+                    <p>Ми вже працюємо над їх наповненням.</p>
+                    <a href="/" class="btn-back">Повернутися на головну</a>
+                </div>
+            <% } %>
+        </section>
+
+        <section class="product-description">
+            <p id="product-description"><%= productDescription %></p>
+        </section>
+
+        <!-- Схожі товари (SSR Rendering) -->
+        <% if (typeof relatedProducts !== 'undefined' && relatedProducts && relatedProducts.length > 0) { %>
+            <section class="related-section" aria-labelledby="related-title">
+                <div class="related-header">
+                    <h3 id="related-title">Схожі товари</h3>
+                    <div class="slider-arrows">
+                        <button id="related-prev" type="button" aria-label="Попередні товари">‹</button>
+                        <button id="related-next" type="button" aria-label="Наступні товари">›</button>
+                    </div>
+                </div>
+                <div id="related-products-grid" class="related-slider" role="region" aria-label="Схожі товари" tabindex="0">
+                    <% relatedProducts.forEach(item => {
+                        const itemSlug = createSlug(item.name);
+                        const itemUrl = `/product/${itemSlug}-${item.id}`;
+                        const itemImg = item.image ? item.image.replace('/upload/', '/upload/f_auto,q_auto,w_400,c_limit/') : '';
+                    %>
+                    <div class="product-card" data-clarity-unmask="true">
+                        <a href="<%= itemUrl %>">
+                            <img src="<%= itemImg %>" loading="lazy" width="250" height="250" alt="<%= item.name %>">
+                            <h3><%= item.name %> <%= item.manufacturer_name || '' %></h3>
+                        </a>
+                        <div class="price-wrapper">
+                            <% if(item.price_retail) { %>
+                                <div class="product-price"><%= item.price_retail %> <span>грн / <%= item.unit || 'шт' %></span></div>
+                            <% } else { %>
+                                <div class="product-price-empty">Ціна уточнюється</div>
+                            <% } %>
+                        </div>
+                        <% const isAv = Number(item.stock) > 0; %>
+                        <% if(!isAv) { %>
+                            <p class="out-of-stock">Немає в наявності</p>
+                        <% } else { %>
+                            <p><span class="available">В наявності</span></p>
+                        <% } %>
+                        <button class="add-to-cart-btn" <%= !isAv || !item.price_retail ? 'disabled' : '' %> data-id="<%= item.id %>">
+                            <%= isAv && item.price_retail ? '🛒 В кошик' : 'Недоступно' %>
+                        </button>
+                    </div>
+                    <% }); %>
+                </div>
+            </section>
+        <% } %>
+    </div>
+</main>
+
+<footer class="footer"></footer>
+
+<!-- Модальне вікно збільшення фото -->
+<div id="image-modal" class="image-modal">
+    <span class="close-modal-img">&times;</span>
+    <img class="modal-content-img" id="full-image" alt="Збільшене фото товару">
+</div>
+
+<script type="module">
+  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
+  injectSidebar(); injectHeader(); injectFooter();
+</script>
+
+<script type="module" src="/js/script.js"></script>
+<script>
+  window.INITIAL_PRODUCT_DATA = <%- JSON.stringify(product) %>;
+</script>
+<script type="module" src="/js/product.js"></script>
+</body>
+</html>
