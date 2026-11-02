@@ -11,26 +11,55 @@
   y.parentNode.insertBefore(t, y);
 })(window, document, 'clarity', 'script', 'z24smkdt0e');
 
-// Ініціалізація Meta Pixel (Facebook)
-!(function (f, b, e, v, n, t, s) {
-  if (f.fbq) return;
-  n = f.fbq = function () {
-    n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-  };
-  if (!f._fbq) f._fbq = n;
-  n.push = n;
-  n.loaded = !0;
-  n.version = '2.0';
-  n.queue = [];
-  t = b.createElement(e);
-  t.async = !0;
-  t.src = v;
-  s = b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t, s);
-})(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+// Функция ленивой загрузки тяжелой аналитики (GTM + Meta Pixel)
+function loadDeferredAnalytics() {
+  if (window.analyticsLoaded) return;
+  window.analyticsLoaded = true;
 
-fbq('init', '2680005392433448');
-fbq('track', 'PageView');
+  // 1. Google Tag Manager / Analytics
+  const gtmScript = document.createElement('script');
+  gtmScript.async = true;
+  gtmScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ';
+  document.head.appendChild(gtmScript);
+
+  // 2. Meta Pixel (Facebook)
+  !(function (f, b, e, v, n, t, s) {
+    if (f.fbq) return;
+    n = f.fbq = function () {
+      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+    };
+    if (!f._fbq) f._fbq = n;
+    n.push = n;
+    n.loaded = !0;
+    n.version = '2.0';
+    n.queue = [];
+    t = b.createElement(e);
+    t.async = !0;
+    t.src = v;
+    s = b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t, s);
+  })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
+  fbq('init', '2680005392433448');
+  fbq('track', 'PageView');
+}
+
+// Запускаем только после взаимодействия пользователя или через 3.5 сек
+window.addEventListener('DOMContentLoaded', () => {
+  const triggerAnalytics = () => {
+    loadDeferredAnalytics();
+    window.removeEventListener('scroll', triggerAnalytics);
+    window.removeEventListener('touchstart', triggerAnalytics);
+    window.removeEventListener('mousemove', triggerAnalytics);
+  };
+
+  window.addEventListener('scroll', triggerAnalytics, { passive: true });
+  window.addEventListener('touchstart', triggerAnalytics, { passive: true });
+  window.addEventListener('mousemove', triggerAnalytics, { passive: true });
+
+  // Запасной таймер
+  setTimeout(loadDeferredAnalytics, 3500);
+});
 
 function initLayoutEvents() {
   // 1. Мобільне меню
