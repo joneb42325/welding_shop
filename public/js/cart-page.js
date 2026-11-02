@@ -25,7 +25,7 @@ function renderCartPage() {
       <div class="empty-message">
         <h2>Ваш кошик порожній 📦</h2>
         <p>Схоже, ви ще нічого не додали. Завітайте до нашого каталогу!</p>
-        <a href="/index.html" class="btn-back">Повернутися до покупок</a>
+        <a href="/" class="btn-back">Повернутися до покупок</a>
       </div>
     </div>
     `;
@@ -72,7 +72,6 @@ function renderCartPage() {
         }
       }
     } else {
-
       total = price * item.quantity;
 
       const threshold = parseInt(item.wholesale_threshold) || 999999;

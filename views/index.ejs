@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-X4VLDJJ2XJ');
+      gtag('config', 'AW-18487453527');
+    </script>
+    <script>
+      function gtag_report_conversion(url) {
+        var callback = function () {
+          if (typeof(url) != 'undefined') { window.location = url; }
+        };
+        gtag('event', 'conversion', {
+          'send_to': 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
+          'value': 1.0,
+          'currency': 'UAH',
+          'event_callback': callback
+        });
+        return false;
+      }
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wolfram Shop — Професійні зварювальні матеріали та електроди</title>
+    <meta name="description" content="Інтернет-магазин Wolfram: найкращі зварювальні електроди, дріт та металопрокат у Харкові та Україні. Гуртові ціни та швидка доставка." />
+    <link rel="icon" type="image/png" href="/images/logo.webp" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+    <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+</head>
+<body>
+<header class="header"></header>
+<main class="main">
+    <aside class="sidebar"></aside>
+    <div class="content">
+        <section class="special-banner">
+            <div class="special-banner-content">
+                <h1>Спеціалізовані зварювальні матеріали</h1>
+                <p>Дріт (пружинний, оцинкований, флюсовий), електроди та присадні прутки. Фасування та порізка від 1 кг!</p>
+                <a href="#catalog-container" class="banner-btn">Переглянути категорії</a>
+            </div>
+        </section>
+
+        <% if (specialProducts && specialProducts.length > 0) { %>
+            <h2>Спеціальні пропозиції Wolfram</h2>
+            <div id="special-products-container" class="catalog-grid">
+                <% specialProducts.forEach((product, index) => { %>
+                    <%
+                        const productSlug = createSlug(product.name);
+                        const isAvailable = Number(product.total_stock) > 0;
+                        const hasPrice = Number(product.price_retail) > 0;
+                        const displayName = product.manufacturer_name
+                                ? `${product.name} ${product.manufacturer_name}`
+                                : product.name;
+
+                        let productImage = product.image || '/images/logo.webp';
+                        if (productImage.includes('/upload/')) {
+                            productImage = productImage.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
+                        }
+                    %>
+                    <div class="product-card" data-clarity-unmask="true">
+                        <a href="/product/<%= productSlug %>-<%= product.id %>">
+                            <img
+                                    src="<%= productImage %>"
+                                    width="250"
+                                    height="250"
+                                    alt="<%= displayName %>"
+                                    loading="<%= index < 4 ? 'eager' : 'lazy' %>"
+                                    <%= index < 4 ? 'fetchpriority="high"' : '' %>
+                            >
+                            <h3><%= displayName %></h3>
+                        </a>
+                        <div class="price-wrapper">
+                            <% if (hasPrice) { %>
+                                <div class="product-price">
+                                    <%= product.price_retail %> <span>грн / <%= product.unit %></span>
+                                </div>
+                            <% } else { %>
+                                <div class="product-price-empty">Ціна уточнюється</div>
+                            <% } %>
+                        </div>
+                        <% if (isAvailable) { %>
+                            <p><span class="available">В наявності</span></p>
+                        <% } else { %>
+                            <p class="out-of-stock">Немає в наявності</p>
+                        <% } %>
+                        <button
+                                class="add-to-cart-btn"
+                                <%= !isAvailable || !hasPrice ? 'disabled' : '' %>
+                        >
+                            <%= isAvailable && hasPrice ? '🛒 В кошик' : 'Недоступно' %>
+                        </button>
+                        <div class="fav-btn" data-id="<%= product.id %>">🤍</div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+
+        <h2>Категорії продукції</h2>
+        <section class="catalog-preview">
+            <div id="catalog-container" class="catalog-grid">
+                <% categories.forEach(category => { %>
+                    <%
+                        const catSlug = createSlug(category.name);
+                        let catImg = category.image || '/images/logo.webp';
+                        if (catImg.includes('/upload/')) {
+                            catImg = catImg.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
+                        } else if (!catImg.startsWith('http')) {
+                            catImg = '/' + catImg;
+                        }
+                    %>
+                    <div class="catalog-item">
+                        <img src="<%= catImg %>" loading="lazy" width="200" height="200" alt="<%= category.name %>">
+                        <a href="/category/<%= catSlug %>-<%= category.id %>"><%= category.name %></a>
+                    </div>
+                <% }); %>
+            </div>
+        </section>
+    </div>
+</main>
+<footer class="footer"></footer>
+
+<!-- Передаємо дані для гідратації в JS -->
+<script>
+  window.INITIAL_SPECIAL_PRODUCTS = <%- JSON.stringify(specialProducts || []).replace(/</g, '\\u003c') %>;
+  window.INITIAL_CATEGORIES = <%- JSON.stringify(categories || []).replace(/</g, '\\u003c') %>;
+</script>
+
+<script type="module">
+  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
+  injectSidebar(); injectHeader(); injectFooter();
+</script>
+<script type="module" src="/js/script.js"></script>
+<script type="module" src="/js/home-page.js"></script>
+</body>
+</html>

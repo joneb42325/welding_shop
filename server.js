@@ -51,8 +51,47 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', './views');
 
+// ГОЛОВНА СТОРІНКА (SSR)
 app.get('/', (req, res) => {
-  res.send('Server is working');
+  // Запит 1: Спеціальні пропозиції
+  const specialQuery = `
+    SELECT p.*, p.stock AS total_stock, m.name AS manufacturer_name
+    FROM products p
+    LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+    WHERE p.is_special = 1
+    ORDER BY p.sort_order ASC, p.id DESC
+    LIMIT 12
+  `;
+
+  // Запит 2: Активні категорії для сітки на головній
+  const catQuery = `
+    SELECT c.*, COUNT(p.id) AS product_count
+    FROM categories c
+    LEFT JOIN products p ON c.id = p.category_id
+    GROUP BY c.id
+    HAVING product_count > 0
+    ORDER BY c.id ASC
+  `;
+
+  db.query(specialQuery, (err, specialProducts) => {
+    if (err) {
+      console.error('Помилка завантаження спец. пропозицій:', err);
+      return res.status(500).send('Помилка сервера');
+    }
+
+    db.query(catQuery, (catErr, categories) => {
+      if (catErr) {
+        console.error('Помилка завантаження категорій:', catErr);
+        return res.status(500).send('Помилка сервера');
+      }
+
+      res.render('index', {
+        specialProducts,
+        categories,
+        createSlug,
+      });
+    });
+  });
 });
 
 const PORT = process.env.PORT || 3000;
@@ -1026,7 +1065,7 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-  const CHAT_IDS = ['1293237281', ''];
+  const CHAT_IDS = ['1293237281', '5106522924'];
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
@@ -1296,7 +1335,7 @@ app.post('/api/quick-order', (req, res) => {
 
             // 4. Формируем сообщение в Telegram с учетом порезки и единиц измерения
             const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-            const CHAT_IDS = ['1293237281', ''];
+            const CHAT_IDS = ['1293237281', '5106522924'];
 
             let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
             if (name && name.trim() !== '') message += `👤 <b>Клієнт:</b> ${name}\n`;

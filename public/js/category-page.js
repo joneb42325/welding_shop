@@ -1,4 +1,4 @@
-import { createProductCard } from './script.js';
+import { createProductCard, initProductCard } from './script.js';
 import { updateCartUI } from './cart.js';
 
 let allProducts = [];
@@ -41,7 +41,20 @@ function init() {
     } else {
       buildFilters();
       setupUIHandlers();
-      applyFiltersAndSort();
+
+      // Початковий стан відповідає SSR (фільтр "Тільки в наявності" увімкнений за замовчуванням)
+      filteredProducts = allProducts.filter((p) => Number(p.total_stock) > 0);
+
+      const initialProducts = filteredProducts.slice(0, itemsPerPage);
+      const cards = document.querySelectorAll('#category-products-container .product-card');
+
+      cards.forEach((card, index) => {
+        if (initialProducts[index]) {
+          initProductCard(card, initialProducts[index]);
+        }
+      });
+
+      updatePaginationUI();
     }
   }
 
@@ -86,16 +99,20 @@ function applyFiltersAndSort() {
   const sortVal = document.getElementById('sort-select')?.value || 'default';
 
   filteredProducts = allProducts.filter((p) => {
-    if (inStockOnly && p.total_stock <= 0) return false;
+    if (inStockOnly && Number(p.total_stock) <= 0) return false;
     if (selectedBrands.length > 0 && !selectedBrands.includes(p.manufacturer_name)) return false;
     if (selectedDiams.length > 0 && !selectedDiams.includes(p.diameter)) return false;
     return true;
   });
 
   if (sortVal === 'price-asc') {
-    filteredProducts.sort((a, b) => (a.price_retail || 0) - (b.price_retail || 0));
+    filteredProducts.sort(
+      (a, b) => (parseFloat(a.price_retail) || 0) - (parseFloat(b.price_retail) || 0)
+    );
   } else if (sortVal === 'price-desc') {
-    filteredProducts.sort((a, b) => (b.price_retail || 0) - (a.price_retail || 0));
+    filteredProducts.sort(
+      (a, b) => (parseFloat(b.price_retail) || 0) - (parseFloat(a.price_retail) || 0)
+    );
   }
 
   currentPage = 1;

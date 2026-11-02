@@ -36,7 +36,6 @@ export function injectSidebar() {
   const sidebar = document.querySelector('aside.sidebar');
   if (!sidebar) return;
 
-
   sidebar.innerHTML = `
 <!--
     <div class="cart-box">
@@ -62,7 +61,7 @@ export function injectHeader() {
   header.innerHTML = `
       <button class="burger">☰</button>
       <div class="header-left">
-        <a href="/index.html" class="logo-link">
+        <a href="/" class="logo-link">
           <div class="logo">
             <img src="/images/logo.webp" alt="Wolfram" />
           </div>
@@ -73,7 +72,7 @@ export function injectHeader() {
         </a>
       </div>
       <nav class="nav">
-        <a href="/index.html">Головна</a>
+        <a href="/">Головна</a>
         <a href="/about.html">Про нас</a>
         <a href="/delivery.html">Доставка і оплата</a>
       </nav>
@@ -95,7 +94,7 @@ export function injectHeader() {
       <div class="mobile-menu-brand">
           <p>WOLFRAM</p>
       </div>
-      <a href="/index.html">🏠 Головна</a>
+      <a href="/">🏠 Головна</a>
       <a href="/about.html">ℹ️ Про нас</a>
       <a href="/delivery.html">🚚 Доставка і оплата</a>
       <hr>
@@ -119,7 +118,7 @@ export function injectHeader() {
         <h4>Контакти</h4>
         <!-- Клік по телефону у мобільному меню -->
         <a href="tel:+380634383823" onclick="return gtag_report_conversion('tel:+380634383823');">📞 +38 (063) 438-38-23</a>
-        <a href="mailto:dgeeek1990@gmail.com">📧 dgeeek1990@gmail.com</a>
+        <a href="mailto:wolframshop.info@gmail.com">📧 wolframshop.info@gmail.com</a>
         <div>📍 м. Харків</div>
       </div>
     </div>
@@ -159,12 +158,12 @@ export function injectFooter() {
           <h4>Контакти</h4>
           <!-- Номер у футері зроблено клікабельним посиланням з відстеженням -->
           <p>Телефон: <a href="tel:+380634383823" onclick="return gtag_report_conversion('tel:+380634383823');">+380 63 438 3823</a> Євген</p>
-          <p>Email: dgeeek1990@gmail.com</p>
+          <p>Email: wolframshop.info@gmail.com</p>
           <p>Адреса: Харків, Україна</p>
         </div>
         <div class="footer-column">
           <h4>Швидкі посилання</h4>
-          <a href="/index.html">Головна</a>
+          <a href="/">Головна</a>
           <a href="/about.html">Про нас</a>
           <a href="/delivery.html">Доставка і оплата</a>
         </div>

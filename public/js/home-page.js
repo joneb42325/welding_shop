@@ -1,21 +1,21 @@
-import { createProductCard, loadCategories } from './script.js';
+import { initProductCard } from './script.js';
 import { updateCartUI } from './cart.js';
 
-async function loadSpecialProducts() {
+function initHomePage() {
   const specialContainer = document.getElementById('special-products-container');
-  if (!specialContainer) return;
 
-  try {
-    const res = await fetch('/products/special');
-    const products = await res.json();
+  const products = window.INITIAL_SPECIAL_PRODUCTS;
 
-    products.forEach((product) => {
-      specialContainer.appendChild(createProductCard(product));
-    });
-  } catch (err) {
-    console.error('Error loading products', err);
-  }
+  if (!specialContainer || !Array.isArray(products)) return;
+
+  const cards = specialContainer.querySelectorAll('.product-card');
+
+  cards.forEach((card, index) => {
+    if (products[index]) {
+      initProductCard(card, products[index]);
+    }
+  });
 }
 
-loadSpecialProducts();
+initHomePage();
 updateCartUI();

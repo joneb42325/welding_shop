@@ -1,6 +1,5 @@
 import { updateCartUI, addToCart, showToast } from './cart.js';
-import { updateFavoritesUI } from './favorites.js';
-import { isFavorite, toggleFavorite } from './favorites.js';
+import { isFavorite, toggleFavorite, updateFavoritesUI } from './favorites.js';
 
 export function getOptimizedImg(url, width = 400) {
   if (!url) return '';
@@ -63,6 +62,84 @@ function createSlug(text) {
   );
 }
 
+export function initProductCard(card, product) {
+  if (!card || !product || card.dataset.handlersInitialized === 'true') {
+    return;
+  }
+
+  card.dataset.handlersInitialized = 'true';
+
+  const cartBtn = card.querySelector('.add-to-cart-btn');
+
+  if (cartBtn) {
+    cartBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (cartBtn.disabled) return;
+
+      addToCart({
+        productId: product.id,
+        name: product.name,
+        image: product.image,
+        manufacturer: product.manufacturer_name || '',
+        diameter: product.diameter || '',
+        weight: product.weight || '',
+        selectedType: 'retail',
+        price: product.price_retail,
+
+        price_retail: product.price_retail,
+        price_wholesale: product.price_wholesale,
+        wholesale_threshold: product.wholesale_threshold,
+
+        unit: product.unit || 'шт',
+
+        has_dynamic_pricing: product.has_dynamic_pricing,
+        is_wholesale: product.is_wholesale,
+        markup_tier1: product.markup_tier1,
+        markup_tier2: product.markup_tier2,
+        markup_tier3: product.markup_tier3,
+        cut_fee: product.cut_fee,
+      });
+
+      updateCartUI();
+
+      showToast(
+        `${product.name} додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
+      );
+
+      const originalText = cartBtn.innerHTML;
+      cartBtn.innerHTML = '✅ Додано';
+      cartBtn.classList.add('added');
+
+      setTimeout(() => {
+        cartBtn.innerHTML = originalText;
+        cartBtn.classList.remove('added');
+      }, 2000);
+    });
+  }
+
+  const favBtn = card.querySelector('.fav-btn');
+
+  if (favBtn) {
+    // Синхронізуємо початковий стан із поточним списком обраного
+    favBtn.textContent = isFavorite(product.id) ? '❤️' : '🤍';
+
+    favBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const isAdded = toggleFavorite(product.id);
+      favBtn.textContent = isAdded ? '❤️' : '🤍';
+
+      favBtn.style.transform = 'scale(1.3)';
+      setTimeout(() => {
+        favBtn.style.transform = 'scale(1)';
+      }, 200);
+    });
+  }
+}
+
 export function createProductCard(product, isEager = false) {
   const slug = createSlug(product.name);
   const isAvailable = product.total_stock > 0;
@@ -109,119 +186,64 @@ export function createProductCard(product, isEager = false) {
     </button>
   `;
 
-  const cartBtn = card.querySelector('.add-to-cart-btn');
-  if (cartBtn) {
-    cartBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      addToCart({
-        productId: product.id,
-        name: product.name,
-        image: product.image,
-        manufacturer: product.manufacturer_name || '',
-        diameter: product.diameter || '',
-        weight: product.weight || '',
-        selectedType: 'retail', // За замовчуванням беремо роздріб
-        price: product.price_retail,
-
-        price_retail: product.price_retail,
-        price_wholesale: product.price_wholesale,
-        wholesale_threshold: product.wholesale_threshold,
-
-        unit: product.unit || 'шт',
-
-        // ПАРАМЕТРИ ДИНАМІЧНОГО ЦІНОУТВОРЕННЯ
-        has_dynamic_pricing: product.has_dynamic_pricing,
-        is_wholesale: product.is_wholesale,
-        markup_tier1: product.markup_tier1,
-        markup_tier2: product.markup_tier2,
-        markup_tier3: product.markup_tier3,
-        cut_fee: product.cut_fee,
-      });
-      updateCartUI();
-
-      /*showToast(`${product.name} додано до кошика!`); */
-
-      showToast(
-        `${product.name} додано до кошика! <strong style="color: #FFD700; margin-left: 8px;">Перейти ➔</strong>`
-      );
-
-      const originalText = cartBtn.innerHTML;
-      cartBtn.innerHTML = '✅ Додано';
-      cartBtn.classList.add('added');
-      setTimeout(() => {
-        cartBtn.innerHTML = originalText;
-        cartBtn.classList.remove('added');
-      }, 2000);
-    });
-  }
-
-  const favBtn = card.querySelector('.fav-btn');
-  favBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const isAdded = toggleFavorite(product.id);
-    favBtn.innerHTML = isAdded ? '❤️' : '🤍';
-    favBtn.style.transform = 'scale(1.3)';
-    setTimeout(() => (favBtn.style.transform = 'scale(1)'), 200);
-  });
+  initProductCard(card, product);
 
   return card;
 }
 
 export async function loadCategories() {
-  const catalogList = document.getElementById('catalog-list');
-  const catalogContainer = document.getElementById('catalog-container');
-  const mobileCatList = document.getElementById('mobile-categories-list');
+  const catalogList = document.getElementById('catalog-list'); // Десктоп бокове меню
+  const catalogContainer = document.getElementById('catalog-container'); // Сітка на головній
+  const mobileCatList = document.getElementById('mobile-categories-list'); // Мобільне меню
 
   if (!catalogList && !catalogContainer && !mobileCatList) return;
 
   try {
-    const res = await fetch('/categories');
-    const categories = await res.json();
+    let categories = [];
+
+    // Використовуємо дані з SSR, якщо вони є (на головній та сторінках категорій)
+    if (window.INITIAL_CATEGORIES) {
+      categories = window.INITIAL_CATEGORIES;
+    } else {
+      const res = await fetch('/categories');
+      categories = await res.json();
+    }
 
     const activeCategories = categories.filter((category) => category.product_count > 0);
 
     activeCategories.forEach((category) => {
-      const categoryLink = `/category/${category.slug}-${category.id}`;
+      const slug = category.slug || category.id;
+      const categoryLink = `/category/${slug}-${category.id}`;
+
+      // 1. Бокове меню (десктоп)
       if (catalogList) {
         const li = document.createElement('li');
-        li.innerHTML = `
-          <a href="${categoryLink}">
-            ${category.name}
-          </a>
-        `;
+        li.innerHTML = `<a href="${categoryLink}">${category.name}</a>`;
         catalogList.appendChild(li);
       }
 
-      if (catalogContainer) {
+      // 2. Сетка категорий на главной (РЕНДЕРИМО ТІЛЬКИ ЯКЩО НЕМАЄ SSR)
+      // Оскільки EJS вже згенерував html в catalogContainer, ми пропускаємо цей крок на головній
+      if (catalogContainer && !window.INITIAL_CATEGORIES) {
         const card = document.createElement('div');
         card.classList.add('catalog-item');
-
         const optimizedCatImg = getOptimizedImg(category.image);
-
         card.innerHTML = `
-          <!-- <img src="${category.image}" alt="${category.name}"> -->
           <img src="${optimizedCatImg}" loading="lazy" width="200" height="200" alt="${category.name}">
-          <a href="${categoryLink}">
-            ${category.name}
-          </a>
+          <a href="${categoryLink}">${category.name}</a>
         `;
-
         catalogContainer.appendChild(card);
       }
+
+      // 3. Мобильное выпадающее меню
       if (mobileCatList) {
         const li = document.createElement('li');
-        li.innerHTML = `
-          <a href="${categoryLink}">
-            • ${category.name}
-          </a>
-        `;
+        li.innerHTML = `<a href="${categoryLink}">${category.name}</a>`;
         mobileCatList.appendChild(li);
       }
     });
   } catch (err) {
-    console.error(err);
+    console.error('Помилка завантаження категорій:', err);
   }
 }
 
