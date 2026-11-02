@@ -311,6 +311,7 @@
                         const itemImg = getOptimizedImg(item.image, 400);
                     %>
                     <div class="product-card" data-clarity-unmask="true">
+                        <div class="fav-btn" data-id="<%= item.id %>">🤍</div>
                         <a href="<%= itemUrl %>">
                             <img src="<%= itemImg %>" loading="lazy" width="250" height="250" alt="<%= item.name %>">
                             <h3><%= item.name %> <%= item.manufacturer_name || '' %></h3>
@@ -351,6 +352,7 @@
 <script type="module" src="/js/script.js"></script>
 <script>
   window.INITIAL_PRODUCT_DATA = <%- JSON.stringify(product || {}).replace(/</g, '\\u003c') %>;
+  window.INITIAL_RELATED_PRODUCTS = <%- JSON.stringify(relatedProducts || []).replace(/</g, '\\u003c') %>;
 </script>
 <script type="module" src="/js/product.js"></script>
 </body>

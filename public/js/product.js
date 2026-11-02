@@ -1,7 +1,29 @@
 import { addToCart, updateCartUI, showToast } from './cart.js';
 import { isFavorite, toggleFavorite } from './favorites.js';
-import { getOptimizedImg, createProductCard } from './script.js';
+import { getOptimizedImg, initProductCard } from './script.js';
 import { calculateDynamicPrice } from './pricing.js';
+
+function initRelatedProductsUI() {
+  const container = document.getElementById('related-products-grid');
+  const relatedData = window.INITIAL_RELATED_PRODUCTS;
+
+  if (!container || !Array.isArray(relatedData) || relatedData.length === 0) return;
+
+  // Находим все отрендеренные SSR-карточки в слайдере похожих товаров
+  const cards = container.querySelectorAll('.product-card');
+
+  relatedData.forEach((product, index) => {
+    if (cards[index]) {
+      // Навешиваем ваши готовые обработчики кошелька и избранного
+      initProductCard(cards[index], product);
+    }
+  });
+}
+
+// Запускаем при загрузке DOM
+document.addEventListener('DOMContentLoaded', () => {
+  initRelatedProductsUI();
+});
 
 const params = new URLSearchParams(window.location.search);
 const productId =
