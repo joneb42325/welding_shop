@@ -339,6 +339,28 @@ app.get('/api/search', (req, res) => {
   });
 });
 
+app.use((req, res, next) => {
+  const catQuery = `
+    SELECT c.*, COUNT(p.id) AS product_count 
+    FROM categories c 
+    LEFT JOIN products p ON c.id = p.category_id 
+    GROUP BY c.id 
+    HAVING product_count > 0 
+    ORDER BY c.id ASC
+  `;
+  db.query(catQuery, (err, categories) => {
+    if (!err && categories) {
+      res.locals.categories = categories.map((cat) => ({
+        ...cat,
+        slug: createSlug(cat.name),
+      }));
+    } else {
+      res.locals.categories = [];
+    }
+    next();
+  });
+});
+
 function getProductById(productId, callback) {
   const sql = `
     SELECT
