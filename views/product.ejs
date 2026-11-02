@@ -33,10 +33,20 @@
             : (product.name || 'Товар');
     %>
     <% const productDescription = product.description || 'Зварювальні матеріали високої якості.'; %>
-    <% const productImage = product.image || product.image_url || product.imageUrl || ''; %>
+
+    <%
+    // Чиста оригінальна URL для SEO та месенджерів
+    const rawProductImage = product.image || product.image_url || product.imageUrl || '';
+
+    // Оптимізована фотографія через глобальну функцію
+    const displayProductImage = getOptimizedImg(rawProductImage, 800);
+    %>
+
     <%
     const productSlug = createSlug ? createSlug(product.name) : '';
     const canonicalUrl = `https://wolfram-shop.com.ua/product/${productSlug}-${product.id}`;
+    const categorySlug = (createSlug && product.category_name) ? createSlug(product.category_name) : '';
+    const categoryUrl = product.category_id ? `https://wolfram-shop.com.ua/category/${categorySlug}-${product.category_id}` : '';
     %>
 
     <title><%= productName %> — Wolfram Shop</title>
@@ -50,16 +60,17 @@
     <meta property="og:title" content="<%= productName %> — Wolfram Shop">
     <meta property="og:description" content="<%= productDescription %>">
     <meta property="og:url" content="<%= canonicalUrl %>">
-    <% if (productImage) { %>
-        <meta property="og:image" content="<%= productImage %>">
+    <% if (rawProductImage) { %>
+        <meta property="og:image" content="<%= rawProductImage %>">
     <% } %>
 
+    <!-- Schema.org Product -->
     <script type="application/ld+json">
         {
           "@context": "https://schema.org/",
           "@type": "Product",
           "name": "<%= productName %>",
-          "image": "<%= productImage %>",
+          "image": "<%= rawProductImage %>",
           "description": "<%= productDescription %>",
           "sku": "<%= product.id %>",
           "brand": {
@@ -71,7 +82,7 @@
             "url": "<%= canonicalUrl %>",
             "priceCurrency": "UAH",
             "price": "<%= product.price_retail || product.price_wholesale || 0 %>",
-            "availability": "<%= product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' %>",
+            "availability": "<%= Number(product.stock) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock' %>",
             "itemCondition": "https://schema.org/NewCondition"
           }
         }
@@ -95,8 +106,8 @@
             <nav id="breadcrumbs" class="breadcrumbs" aria-label="Хлібні крихти">
                 <a href="/">Головна</a>
                 <span class="separator">/</span>
-                <% if (product.category_name) { %>
-                    <a href="/category.html?categoryId=<%= product.category_id %>"><%= product.category_name %></a>
+                <% if (product.category_name && product.category_id) { %>
+                    <a href="/category/<%= categorySlug %>-<%= product.category_id %>"><%= product.category_name %></a>
                     <span class="separator">/</span>
                 <% } %>
                 <span class="current"><%= productName %></span>
@@ -106,7 +117,7 @@
                 <h1 id="product-name"><%= productName %></h1>
                 <img
                         id="product-image"
-                        <% if (productImage) { %>src="<%= productImage %>"<% } %>
+                        <% if (displayProductImage) { %>src="<%= displayProductImage %>"<% } %>
                         alt="<%= productName %>"
                         width="600"
                         height="600"
@@ -201,6 +212,8 @@
                         const t1 = parseFloat(product.markup_tier1) || 0.0;
                         const t2 = parseFloat(product.markup_tier2) || 0.15;
                         const t3 = parseFloat(product.markup_tier3) || 0.3;
+
+                        // Відновлено правильні математичні оператори
                         const p1 = (retail * (1 - t1)).toFixed(2);
                         const p2 = (retail * (1 - t2)).toFixed(2);
                         const p3 = (retail * (1 - t3)).toFixed(2);
@@ -223,11 +236,13 @@
                             </tr>
                             <tr>
                                 <td>5 – 10 <%= unit %></td>
+                                <!-- Відновлено оператор множення -->
                                 <td class="highlight"> -<%= Math.round(t2 * 100) %>%</td>
                                 <td><strong><%= p2 %> грн</strong></td>
                             </tr>
                             <tr>
                                 <td>10 – <%= threshold %> <%= unit %></td>
+                                <!-- Відновлено оператор множення -->
                                 <td class="highlight"> -<%= Math.round(t3 * 100) %>%</td>
                                 <td><strong><%= p3 %> грн</strong></td>
                             </tr>
@@ -293,7 +308,8 @@
                     <% relatedProducts.forEach(item => {
                         const itemSlug = createSlug(item.name);
                         const itemUrl = `/product/${itemSlug}-${item.id}`;
-                        const itemImg = item.image ? item.image.replace('/upload/', '/upload/f_auto,q_auto,w_400,c_limit/') : '';
+                        // Використовуємо глобальну функцію оптимізації
+                        const itemImg = getOptimizedImg(item.image, 400);
                     %>
                     <div class="product-card" data-clarity-unmask="true">
                         <a href="<%= itemUrl %>">
@@ -333,10 +349,9 @@
 </div>
 
 <script type="module" src="/js/layout-events.js"></script>
-
 <script type="module" src="/js/script.js"></script>
 <script>
-  window.INITIAL_PRODUCT_DATA = <%- JSON.stringify(product) %>;
+  window.INITIAL_PRODUCT_DATA = <%- JSON.stringify(product || {}).replace(/</g, '\\u003c') %>;
 </script>
 <script type="module" src="/js/product.js"></script>
 </body>

@@ -51,6 +51,45 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', './views');
 
+app.use((req, res, next) => {
+  // 1. Хелпер оптимізації зображень (доступний у всіх EJS шаблонах)
+  res.locals.getOptimizedImg = (url, width = 500) => {
+    if (!url) return '/images/logo.webp';
+
+    if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+      return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
+    }
+
+    if (!url.startsWith('http') && !url.startsWith('/')) {
+      return '/images/' + url;
+    }
+
+    return url;
+  };
+
+  // 2. Категорії для сайдбара та навігації
+  const catQuery = `
+    SELECT c.*, COUNT(p.id) AS product_count
+    FROM categories c
+           LEFT JOIN products p ON c.id = p.category_id
+    GROUP BY c.id
+    HAVING product_count > 0
+    ORDER BY c.id ASC
+  `;
+
+  db.query(catQuery, (err, categories) => {
+    if (!err && categories) {
+      res.locals.categories = categories.map((cat) => ({
+        ...cat,
+        slug: createSlug(cat.name),
+      }));
+    } else {
+      res.locals.categories = [];
+    }
+    next();
+  });
+});
+
 // ГОЛОВНА СТОРІНКА (SSR)
 app.get('/', (req, res) => {
   // Запит 1: Спеціальні пропозиції
@@ -336,28 +375,6 @@ app.get('/api/search', (req, res) => {
       return res.status(500).json({ error: 'Server error' });
     }
     res.json(results);
-  });
-});
-
-app.use((req, res, next) => {
-  const catQuery = `
-    SELECT c.*, COUNT(p.id) AS product_count 
-    FROM categories c 
-    LEFT JOIN products p ON c.id = p.category_id 
-    GROUP BY c.id 
-    HAVING product_count > 0 
-    ORDER BY c.id ASC
-  `;
-  db.query(catQuery, (err, categories) => {
-    if (!err && categories) {
-      res.locals.categories = categories.map((cat) => ({
-        ...cat,
-        slug: createSlug(cat.name),
-      }));
-    } else {
-      res.locals.categories = [];
-    }
-    next();
   });
 });
 

@@ -28,6 +28,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Wolfram Shop — Професійні зварювальні матеріали та електроди</title>
     <meta name="description" content="Інтернет-магазин Wolfram: найкращі зварювальні електроди, дріт та металопрокат у Харкові та Україні. Гуртові ціни та швидка доставка." />
+
+    <link rel="canonical" href="https://wolfram-shop.com.ua/" />
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Wolfram Shop">
+    <meta property="og:title" content="Wolfram Shop — Професійні зварювальні матеріали та електроди">
+    <meta property="og:description" content="Інтернет-магазин Wolfram: найкращі зварювальні електроди, дріт та металопрокат у Харкові та Україні.">
+    <meta property="og:url" content="https://wolfram-shop.com.ua/">
+    <meta property="og:image" content="https://wolfram-shop.com.ua/images/logo.webp">
+
     <link rel="icon" type="image/png" href="/images/logo.webp" />
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
@@ -58,12 +68,12 @@
                                 ? `${product.name} ${product.manufacturer_name}`
                                 : product.name;
 
-                        let productImage = product.image || '/images/logo.webp';
-                        if (productImage.includes('/upload/')) {
-                            productImage = productImage.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
-                        }
+                        // Використовуємо глобальну функцію оптимізації
+                        const productImage = getOptimizedImg(product.image, 500);
                     %>
                     <div class="product-card" data-clarity-unmask="true">
+                        <div class="fav-btn" data-id="<%= product.id %>">🤍</div>
+
                         <a href="/product/<%= productSlug %>-<%= product.id %>">
                             <img
                                     src="<%= productImage %>"
@@ -95,7 +105,6 @@
                         >
                             <%= isAvailable && hasPrice ? '🛒 В кошик' : 'Недоступно' %>
                         </button>
-                        <div class="fav-btn" data-id="<%= product.id %>">🤍</div>
                     </div>
                 <% }); %>
             </div>
@@ -107,12 +116,8 @@
                 <% categories.forEach(category => { %>
                     <%
                         const catSlug = createSlug(category.name);
-                        let catImg = category.image || '/images/logo.webp';
-                        if (catImg.includes('/upload/')) {
-                            catImg = catImg.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
-                        } else if (!catImg.startsWith('http')) {
-                            catImg = '/' + catImg;
-                        }
+                        // Використовуємо глобальну функцію оптимізації
+                        const catImg = getOptimizedImg(category.image, 500);
                     %>
                     <div class="catalog-item">
                         <img src="<%= catImg %>" loading="lazy" width="200" height="200" alt="<%= category.name %>">

@@ -17,11 +17,11 @@
     <%
     const catSlug = createSlug(category.name);
     const canonicalUrl = `https://wolfram-shop.com.ua/category/${catSlug}-${category.id}`;
-    let bgUrl = '';
-    if (category.image) {
-        const rawUrl = category.image.startsWith('http') ? category.image : '/images/' + category.image;
-        bgUrl = rawUrl.includes('/upload/') ? rawUrl.replace('/upload/', '/upload/f_auto,q_auto,w_1000/') : rawUrl;
-    }
+
+    // Чисте посилання для соцмереж (без f_auto, щоб месенджери не губили картинку)
+    const rawCategoryImg = category.image ? (category.image.startsWith('http') ? category.image : '/images/' + category.image) : '';
+    // Оптимізоване фото для фону шапки (1000px, WebP/JXL)
+    const bgUrl = getOptimizedImg(category.image, 1000);
     %>
 
     <title><%= category.name %> — Купити в Wolfram Shop</title>
@@ -32,7 +32,7 @@
     <meta property="og:site_name" content="Wolfram Shop">
     <meta property="og:title" content="<%= category.name %> — Wolfram Shop">
     <meta property="og:url" content="<%= canonicalUrl %>">
-    <% if (bgUrl) { %><meta property="og:image" content="<%= bgUrl %>"><% } %>
+    <% if (rawCategoryImg) { %><meta property="og:image" content="<%= rawCategoryImg %>"><% } %>
 
     <link rel="icon" type="image/png" href="/images/logo.webp" />
     <link rel="stylesheet" href="/css/style.css" />
@@ -45,7 +45,7 @@
     <%- include('partials/sidebar') %>
 
     <div class="content">
-        <section class="category-header" <% if (bgUrl) { %>style="background-image: url('<%= bgUrl %>');"<% } %>>
+        <section class="category-header" <% if (bgUrl && bgUrl !== '/images/logo.webp') { %>style="background-image: url('<%= bgUrl %>');"<% } %>>
             <div class="category-header-content">
                 <h1 id="category-title"><%= category.name %></h1>
             </div>
@@ -120,10 +120,8 @@
                                     ? `${product.name} ${product.manufacturer_name}`
                                     : product.name;
 
-                            let productImage = product.image || '/images/logo.webp';
-                            if (productImage.includes('/upload/')) {
-                                productImage = productImage.replace('/upload/', '/upload/f_auto,q_auto,w_500/');
-                            }
+                            // Виклик нашої нової єдиної функції оптимізації
+                            const productImage = getOptimizedImg(product.image, 500);
                         %>
 
                         <div class="product-card" data-clarity-unmask="true">
