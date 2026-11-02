@@ -33,6 +33,19 @@ app.get('/product.html', (req, res, next) => {
     return res.redirect(301, `/product/${slug}-${product.id}`);
   });
 });
+
+app.get('/category.html', (req, res, next) => {
+  const categoryId = req.query.categoryId;
+  if (!categoryId || !/^\d+$/.test(categoryId)) return next();
+
+  db.query('SELECT name, id FROM categories WHERE id = ?', [categoryId], (err, results) => {
+    if (err || results.length === 0) return res.redirect(301, '/');
+
+    const slug = createSlug(results[0].name);
+    return res.redirect(301, `/category/${slug}-${results[0].id}`);
+  });
+});
+
 app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
@@ -134,22 +147,47 @@ app.get('/products/special', (req, res) => {
   });
 });
 
-app.get('/products/category/:id', (req, res) => {
-  const categoryId = req.params.id;
-  const query = `
-    SELECT
-      p.*,
-      p.stock AS total_stock,
-      m.name AS manufacturer_name
-    FROM products p
-           LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
-    WHERE p.category_id = ?
-    ORDER BY p.sort_order ASC, p.id DESC
-  `;
+app.get('/category/:slugAndId', (req, res) => {
+  const param = req.params.slugAndId;
+  const match = param.match(/(?:^|-)(\d+)$/);
 
-  db.query(query, [categoryId], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
-    res.json(results);
+  if (!match) return res.status(404).send('Категорію не знайдено');
+
+  const categoryId = match[1];
+
+  // Отримуємо інформацію про категорію
+  db.query('SELECT * FROM categories WHERE id = ?', [categoryId], (err, catResults) => {
+    if (err || catResults.length === 0) {
+      return res.status(404).send('Категорію не знайдено');
+    }
+
+    const category = catResults[0];
+    const correctSlug = createSlug(category.name);
+    const correctUrl = `/category/${correctSlug}-${category.id}`;
+
+    // Якщо URL не ідеальний (наприклад, без slug) — 301 редирект
+    if (param !== `${correctSlug}-${category.id}`) {
+      return res.redirect(301, correctUrl);
+    }
+
+    // Отримуємо товари для цієї категорії
+    const prodQuery = `
+      SELECT p.*, p.stock AS total_stock, m.name AS manufacturer_name
+      FROM products p
+      LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+      WHERE p.category_id = ?
+      ORDER BY p.sort_order ASC, p.id DESC
+    `;
+
+    db.query(prodQuery, [categoryId], (pErr, products) => {
+      if (pErr) return res.status(500).send('Помилка сервера');
+
+      res.render('category', {
+        category,
+        products,
+        createSlug,
+      });
+    });
   });
 });
 
@@ -162,21 +200,23 @@ app.get('/categories/:id/info', (req, res) => {
 });
 
 app.get('/categories', (req, res) => {
-  // Рахуємо кількість товарів для кожної категорії через LEFT JOIN
   const query = `
     SELECT c.*, COUNT(p.id) AS product_count
     FROM categories c
-    LEFT JOIN products p ON c.id = p.category_id
+           LEFT JOIN products p ON c.id = p.category_id
     GROUP BY c.id
   `;
 
   db.query(query, (err, results) => {
-    if (err) {
-      console.error('Помилка отримання категорій:', err);
-      return res.status(500).json({ error: 'Server error' });
-    }
+    if (err) return res.status(500).json({ error: 'Server error' });
 
-    res.json(results);
+    // Додаємо slug до кожної категорії для побудови меню на фронтенді
+    const formatted = results.map((cat) => ({
+      ...cat,
+      slug: createSlug(cat.name),
+    }));
+
+    res.json(formatted);
   });
 });
 
@@ -259,32 +299,6 @@ app.get('/api/search', (req, res) => {
     res.json(results);
   });
 });
-
-// app.get('/product/:id', (req, res) => {
-//   const productId = req.params.id;
-//
-//   const sql = `
-//     SELECT
-//       p.*,
-//       m.name AS manufacturer_name,
-//       c.name AS category_name,
-//       p.stock AS total_stock
-//     FROM products p
-//            LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
-//            LEFT JOIN categories c ON p.category_id = c.id
-//     WHERE p.id = ?
-//   `;
-//
-//   db.query(sql, [productId], (err, results) => {
-//     if (err) return res.status(500).json({ error: 'Server error' });
-//
-//     if (results.length === 0) {
-//       return res.status(404).json({ error: 'Товар не знайдено' });
-//     }
-//
-//     res.json(results[0]);
-//   });
-// });
 
 function getProductById(productId, callback) {
   const sql = `
@@ -1429,7 +1443,7 @@ app.get('/feed.xml', (req, res) => {
 
 // GET - Динамічна генерація sitemap.xml для Google Search Console
 app.get('/sitemap.xml', (req, res) => {
-  const categoriesQuery = 'SELECT id FROM categories';
+  const categoriesQuery = 'SELECT id, name FROM categories';
   const productsQuery = 'SELECT id, name FROM products';
 
   db.query(categoriesQuery, (err, categories) => {
@@ -1466,8 +1480,9 @@ app.get('/sitemap.xml', (req, res) => {
 
       // 2. Сторінки категорій
       categories.forEach((cat) => {
+        const catUrl = `${baseUrl}/category/${createSlug(cat.name)}-${cat.id}`;
         xml += '  <url>\n';
-        xml += `    <loc>${baseUrl}/category.html?categoryId=${cat.id}</loc>\n`;
+        xml += `    <loc>${catUrl}</loc>\n`;
         xml += '    <changefreq>weekly</changefreq>\n';
         xml += '    <priority>0.8</priority>\n';
         xml += '  </url>\n';

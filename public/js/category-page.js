@@ -1,4 +1,4 @@
-import { createProductCard, getOptimizedImg } from './script.js';
+import { createProductCard } from './script.js';
 import { updateCartUI } from './cart.js';
 
 let allProducts = [];
@@ -6,42 +6,10 @@ let filteredProducts = [];
 let currentPage = 1;
 let itemsPerPage = 16;
 
-async function init() {
-  const params = new URLSearchParams(window.location.search);
-  const categoryId = params.get('categoryId');
-
-  if (!categoryId) return;
-
-  await Promise.all([loadCategoryTitle(categoryId), loadCategoryProducts(categoryId)]);
-
-  if (allProducts.length > 0) {
-    buildFilters();
-    setupUIHandlers();
-    applyFiltersAndSort();
-  }
-
-  updateCartUI();
-}
-
-async function loadCategoryTitle(categoryId) {
-  const header = document.querySelector('.category-header');
-  const categoryTitle = document.getElementById('category-title');
-  const diamTitle = document.getElementById('diameter-filter-title');
-
-  if (!categoryTitle || !categoryId) return;
-
-  try {
-    const res = await fetch(`/categories/${categoryId}/info`);
-    const category = await res.json();
-
-    document.title = `${category.name} — Купити в Wolfram Shop`;
-
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.content = `Каталог продукції у категорії ${category.name}. Великий вибір зварювальних матеріалів за найкращими цінами.`;
-    }
-
-    categoryTitle.textContent = category.name;
+function init() {
+  if (window.INITIAL_CATEGORY) {
+    const category = window.INITIAL_CATEGORY;
+    const diamTitle = document.getElementById('diameter-filter-title');
 
     if (diamTitle) {
       const nameLower = category.name.toLowerCase();
@@ -53,50 +21,36 @@ async function loadCategoryTitle(categoryId) {
         diamTitle.textContent = 'Діаметр, мм';
       }
     }
-
-    if (header && category.image) {
-      const rawBgUrl = category.image.startsWith('http')
-        ? category.image
-        : `images/${category.image}`;
-      const bgUrl = getOptimizedImg(rawBgUrl, 1000);
-      header.style.backgroundImage = `url('${bgUrl}')`;
-    }
-  } catch (err) {
-    console.error('Error loading category info', err);
   }
-}
 
-async function loadCategoryProducts(categoryId) {
-  const categorySection = document.querySelector('.category-products');
+  if (window.INITIAL_PRODUCTS) {
+    allProducts = window.INITIAL_PRODUCTS;
+    const categorySection = document.querySelector('.category-products');
 
-  try {
-    const res = await fetch(`/products/category/${categoryId}`);
-    allProducts = await res.json();
-
-    const oldWrapper = document.querySelector('.empty-state-wrapper');
-    if (oldWrapper) oldWrapper.remove();
-
-    if (allProducts.length === 0) {
+    if (allProducts.length === 0 && categorySection) {
       const emptyWrapper = document.createElement('div');
       emptyWrapper.className = 'empty-state-wrapper';
       emptyWrapper.innerHTML = `
         <div class="empty-message">
           <h2>У цій категорії поки немає товарів 😔</h2>
           <p>Ми вже працюємо над її наповненням. Загляньте сюди трохи пізніше!</p>
-          <a href="/index.html" class="btn-back">Повернутися на головну</a>
+          <a href="/" class="btn-back">Повернутися на головну</a>
         </div>
       `;
       categorySection.appendChild(emptyWrapper);
+    } else {
+      buildFilters();
+      setupUIHandlers();
+      applyFiltersAndSort();
     }
-  } catch (err) {
-    console.error('Error loading products', err);
   }
+
+  updateCartUI();
 }
 
 function buildFilters() {
   const brandsContainer = document.getElementById('filter-brands');
   const diametersContainer = document.getElementById('filter-diameters');
-
   if (!brandsContainer || !diametersContainer) return;
 
   const brands = [...new Set(allProducts.map((p) => p.manufacturer_name).filter(Boolean))].sort();
@@ -107,10 +61,7 @@ function buildFilters() {
   brandsContainer.innerHTML = brands
     .map(
       (b) => `
-    <label class="custom-checkbox">
-      <input type="checkbox" value="${b}" class="filter-brand">
-      <span>${b}</span>
-    </label>
+    <label class="custom-checkbox"><input type="checkbox" value="${b}" class="filter-brand"><span>${b}</span></label>
   `
     )
     .join('');
@@ -118,10 +69,7 @@ function buildFilters() {
   diametersContainer.innerHTML = diameters
     .map(
       (d) => `
-    <label class="custom-checkbox">
-      <input type="checkbox" value="${d}" class="filter-diam">
-      <span>${d}</span>
-    </label>
+    <label class="custom-checkbox"><input type="checkbox" value="${d}" class="filter-diam"><span>${d}</span></label>
   `
     )
     .join('');
@@ -172,7 +120,6 @@ function renderProductsChunk(append = false) {
       container.appendChild(createProductCard(product, isEager));
     });
   }
-
   updatePaginationUI();
 }
 
@@ -180,7 +127,6 @@ function updatePaginationUI() {
   const controls = document.getElementById('pagination-controls');
   const counter = document.getElementById('products-counter');
   const loadBtn = document.getElementById('load-more-btn');
-
   if (!controls) return;
 
   const visibleCount = Math.min(currentPage * itemsPerPage, filteredProducts.length);
@@ -188,35 +134,25 @@ function updatePaginationUI() {
   if (filteredProducts.length > 0) {
     controls.style.display = 'block';
     counter.textContent = `Відображено ${visibleCount} з ${filteredProducts.length}`;
-
-    if (visibleCount >= filteredProducts.length) {
-      loadBtn.style.display = 'none';
-    } else {
-      loadBtn.style.display = 'inline-block';
-    }
+    loadBtn.style.display = visibleCount >= filteredProducts.length ? 'none' : 'inline-block';
   } else {
     controls.style.display = 'none';
   }
 }
 
 function setupUIHandlers() {
-  // Автоматическое применение фильтров при выборе чекбокса
   document.querySelector('.filter-sidebar')?.addEventListener('change', (e) => {
     if (e.target.type === 'checkbox') applyFiltersAndSort();
   });
-
   document.getElementById('sort-select')?.addEventListener('change', applyFiltersAndSort);
-
   document.getElementById('per-page-select')?.addEventListener('change', (e) => {
     itemsPerPage = parseInt(e.target.value, 10);
     applyFiltersAndSort();
   });
-
   document.getElementById('load-more-btn')?.addEventListener('click', () => {
     currentPage++;
     renderProductsChunk(true);
   });
-
   document.getElementById('reset-filters')?.addEventListener('click', () => {
     document.querySelectorAll('.filter-sidebar input[type="checkbox"]').forEach((cb) => {
       cb.checked = cb.id === 'filter-instock';
@@ -224,7 +160,6 @@ function setupUIHandlers() {
     applyFiltersAndSort();
   });
 
-  // Логика Модального окна
   const filterSidebar = document.getElementById('filter-sidebar');
   const filterOverlay = document.getElementById('filter-overlay');
 
@@ -245,11 +180,8 @@ function setupUIHandlers() {
   document.getElementById('apply-filters-btn')?.addEventListener('click', closeFilterModal);
   filterOverlay?.addEventListener('click', closeFilterModal);
 
-  // Аккордеоны внутри фильтра
   document.querySelectorAll('.filter-group-header').forEach((header) => {
-    header.addEventListener('click', () => {
-      header.parentElement.classList.toggle('active');
-    });
+    header.addEventListener('click', () => header.parentElement.classList.toggle('active'));
   });
 }
 

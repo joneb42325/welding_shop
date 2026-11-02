@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="uk">
+<head>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-X4VLDJJ2XJ');
+      gtag('config', 'AW-18487453527');
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <%
+    const catSlug = createSlug(category.name);
+    const canonicalUrl = `https://wolfram-shop.com.ua/category/${catSlug}-${category.id}`;
+    // Формуємо оптимізований URL для банера
+    let bgUrl = '';
+    if (category.image) {
+        const rawUrl = category.image.startsWith('http') ? category.image : '/images/' + category.image;
+        bgUrl = rawUrl.includes('/upload/') ? rawUrl.replace('/upload/', '/upload/f_auto,q_auto,w_1000/') : rawUrl;
+    }
+    %>
+
+    <title><%= category.name %> — Купити в Wolfram Shop</title>
+    <meta name="description" content="Каталог продукції у категорії <%= category.name %>. Великий вибір зварювальних матеріалів за найкращими цінами." />
+    <link rel="canonical" href="<%= canonicalUrl %>">
+
+    <meta property="og:type" content="product.group">
+    <meta property="og:site_name" content="Wolfram Shop">
+    <meta property="og:title" content="<%= category.name %> — Wolfram Shop">
+    <meta property="og:url" content="<%= canonicalUrl %>">
+    <% if (bgUrl) { %><meta property="og:image" content="<%= bgUrl %>"><% } %>
+
+    <link rel="icon" type="image/png" href="/images/logo.webp" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+</head>
+<body>
+<header class="header"></header>
+
+<main class="main">
+    <aside class="sidebar"></aside>
+
+    <div class="content">
+        <!-- Банер рендериться миттєво через SSR -->
+        <section class="category-header" <% if (bgUrl) { %>style="background-image: url('<%= bgUrl %>');"<% } %>>
+            <div class="category-header-content">
+                <h1 id="category-title"><%= category.name %></h1>
+            </div>
+        </section>
+
+        <section class="category-products">
+            <div class="category-controls">
+                <button id="mobile-filter-btn" class="filter-toggle-btn">
+                    Фільтри <span class="filter-icon">⇋</span>
+                </button>
+                <div class="sort-wrapper">
+                    <select id="sort-select" class="sort-select">
+                        <option value="default">за замовчуванням</option>
+                        <option value="price-asc">за ціною ↑ (від дешевих)</option>
+                        <option value="price-desc">за ціною ↓ (від дорогих)</option>
+                    </select>
+                    <select id="per-page-select" class="per-page-select">
+                        <option value="16">16 ▾</option>
+                        <option value="32">32 ▾</option>
+                        <option value="60">60 ▾</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="filter-overlay" class="filter-overlay"></div>
+
+            <div id="filter-sidebar" class="filter-sidebar">
+                <div class="filter-header">
+                    <h3>Фільтри</h3>
+                    <button id="close-filter-btn" class="close-filter-btn">✕</button>
+                </div>
+                <div class="filter-group">
+                    <label class="custom-checkbox">
+                        <input type="checkbox" id="filter-instock" checked>
+                        <span>Тільки в наявності</span>
+                    </label>
+                </div>
+                <div class="filter-group collapsible active">
+                    <div class="filter-group-header">
+                        <h4 id="diameter-filter-title">Діаметр, мм</h4>
+                        <span class="toggle-arrow">↓</span>
+                    </div>
+                    <div class="filter-options" id="filter-diameters"></div>
+                </div>
+                <div class="filter-group collapsible active">
+                    <div class="filter-group-header">
+                        <h4>Бренд</h4>
+                        <span class="toggle-arrow">↓</span>
+                    </div>
+                    <div class="filter-options" id="filter-brands"></div>
+                </div>
+                <div class="filter-actions">
+                    <button id="apply-filters-btn" class="apply-filters-btn">Застосувати</button>
+                    <button id="reset-filters" class="reset-filters-btn">Очистити</button>
+                </div>
+            </div>
+
+            <div id="category-products-container" class="catalog-grid"></div>
+
+            <div id="pagination-controls" class="pagination-controls" style="display: none;">
+                <button id="load-more-btn" class="load-more-btn">Показати ще</button>
+                <p id="products-counter" class="products-counter">Відображено 0 з 0</p>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer class="footer"></footer>
+
+<script type="module">
+  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
+  injectHeader(); injectSidebar(); injectFooter();
+</script>
+
+<script>
+  // Передаємо дані сервера одразу в JS (без необхідності робити Fetch)
+  window.INITIAL_CATEGORY = <%- JSON.stringify(category) %>;
+  window.INITIAL_PRODUCTS = <%- JSON.stringify(products) %>;
+</script>
+
+<script type="module" src="/js/script.js"></script>
+<script type="module" src="/js/category-page.js"></script>
+</body>
+</html>

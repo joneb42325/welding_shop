@@ -183,10 +183,11 @@ export async function loadCategories() {
     const activeCategories = categories.filter((category) => category.product_count > 0);
 
     activeCategories.forEach((category) => {
+      const categoryLink = `/category/${category.slug}-${category.id}`;
       if (catalogList) {
         const li = document.createElement('li');
         li.innerHTML = `
-          <a href="category.html?categoryId=${category.id}">
+          <a href="${categoryLink}">
             ${category.name}
           </a>
         `;
@@ -202,7 +203,7 @@ export async function loadCategories() {
         card.innerHTML = `
           <!-- <img src="${category.image}" alt="${category.name}"> -->
           <img src="${optimizedCatImg}" loading="lazy" width="200" height="200" alt="${category.name}">
-          <a href="category.html?categoryId=${category.id}">
+          <a href="${categoryLink}">
             ${category.name}
           </a>
         `;
@@ -212,7 +213,7 @@ export async function loadCategories() {
       if (mobileCatList) {
         const li = document.createElement('li');
         li.innerHTML = `
-          <a href="category.html?categoryId=${category.id}">
+          <a href="${categoryLink}">
             • ${category.name}
           </a>
         `;
