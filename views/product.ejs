@@ -27,7 +27,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <% const productName = product.name || 'Товар'; %>
+    <%
+    const productName = product.manufacturer_name
+            ? `${product.name} ${product.manufacturer_name}`
+            : (product.name || 'Товар');
+    %>
     <% const productDescription = product.description || 'Зварювальні матеріали високої якості.'; %>
     <% const productImage = product.image || product.image_url || product.imageUrl || ''; %>
     <%
