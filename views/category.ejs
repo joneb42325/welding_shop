@@ -105,7 +105,70 @@
                 </div>
             </div>
 
-            <div id="category-products-container" class="catalog-grid"></div>
+            <div id="category-products-container" class="catalog-grid">
+                <% if (products && products.length > 0) { %>
+                    <% products.slice(0, 16).forEach(product => { %>
+                        <%
+                            const productSlug = createSlug(product.name);
+                            const isAvailable = Number(product.total_stock) > 0;
+                            const hasPrice = Number(product.price_retail) > 0;
+                            const displayName = product.manufacturer_name
+                                    ? `${product.name} ${product.manufacturer_name}`
+                                    : product.name;
+
+                            let productImage = product.image || '/images/logo.webp';
+
+                            if (productImage.includes('/upload/')) {
+                                productImage = productImage.replace(
+                                        '/upload/',
+                                        '/upload/f_auto,q_auto,w_500/'
+                                );
+                            }
+                        %>
+
+                        <div class="product-card" data-clarity-unmask="true">
+                            <a href="/product/<%= productSlug %>-<%= product.id %>">
+                                <img
+                                        src="<%= productImage %>"
+                                        width="250"
+                                        height="250"
+                                        alt="<%= displayName %>"
+                                        loading="<%= products.indexOf(product) < 4 ? 'eager' : 'lazy' %>"
+                                        <%= products.indexOf(product) < 4 ? 'fetchpriority="high"' : '' %>
+                                >
+                                <h3><%= displayName %></h3>
+                            </a>
+
+                            <div class="price-wrapper">
+                                <% if (hasPrice) { %>
+                                    <div class="product-price">
+                                        <%= product.price_retail %>
+                                        <span>грн / <%= product.unit %></span>
+                                    </div>
+                                <% } else { %>
+                                    <div class="product-price-empty">Ціна уточнюється</div>
+                                <% } %>
+                            </div>
+
+                            <% if (isAvailable) { %>
+                                <p><span class="available">В наявності</span></p>
+                            <% } else { %>
+                                <p class="out-of-stock">Немає в наявності</p>
+                            <% } %>
+
+                            <button
+                                    class="add-to-cart-btn"
+                                    disabled
+                                    aria-label="Додайте товар до кошика на сторінці товару"
+                            >
+                                Переглянути товар
+                            </button>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <p>У цій категорії поки немає товарів.</p>
+                <% } %>
+            </div>
 
             <div id="pagination-controls" class="pagination-controls" style="display: none;">
                 <button id="load-more-btn" class="load-more-btn">Показати ще</button>
