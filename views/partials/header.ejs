@@ -1,0 +1,62 @@
+<header class="header">
+    <button class="burger" aria-label="Відкрити меню">☰</button>
+    <div class="header-left">
+        <a href="/" class="logo-link">
+            <div class="logo">
+                <img src="/images/logo.webp" alt="Wolfram" />
+            </div>
+            <p>Wolfram</p>
+        </a>
+        <a href="tel:+380634383823" class="header-phone" onclick="return gtag_report_conversion('tel:+380634383823');">
+            +380 63 438 3823
+        </a>
+    </div>
+    <nav class="nav">
+        <a href="/">Головна</a>
+        <a href="/about.html">Про нас</a>
+        <a href="/delivery.html">Доставка і оплата</a>
+    </nav>
+    <div class="header-right">
+        <div class="search-container" data-clarity-unmask="true">
+            <input type="text" id="search-input" placeholder="Пошук матеріалів..." autocomplete="off">
+            <div id="search-results" class="search-results-dropdown"></div>
+        </div>
+        <a href="/favorites.html" class="fav-header-link">❤️ <span class="fav-count">0</span></a>
+        <a href="/cart.html" class="cart">🛒 <span class="cart-count">0</span></a>
+    </div>
+</header>
+
+<!-- Мобільне меню відразу в HTML для індексації ботами -->
+<div class="mobile-overlay"></div>
+<div class="mobile-menu">
+    <div class="mobile-menu-brand">
+        <p>WOLFRAM</p>
+    </div>
+    <a href="/">🏠 Головна</a>
+    <a href="/about.html">ℹ️ Про нас</a>
+    <a href="/delivery.html">🚚 Доставка і оплата</a>
+    <hr>
+    <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
+    <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
+
+    <div class="mobile-categories-section">
+        <div class="mobile-cat-toggle" id="mobile-cat-toggle">
+            <h4>📁 КАТАЛОГ ТОВАРІВ</h4>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <ul id="mobile-categories-list" class="mobile-categories-list collapsed">
+            <% if (locals.categories) { %>
+                <% categories.forEach(cat => { %>
+                    <li><a href="/category/<%= cat.slug %>-<%= cat.id %>"><%= cat.name %></a></li>
+                <% }); %>
+            <% } %>
+        </ul>
+    </div>
+
+    <div class="mobile-contacts">
+        <h4>Контакти</h4>
+        <a href="tel:+380634383823" onclick="return gtag_report_conversion('tel:+380634383823');">📞 +38 (063) 438-38-23</a>
+        <a href="mailto:wolframshop.info@gmail.com">📧 wolframshop.info@gmail.com</a>
+        <div>📍 м. Харків</div>
+    </div>
+</div>

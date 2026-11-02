@@ -34,9 +34,9 @@
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
 </head>
 <body>
-<header class="header"></header>
+<%- include('partials/header') %>
 <main class="main">
-    <aside class="sidebar"></aside>
+    <%- include('partials/sidebar') %>
     <div class="content">
         <section class="special-banner">
             <div class="special-banner-content">
@@ -123,7 +123,7 @@
         </section>
     </div>
 </main>
-<footer class="footer"></footer>
+<%- include('partials/footer') %>
 
 <!-- Передаємо дані для гідратації в JS -->
 <script>
@@ -131,10 +131,7 @@
   window.INITIAL_CATEGORIES = <%- JSON.stringify(categories || []).replace(/</g, '\\u003c') %>;
 </script>
 
-<script type="module">
-  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
-  injectSidebar(); injectHeader(); injectFooter();
-</script>
+<script type="module" src="/js/layout-events.js"></script>
 <script type="module" src="/js/script.js"></script>
 <script type="module" src="/js/home-page.js"></script>
 </body>

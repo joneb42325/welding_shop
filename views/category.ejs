@@ -39,10 +39,10 @@
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
 </head>
 <body>
-<header class="header"></header>
+<%- include('partials/header') %>
 
 <main class="main">
-    <aside class="sidebar"></aside>
+    <%- include('partials/sidebar') %>
 
     <div class="content">
         <section class="category-header" <% if (bgUrl) { %>style="background-image: url('<%= bgUrl %>');"<% } %>>
@@ -179,12 +179,9 @@
     </div>
 </main>
 
-<footer class="footer"></footer>
+<%- include('partials/footer') %>
 
-<script type="module">
-  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
-  injectHeader(); injectSidebar(); injectFooter();
-</script>
+<script type="module" src="/js/layout-events.js"></script>
 
 <script>
   window.INITIAL_CATEGORY = <%- JSON.stringify(category || {}).replace(/</g, '\\u003c') %>;

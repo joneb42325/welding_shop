@@ -198,10 +198,19 @@ export async function loadCategories() {
 
   if (!catalogList && !catalogContainer && !mobileCatList) return;
 
+  // Перевіряємо, чи категорії вже зарендерені сервером (SSR)
+  const isSidebarRendered = catalogList && catalogList.children.length > 0;
+  const isMobileRendered = mobileCatList && mobileCatList.children.length > 0;
+  const isContainerRendered = catalogContainer && catalogContainer.children.length > 0;
+
+  // Якщо все вже згенеровано через EJS, виходимо і не дублюємо
+  if (isSidebarRendered && isMobileRendered && (catalogContainer ? isContainerRendered : true)) {
+    return;
+  }
+
   try {
     let categories = [];
 
-    // Використовуємо дані з SSR, якщо вони є (на головній та сторінках категорій)
     if (window.INITIAL_CATEGORIES) {
       categories = window.INITIAL_CATEGORIES;
     } else {
@@ -215,16 +224,15 @@ export async function loadCategories() {
       const slug = category.slug || category.id;
       const categoryLink = `/category/${slug}-${category.id}`;
 
-      // 1. Бокове меню (десктоп)
-      if (catalogList) {
+      // 1. Бокове меню (додаємо тільки якщо порожнє)
+      if (catalogList && !isSidebarRendered) {
         const li = document.createElement('li');
         li.innerHTML = `<a href="${categoryLink}">${category.name}</a>`;
         catalogList.appendChild(li);
       }
 
-      // 2. Сетка категорий на главной (РЕНДЕРИМО ТІЛЬКИ ЯКЩО НЕМАЄ SSR)
-      // Оскільки EJS вже згенерував html в catalogContainer, ми пропускаємо цей крок на головній
-      if (catalogContainer && !window.INITIAL_CATEGORIES) {
+      // 2. Сітка категорій на головній (додаємо тільки якщо порожня)
+      if (catalogContainer && !isContainerRendered) {
         const card = document.createElement('div');
         card.classList.add('catalog-item');
         const optimizedCatImg = getOptimizedImg(category.image);
@@ -235,8 +243,8 @@ export async function loadCategories() {
         catalogContainer.appendChild(card);
       }
 
-      // 3. Мобильное выпадающее меню
-      if (mobileCatList) {
+      // 3. Мобільне меню (додаємо тільки якщо порожнє)
+      if (mobileCatList && !isMobileRendered) {
         const li = document.createElement('li');
         li.innerHTML = `<a href="${categoryLink}">${category.name}</a>`;
         mobileCatList.appendChild(li);

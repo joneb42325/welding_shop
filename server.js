@@ -401,7 +401,7 @@ app.get('/product/:slugAndId', (req, res) => {
   WHERE p.category_id = ?
     AND p.id != ?
   ORDER BY p.id DESC
-  LIMIT 8
+  LIMIT 16
 `;
 
     db.query(relatedSql, [product.category_id, product.id], (relatedErr, relatedResults) => {

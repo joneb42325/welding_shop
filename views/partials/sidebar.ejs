@@ -1,0 +1,12 @@
+<aside class="sidebar">
+    <div class="catalog">
+        <h2>🗂️ Категорії</h2>
+        <ul id="catalog-list">
+            <% if (locals.categories) { %>
+                <% categories.forEach(cat => { %>
+                    <li><a href="/category/<%= cat.slug %>-<%= cat.id %>"><%= cat.name %></a></li>
+                <% }); %>
+            <% } %>
+        </ul>
+    </div>
+</aside>

@@ -85,10 +85,10 @@
 </head>
 
 <body>
-<header class="header"></header>
+<%- include('partials/header') %>
 
 <main class="main">
-    <aside class="sidebar"></aside>
+    <%- include('partials/sidebar') %>
 
     <div class="content">
         <section class="product-header">
@@ -324,7 +324,7 @@
     </div>
 </main>
 
-<footer class="footer"></footer>
+<%- include('partials/footer') %>
 
 <!-- Модальне вікно збільшення фото -->
 <div id="image-modal" class="image-modal">
@@ -332,10 +332,7 @@
     <img class="modal-content-img" id="full-image" alt="Збільшене фото товару">
 </div>
 
-<script type="module">
-  import { injectSidebar, injectHeader, injectFooter } from '/js/layouts.js';
-  injectSidebar(); injectHeader(); injectFooter();
-</script>
+<script type="module" src="/js/layout-events.js"></script>
 
 <script type="module" src="/js/script.js"></script>
 <script>
