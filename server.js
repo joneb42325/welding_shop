@@ -52,10 +52,6 @@ app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', './views');
 
-app.get('/delivery.html', (req, res) => {
-  res.render('pages/delivery');
-});
-
 app.use((req, res, next) => {
   // 1. Хелпер оптимізації зображень (доступний у всіх EJS шаблонах)
   res.locals.getOptimizedImg = (url, width = 500) => {
@@ -93,6 +89,10 @@ app.use((req, res, next) => {
     }
     next();
   });
+});
+
+app.get('/delivery.html', (req, res) => {
+  res.render('pages/delivery');
 });
 
 // ГОЛОВНА СТОРІНКА (SSR)

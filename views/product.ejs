@@ -1,28 +1,6 @@
 <!doctype html>
 <html lang="uk">
 <head>
-    <!-- Google Analytics и Google Ads -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() { dataLayer.push(arguments); }
-      gtag('js', new Date());
-      gtag('config', 'G-X4VLDJJ2XJ');
-      gtag('config', 'AW-18487453527');
-
-      function gtag_report_conversion(url) {
-        const callback = function () {
-          if (typeof url !== 'undefined') window.location = url;
-        };
-        gtag('event', 'conversion', {
-          send_to: 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
-          value: 1.0,
-          currency: 'UAH',
-          event_callback: callback
-        });
-        return false;
-      }
-    </script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -308,7 +286,7 @@
                         const itemSlug = createSlug(item.name);
                         const itemUrl = `/product/${itemSlug}-${item.id}`;
                         // Використовуємо глобальну функцію оптимізації
-                        const itemImg = getOptimizedImg(item.image, 400);
+                        const itemImg = getOptimizedImg(item.image, 300);
                     %>
                     <div class="product-card" data-clarity-unmask="true">
                         <div class="fav-btn" data-id="<%= item.id %>">🤍</div>

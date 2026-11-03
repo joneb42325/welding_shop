@@ -16,13 +16,44 @@ function loadDeferredAnalytics() {
   if (window.analyticsLoaded) return;
   window.analyticsLoaded = true;
 
-  // 1. Google Tag Manager / Analytics
+  // 1. Ініціалізація dataLayer та gtag
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    window.dataLayer.push(arguments);
+  }
+  window.gtag = gtag; // робимо глобальною для виклику конверсій
+
+  // ⚡ Глобальна функція для трекінгу конверсій Google Ads (без затримок)
+  window.gtag_report_conversion = function (url) {
+    const callback = function () {
+      if (typeof url !== 'undefined') {
+        window.location = url;
+      }
+    };
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', 'conversion', {
+        send_to: 'AW-18487453527/3u9cCIiP4pwdENfOwO9E',
+        value: 1.0,
+        currency: 'UAH',
+        event_callback: callback,
+      });
+    } else {
+      callback();
+    }
+    return false;
+  };
+
+  gtag('js', new Date());
+  gtag('config', 'G-X4VLDJJ2XJ'); // Google Analytics 4
+  gtag('config', 'AW-18487453527'); // Google Ads
+
+  // 2. Завантаження скрипта Google Analytics / Tag Manager
   const gtmScript = document.createElement('script');
   gtmScript.async = true;
   gtmScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-X4VLDJJ2XJ';
   document.head.appendChild(gtmScript);
 
-  // 2. Meta Pixel (Facebook)
+  // 3. Meta Pixel (Facebook)
   !(function (f, b, e, v, n, t, s) {
     if (f.fbq) return;
     n = f.fbq = function () {
@@ -149,7 +180,6 @@ function renderSearchResult(items, container, query) {
       .slice(0, maxItemsToShow)
       .map((item) => {
         const imgSrc = item.image.startsWith('http') ? item.image : `/images/${item.image}`;
-        // Пряме ЧПУ посилання для SEO
         const productSlug = item.slug || item.id;
         return `
           <a href="/product/${productSlug}-${item.id}" class="search-item">
