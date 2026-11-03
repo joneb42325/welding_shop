@@ -10,6 +10,7 @@ const { sendOrderEmail } = require('./services/email');
 const cloudinary = require('./cloudinaryConfig');
 
 const app = express();
+
 app.get('/product.html', (req, res, next) => {
   const productId = req.query.productId;
 
@@ -50,6 +51,10 @@ app.use(express.json());
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.set('views', './views');
+
+app.get('/delivery.html', (req, res) => {
+  res.render('pages/delivery');
+});
 
 app.use((req, res, next) => {
   // 1. Хелпер оптимізації зображень (доступний у всіх EJS шаблонах)
