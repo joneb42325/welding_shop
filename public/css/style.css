@@ -1733,6 +1733,9 @@ textarea:-webkit-autofill:focus {
 }
 
 /* Фірмові кольори месенджерів */
+.contact-item.instagram {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
 .contact-item.telegram { background: #0088cc; }
 .contact-item.viber { background: #665CAC; }
 .contact-item.phone { background: #25d366; }
@@ -2819,6 +2822,38 @@ textarea:-webkit-autofill:focus {
   padding-top: 8px;
 }
 
+/* Десктопні стилі для телефонів та Instagram у шапці */
+.header-phones {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 45px;
+}
+
+.header-phones .header-phone {
+  font-size: 14px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.header-phones .header-phone:hover {
+  color: #FFD700;
+}
+
+.header-instagram {
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.header-instagram:hover {
+  transform: scale(1.1);
+}
+
 @media (max-width: 480px) {
   .contact-widget {
     bottom: 100px;
@@ -3668,5 +3703,10 @@ textarea:-webkit-autofill:focus {
     width: 100%;
     padding: 15px;
     font-size: 16px;
+  }
+
+  .header-phones,
+  .header-instagram {
+    display: none !important;
   }
 }
