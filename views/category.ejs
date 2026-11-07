@@ -53,9 +53,9 @@
                         <option value="price-desc">за ціною ↓ (від дорогих)</option>
                     </select>
                     <select id="per-page-select" class="per-page-select">
-                        <option value="16">16 ▾</option>
-                        <option value="32">32 ▾</option>
-                        <option value="60">60 ▾</option>
+                        <option value="12">12 на сторінці ▾</option>
+                        <option value="24" selected>24 на сторінці ▾</option>
+                        <option value="48">48 на сторінці ▾</option>
                     </select>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                 <%
                 const initialProducts = (products || [])
                         .filter(product => Number(product.total_stock) > 0)
-                        .slice(0, 16);
+                        .slice(0, 24);
                 %>
 
                 <% if (initialProducts.length > 0) { %>

@@ -4,7 +4,7 @@ import { updateCartUI } from './cart.js';
 let allProducts = [];
 let filteredProducts = [];
 let currentPage = 1;
-let itemsPerPage = 16;
+let itemsPerPage = 24;
 
 function init() {
   if (window.INITIAL_CATEGORY) {
