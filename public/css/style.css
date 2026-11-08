@@ -1059,7 +1059,7 @@ body.no-scroll {
   margin: 10px auto;
     background: rgba(30, 34, 43, 0.75);
     backdrop-filter: blur(1px);
-  padding: 20px;
+  padding: 12px 15px !important;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
@@ -3003,6 +3003,15 @@ textarea:-webkit-autofill:focus {
     flex-direction: column;
   }
 
+  #product-image {
+    width: 100%;
+    max-width: 240px !important;  /* Ограничиваем ширину картинки */
+    max-height: 200px !important; /* Ограничиваем высоту картинки */
+    object-fit: contain !important; /* Картинка аккуратно впишется без искажений */
+    margin: 0 auto 10px auto !important; /* Центрируем и добавляем небольшой отступ снизу */
+    display: block;
+  }
+
   .cart-section {
     padding-top: 0;
   }
@@ -3068,6 +3077,7 @@ textarea:-webkit-autofill:focus {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    margin-bottom: 6px !important;
   }
 
   #product-image {
@@ -3077,10 +3087,22 @@ textarea:-webkit-autofill:focus {
     transition: transform 0.2s ease, opacity 0.2s ease;
   }
 
+  .product-info h1 {
+    font-size: 17px;
+    line-height: 1.25 ;
+    margin-bottom: 4px ;
+  }
+
   #manufacturer-tables table,
   #manufacturer-tables tbody {
     display: block;
     width: 100%;
+  }
+
+  .product-prices {
+    padding: 4px 8px !important;
+    margin-bottom: 8px !important;
+    margin-top: 0 !important;
   }
 
   #manufacturer-tables thead {
@@ -3092,34 +3114,50 @@ textarea:-webkit-autofill:focus {
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: center;
-      background: rgba(30, 34, 43, 0.5);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(30, 34, 43, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 8px;
-    margin-bottom: 15px;
-    padding: 15px;
+    padding: 6px 8px !important;
+    margin-bottom: 8px !important;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      color: #ffffff;
+    color: #ffffff;
   }
 
-  #manufacturer-tables td:nth-child(1),
-  #manufacturer-tables td:nth-child(2) {
-    width: 50%;
-    margin-bottom: 15px;
-      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-    padding-bottom: 10px;
-  }
-
+  /* 1. ПРИОРИТЕТ 1: Цены (Роздріб, ФОП, Опт) идут САМЫМИ ПЕРВЫМИ */
   #manufacturer-tables td:nth-child(3),
   #manufacturer-tables td:nth-child(4),
   #manufacturer-tables td:nth-child(5) {
     width: 33.33%;
-    margin-bottom: 10px;
+    margin-bottom: 4px;
+    order: 1; /* Поднимаем вверх */
   }
 
+  /* 2. ПРИОРИТЕТ 2: Диаметр и Вес уходят НИЖЕ цен */
+  #manufacturer-tables td:nth-child(1),
+  #manufacturer-tables td:nth-child(2) {
+    width: 50%;
+    margin-bottom: 4px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2); /* Пунктир сверху */
+    border-bottom: none;
+    padding-top: 10px;
+    padding-bottom: 0;
+    order: 3; /* Опускаем под цены */
+  }
+
+  /* 3. ПРИОРИТЕТ 3: Количество и Кнопка "В корзину" в самом низу карточки */
+  #manufacturer-tables td:nth-child(6),
   #manufacturer-tables td:last-child {
     width: 100%;
-    margin-top: 15px;
+    margin-top: 10px;
     padding: 0;
+    order: 2; /* Самый низ */
+  }
+
+  #manufacturer-tables td:nth-child(6) {
+    width: 100%;
+    margin-top: 0px !important;    /* Уменьшаем или обнуляем верхний отступ */
+    margin-bottom: 4px !important; /* Небольшой отступ до надписи "Разом:" */
+    order: 2;
   }
 
   #manufacturer-tables .add-to-cart {
@@ -3563,8 +3601,10 @@ textarea:-webkit-autofill:focus {
 
   .product-delivery-info {
     padding: 12px;
+    margin-top: 0 !important;
     gap: 10px;
   }
+
 
   .delivery-item {
     font-size: 13px;
