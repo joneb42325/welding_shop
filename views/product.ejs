@@ -92,6 +92,13 @@
 
             <div class="product-info">
                 <h1 id="product-name"><%= productName %></h1>
+
+                <% if (Number(product.stock) > 0) { %>
+                    <p class="stock-status available">✓ В наявності</p>
+                <% } else { %>
+                    <p class="stock-status out-of-stock">✕ Немає в наявності</p>
+                <% } %>
+
                 <img
                         id="product-image"
                         <% if (displayProductImage) { %>src="<%= displayProductImage %>"<% } %>
