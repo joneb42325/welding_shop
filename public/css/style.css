@@ -2869,6 +2869,81 @@ textarea:-webkit-autofill:focus {
   }
 }
 
+/* ==========================================================================
+   АДАПТИВ ДЛЯ ПЛАНШЕТОВ (до 1024px)
+   ========================================================================== */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* 1. Предотвращаем раздувание всей страницы по ширине */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* 2. Шапка: компактное распределение элементов */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+  }
+
+  /* Спрячем десктопные телефоны в шапке на планшетах, чтобы не выталкивали корзину */
+  .header-phones {
+    display: none;
+  }
+
+  /* Поиск подстраивается под оставшееся место */
+  .search-container {
+    flex-shrink: 1;
+    margin-right: 10px;
+  }
+
+  #search-input {
+    width: 140px;
+  }
+
+  #search-input:focus {
+    width: 180px;
+  }
+
+  /* 3. Основной контент: переходим в 1 колонку */
+  .main {
+    flex-direction: column;
+    padding: 15px 10px;
+    gap: 15px;
+  }
+
+  /* Прячем десктопный сайдбар, переключаясь на мобильное/выпадающее меню */
+  .sidebar,
+  .cart-box,
+  .catalog {
+    display: none;
+  }
+
+  /* Правый блок разворачиваем на все 100% ширины экрана */
+  .content,
+  .product-header,
+  .product-prices,
+  .product-description {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* 4. Таблица цен: включаем горизонтальный скролл ВНУТРИ карточки,
+     чтобы она не растягивала весь сайт */
+  .manufacturer-block {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .manufacturer-block table {
+    min-width: 650px; /* Таблица скроллится внутри своего блока */
+  }
+}
+
 @media (max-width: 768px) {
 
   body {
@@ -2958,8 +3033,8 @@ textarea:-webkit-autofill:focus {
   }
 
   .header-right {
-     display: flex;
-     justify-content: flex-end;
+    display: flex;
+    justify-content: flex-end;
   }
 
   .burger {
@@ -3005,7 +3080,7 @@ textarea:-webkit-autofill:focus {
 
   #product-image {
     width: 100%;
-    max-width: 240px !important;  /* Ограничиваем ширину картинки */
+    max-width: 240px !important; /* Ограничиваем ширину картинки */
     max-height: 200px !important; /* Ограничиваем высоту картинки */
     object-fit: contain !important; /* Картинка аккуратно впишется без искажений */
     margin: 0 auto 10px auto !important; /* Центрируем и добавляем небольшой отступ снизу */
@@ -3023,17 +3098,17 @@ textarea:-webkit-autofill:focus {
     width: 100%;
   }
 
-.catalog-grid > *,
-#special-products-container > *,
-#category-products-container > * {
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100%;
-  padding: 10px;
-}
+  .catalog-grid > *,
+  #special-products-container > *,
+  #category-products-container > * {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 10px;
+  }
 
   .catalog-grid img,
   #special-products-container img,
@@ -3073,6 +3148,54 @@ textarea:-webkit-autofill:focus {
     display: block !important;
   }
 
+  /* 1. Компактные внутренние отступы самой карточки */
+  .catalog-grid > .product-card,
+  #special-products-container > .product-card,
+  #category-products-container > .product-card,
+  .product-card {
+    padding: 12px 10px !important;
+    gap: 8px !important; /* Делает минимальное и аккуратное расстояние между элементами */
+  }
+
+  /* 2. Отступ под картинкой */
+  .product-card img,
+  .catalog-item img {
+    height: 110px !important; /* Небольшое уменьшение высоты картинки освободит место */
+    margin-bottom: 4px !important;
+  }
+
+  /* 3. Уменьшаем заголовок и его отступы */
+  .product-card h3 {
+    font-size: 14px !important;
+    line-height: 1.25 !important;
+    margin: 2px 0 !important;
+  }
+
+  /* 4. Прижимаем блок цены к тексту, убирая автоматический разрыв вверх */
+  .product-card .price-wrapper {
+    margin-top: 2px !important;
+    padding: 2px 0 !important;
+  }
+
+  /* 5. Уменьшаем текст цены */
+  .product-price,
+  .product-price-empty {
+    font-size: 0.9rem !important;
+  }
+
+  /* 6. Убираем лишние отступы у текста "В наявності" */
+  .product-card p {
+    margin: 2px 0 !important;
+    font-size: 12px !important;
+  }
+
+  /* 7. Поджимаем кнопку "В кошик" вверх */
+  .product-card .add-to-cart-btn {
+    margin-top: 4px !important;
+    padding: 8px 6px !important;
+    font-size: 0.85rem !important;
+  }
+
   .product-header {
     flex-direction: column;
     align-items: center;
@@ -3089,8 +3212,8 @@ textarea:-webkit-autofill:focus {
 
   .product-info h1 {
     font-size: 17px;
-    line-height: 1.25 ;
-    margin-bottom: 4px ;
+    line-height: 1.25;
+    margin-bottom: 4px;
   }
 
   #manufacturer-tables table,
@@ -3119,7 +3242,7 @@ textarea:-webkit-autofill:focus {
     border-radius: 8px;
     padding: 6px 8px !important;
     margin-bottom: 8px !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     color: #ffffff;
   }
 
@@ -3155,7 +3278,7 @@ textarea:-webkit-autofill:focus {
 
   #manufacturer-tables td:nth-child(6) {
     width: 100%;
-    margin-top: 0px !important;    /* Уменьшаем или обнуляем верхний отступ */
+    margin-top: 0px !important; /* Уменьшаем или обнуляем верхний отступ */
     margin-bottom: 4px !important; /* Небольшой отступ до надписи "Разом:" */
     order: 2;
   }
@@ -3176,15 +3299,29 @@ textarea:-webkit-autofill:focus {
 
   #manufacturer-tables td::before {
     font-size: 14px;
-      color: #aaa;
+    color: #aaa;
     margin-bottom: 4px;
   }
 
-  #manufacturer-tables td:nth-child(1)::before { content: "Діаметр"; }
-  #manufacturer-tables td:nth-child(2)::before { content: "Вага"; }
-  #manufacturer-tables td:nth-child(3)::before { content: "Роздріб"; }
-  #manufacturer-tables td:nth-child(4)::before { content: "ФОП"; }
-  #manufacturer-tables td:nth-child(5)::before { content: "Опт"; }
+  #manufacturer-tables td:nth-child(1)::before {
+    content: "Діаметр";
+  }
+
+  #manufacturer-tables td:nth-child(2)::before {
+    content: "Вага";
+  }
+
+  #manufacturer-tables td:nth-child(3)::before {
+    content: "Роздріб";
+  }
+
+  #manufacturer-tables td:nth-child(4)::before {
+    content: "ФОП";
+  }
+
+  #manufacturer-tables td:nth-child(5)::before {
+    content: "Опт";
+  }
 
   .about-highlight {
     font-size: 1.1em;
@@ -3209,9 +3346,21 @@ textarea:-webkit-autofill:focus {
     touch-action: manipulation;
   }
 
+  .product-description {
+    margin-bottom: 8px !important; /* Минимальный разрыв от описания */
+    padding: 12px 15px !important; /* Компактные внутренние поля самого блока описания */
+  }
+
+  .related-section {
+    margin-top: 8px !important; /* Перекрываем дефолтные margin-top: 32px */
+    padding-top: 10px !important; /* Перекрываем padding-top: 22px */
+  }
+
+  .related-header {
+    margin-bottom: 8px !important; /* Поджимаем заголовок "Схожі товари" ближе к карточкам */
+  }
 
   /* === Адаптація корзини для мобілних пристроїв === */
-
   .cart-container {
     overflow-x: hidden;
   }
@@ -3278,7 +3427,7 @@ textarea:-webkit-autofill:focus {
     justify-content: flex-start;
   }
 
-  /* Налаштування кнопок перемикача без !important */
+  /* Налаштування кнопок перемикача */
   .cart-section #cart-table tbody td .quantity-controls {
     display: flex;
     align-items: center;
@@ -3388,6 +3537,7 @@ textarea:-webkit-autofill:focus {
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
   /* Стилі для випадаючого каталогу */
   .mobile-categories-section {
     padding: 10px 0;
@@ -3461,6 +3611,7 @@ textarea:-webkit-autofill:focus {
     text-decoration: none;
     line-height: 1.3;
   }
+
   /* 1. Захисний відступ знизу, щоб "Кнопка зв'язку" не перекривала текст */
   .about-page {
     padding-bottom: 90px;
@@ -3570,11 +3721,11 @@ textarea:-webkit-autofill:focus {
   /* ==========================================================================
    ФІЛЬТРИ ТА СОРТУВАННЯ (category.html)
    ========================================================================== */
-
   .filter-toggle-btn {
     width: 100%;
     margin-bottom: 10px;
   }
+
   .sort-wrapper {
     width: 100%;
     justify-content: space-between;
@@ -3594,8 +3745,8 @@ textarea:-webkit-autofill:focus {
     margin-bottom: 8px;
     justify-content: center; /* Центрируем, если заголовок карточки по центру */
   }
-  .header-phone
-  {
+
+  .header-phone {
     display: none;
   }
 
@@ -3716,6 +3867,7 @@ textarea:-webkit-autofill:focus {
   #volume-discounts-block td::before {
     content: none !important; /* Убираем подставление фейковых заголовков */
   }
+
   .modal {
     align-items: flex-start; /* На мобільному модалка притискається вище */
     padding: 10px;
