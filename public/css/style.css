@@ -3164,12 +3164,11 @@ textarea:-webkit-autofill:focus {
     margin-bottom: 4px !important;
   }
 
-  /* 3. Уменьшаем заголовок и его отступы */
-  .product-card h3 {
-    font-size: 14px !important;
-    line-height: 1.25 !important;
-    margin: 2px 0 !important;
-  }
+  /*.product-card h3 {*/
+  /*  font-size: 16px !important;*/
+  /*  line-height: 1.25 !important;*/
+  /*  margin: 2px 0 !important;*/
+  /*}*/
 
   /* 4. Прижимаем блок цены к тексту, убирая автоматический разрыв вверх */
   .product-card .price-wrapper {
