@@ -2856,7 +2856,7 @@ textarea:-webkit-autofill:focus {
 
 @media (max-width: 480px) {
   .contact-widget {
-    bottom: 100px;
+    bottom: 60px;
     right: 15px;
   }
   .contact-main-btn {
@@ -3078,15 +3078,6 @@ textarea:-webkit-autofill:focus {
     flex-direction: column;
   }
 
-  #product-image {
-    width: 100%;
-    max-width: 320px !important;
-    max-height: 260px !important;
-    object-fit: contain !important; /* Картинка аккуратно впишется без искажений */
-    margin: 0 auto 10px auto !important; /* Центрируем и добавляем небольшой отступ снизу */
-    display: block;
-  }
-
   .cart-section {
     padding-top: 0;
   }
@@ -3201,6 +3192,13 @@ textarea:-webkit-autofill:focus {
     max-width: 300px;
     cursor: zoom-in;
     transition: transform 0.2s ease, opacity 0.2s ease;
+    max-height: 180px !important;
+    margin: 0 auto 4px auto !important;
+  }
+
+  .stock-status {
+    margin-top: 2px !important;
+    margin-bottom: 6px !important;
   }
 
   .product-info h1 {
@@ -3215,10 +3213,18 @@ textarea:-webkit-autofill:focus {
     width: 100%;
   }
 
+  #manufacturer-tables .add-to-cart {
+    padding: 10px 12px !important;
+    font-size: 15px !important;
+  }
+
   .product-prices {
-    padding: 4px 8px !important;
-    margin-bottom: 8px !important;
-    margin-top: 0 !important;
+    padding: 0 0 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .manufacturer-block {
+    padding: 0 0 !important;
   }
 
   #manufacturer-tables thead {
@@ -3264,7 +3270,7 @@ textarea:-webkit-autofill:focus {
   #manufacturer-tables td:nth-child(6),
   #manufacturer-tables td:last-child {
     width: 100%;
-    margin-top: 10px;
+    margin-top: 2px;
     padding: 0;
     order: 2; /* Самый низ */
   }
@@ -3777,16 +3783,16 @@ textarea:-webkit-autofill:focus {
 
   /* Кнопки + и - */
   .quantity-controls .qty-btn {
-    width: 38px;
-    height: 38px;
-    font-size: 20px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
   }
 
   /* Поле ввода цифры */
   .quantity-controls .qty-input {
-    width: 55px;
-    height: 38px;
-    font-size: 16px;
+    width: 42px;
+    height: 30px;
+    font-size: 14px;
   }
 
   .special-banner {
@@ -3893,5 +3899,12 @@ textarea:-webkit-autofill:focus {
   .header-phones,
   .header-instagram {
     display: none !important;
+  }
+
+  .modal-content-img {
+    max-width: 150vw !important; /* Разрешаем выходить за границы экрана */
+    max-height: 80vh !important;
+    transform: scale(1.2); /* Принудительно увеличиваем объект на 20% */
+    object-fit: contain;
   }
 }
