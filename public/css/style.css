@@ -1090,10 +1090,10 @@ body.no-scroll {
 }
 
 #product-image {
-  width: 250px;
+  max-width: 400px;
   height: auto;
   border-radius: 10px;
-  object-fit: cover;
+  object-fit: contain;
   cursor: zoom-in;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
@@ -3080,8 +3080,8 @@ textarea:-webkit-autofill:focus {
 
   #product-image {
     width: 100%;
-    max-width: 240px !important; /* Ограничиваем ширину картинки */
-    max-height: 200px !important; /* Ограничиваем высоту картинки */
+    max-width: 320px !important;
+    max-height: 260px !important;
     object-fit: contain !important; /* Картинка аккуратно впишется без искажений */
     margin: 0 auto 10px auto !important; /* Центрируем и добавляем небольшой отступ снизу */
     display: block;
@@ -3163,12 +3163,6 @@ textarea:-webkit-autofill:focus {
     height: 110px !important; /* Небольшое уменьшение высоты картинки освободит место */
     margin-bottom: 4px !important;
   }
-
-  /*.product-card h3 {*/
-  /*  font-size: 16px !important;*/
-  /*  line-height: 1.25 !important;*/
-  /*  margin: 2px 0 !important;*/
-  /*}*/
 
   /* 4. Прижимаем блок цены к тексту, убирая автоматический разрыв вверх */
   .product-card .price-wrapper {
