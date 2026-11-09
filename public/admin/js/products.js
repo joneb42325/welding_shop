@@ -55,6 +55,7 @@ async function loadProducts() {
         : `product-edit.html?id=${prod.id}`;
 
       tr.innerHTML = `
+<td><input type="checkbox" class="product-select" data-id="${prod.id}"></td>
         <td>${fullName}</td>
         <td><img src="${prod.image}"></td>
         <td><a href="products.html?categoryId=${prod.category_id}">
@@ -100,11 +101,11 @@ tableBody.addEventListener('click', async (e) => {
   }
 });
 
-document.getElementById('save-order-btn').addEventListener('click', async() => {
+document.getElementById('save-order-btn').addEventListener('click', async () => {
   const inputs = document.querySelectorAll('.sort-input');
   const items = Array.from(inputs).map((input) => ({
     id: input.dataset.id,
-    sort_order: parseInt(input.value, 10) || 100
+    sort_order: parseInt(input.value, 10) || 100,
   }));
 
   try {
@@ -118,16 +119,14 @@ document.getElementById('save-order-btn').addEventListener('click', async() => {
     if (response.ok) {
       alert('Порядок товарів успішно збережено!');
       location.reload();
-    }
-    else {
+    } else {
       alert('Помилка при збереженні порядку.');
     }
+  } catch (err) {
+    console.error('Помилка мережі:', err);
+    alert('Server error');
   }
-    catch (err) {
-      console.error('Помилка мережі:', err);
-      alert('Server error');
-    }
-})
+});
 
 document.getElementById('save-prices-btn').addEventListener('click', async () => {
   const inputs = document.querySelectorAll('.price-input');
@@ -177,6 +176,71 @@ window.addEventListener('load', async () => {
   } catch (err) {
     console.error(err);
   }
+});
+
+// 1. Чекбокс "Выбрать все"
+document.getElementById('select-all')?.addEventListener('change', (e) => {
+  const checkboxes = document.querySelectorAll('.product-select');
+  checkboxes.forEach((cb) => (cb.checked = e.target.checked));
+});
+
+// 2. Обработка кнопки "Застосувати"
+document.getElementById('apply-bulk-btn')?.addEventListener('click', async () => {
+  const selectedCheckboxes = document.querySelectorAll('.product-select:checked');
+  const selectedIds = Array.from(selectedCheckboxes).map((cb) => cb.dataset.id);
+
+  if (selectedIds.length === 0) {
+    alert('Будь ласка, виберіть хоча б один товар!');
+    return;
+  }
+
+  const action = document.getElementById('bulk-action-type').value;
+  const rawValue = parseFloat(document.getElementById('bulk-action-val').value) || 0;
+
+  // А) Массовое удаление
+  if (action === 'delete') {
+    if (confirm(`Ви впевнені, що хочете видалити ${selectedIds.length} товарів?`)) {
+      for (const id of selectedIds) {
+        await fetch(`/admin/products/${id}`, { method: 'DELETE' });
+      }
+      alert('Товари видалено!');
+      await loadProducts();
+    }
+    return;
+  }
+
+  // Б) Пересчет цен přímo в полях таблицы (инпутах)
+  if (rawValue === 0) {
+    alert('Введіть значення для зміни ціни (більше 0)');
+    return;
+  }
+
+  selectedIds.forEach((id) => {
+    // Находим все инпуты цен для конкретного товара
+    const priceInputs = document.querySelectorAll(`.price-input[data-id="${id}"]`);
+
+    priceInputs.forEach((input) => {
+      let currentPrice = parseFloat(input.value) || 0;
+      let newPrice = currentPrice;
+
+      if (action === 'price_add_abs') {
+        newPrice = currentPrice + rawValue;
+      } else if (action === 'price_sub_abs') {
+        newPrice = Math.max(0, currentPrice - rawValue);
+      } else if (action === 'price_add_percent') {
+        newPrice = currentPrice * (1 + rawValue / 100);
+      } else if (action === 'price_sub_percent') {
+        newPrice = Math.max(0, currentPrice * (1 - rawValue / 100));
+      }
+
+      // Округляем до 2 знаков после запятой
+      input.value = newPrice.toFixed(2);
+    });
+  });
+
+  alert(
+    `Ціни змінено у таблиці для ${selectedIds.length} товарів! Натисніть "Зберегти ціни", щоб зберегти зміни у базі.`
+  );
 });
 
 await loadProducts();

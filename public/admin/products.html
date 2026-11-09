@@ -20,9 +20,25 @@
         <a href="index.html"><button class="secondary-btn">На головну</button></a>
       </div>
 
+      <div class="bulk-actions" style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+        <span style="font-weight: bold;">Масові дії:</span>
+        <select id="bulk-action-type" style="padding: 6px;">
+          <option value="price_add_abs">Збільшити ціни на (грн)</option>
+          <option value="price_sub_abs">Зменшити ціни на (грн)</option>
+          <option value="price_add_percent">Збільшити ціни на (%)</option>
+          <option value="price_sub_percent">Зменшити ціни на (%)</option>
+          <option value="delete">Видалити обрані</option>
+        </select>
+
+        <input type="number" id="bulk-action-val" placeholder="Значення (напр. 10)" step="0.01" style="width: 140px; padding: 5px;">
+
+        <button id="apply-bulk-btn" class="secondary-btn" style="background-color: #e67e22; color: white;">Застосувати</button>
+      </div>
+
       <table id="products-table">
         <thead>
           <tr>
+            <th><input type="checkbox" id="select-all" /></th>
             <th>Назва</th>
             <th>Фото</th>
             <th>Категорія</th>
