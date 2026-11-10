@@ -233,7 +233,9 @@ function renderTable(product) {
     if (!isAvailable) return;
     const quantity = parseInt(qtyInput.value, 10) || initialQty;
     const price = getBasePrice();
-    showToast(`${product.name} (${quantity} ${unit}) додано до кошика!`);
+    showToast(
+      `${product.name} (${quantity} ${unit}) додано до кошика!  <strong class="toast-action-link">Перейти ➔</strong>`
+    );
 
     addToCart({
       productId: product.id,

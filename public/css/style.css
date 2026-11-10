@@ -1011,6 +1011,18 @@ body.no-scroll {
   border-left: 6px solid #00ff88;
 }
 
+.toast-action-link {
+  color: #FFD700;
+  margin-left: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.toast-action-link:hover {
+  opacity: 0.8;
+}
+
 @keyframes slideIn {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
@@ -1091,6 +1103,8 @@ body.no-scroll {
 
 #product-image {
   max-width: 400px;
+  max-height: 350px;
+  width: auto;
   height: auto;
   border-radius: 10px;
   object-fit: contain;

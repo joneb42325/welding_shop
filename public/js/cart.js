@@ -148,5 +148,5 @@ export function showToast(message, type = 'success') {
     toast.addEventListener('animationend', () => {
       toast.remove();
     });
-  }, 3000);
+  }, 4000);
 }
