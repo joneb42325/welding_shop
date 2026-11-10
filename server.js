@@ -19,6 +19,8 @@ const loginLimiter = rateLimit({
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 app.get('/product.html', (req, res, next) => {
   const productId = req.query.productId;
 
