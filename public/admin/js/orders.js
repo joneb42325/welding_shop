@@ -271,6 +271,123 @@ function renderOrderItems(isEditing = false) {
   });
 }
 
+const productSearch = document.getElementById('product-search');
+const productSearchResults = document.getElementById('product-search-results');
+
+let productSearchController = null;
+
+productSearch.addEventListener('input', async () => {
+  const search = productSearch.value.trim();
+
+  if (productSearchController) {
+    productSearchController.abort();
+    productSearchController = null;
+  }
+
+  productSearchResults.replaceChildren();
+
+  if (search.length < 2) {
+    return;
+  }
+
+  const loading = document.createElement('p');
+  loading.textContent = 'Пошук товарів...';
+  productSearchResults.appendChild(loading);
+
+  const controller = new AbortController();
+  productSearchController = controller;
+
+  try {
+    const response = await fetch(`/admin/products/search?q=${encodeURIComponent(search)}`, {
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error('Не вдалося знайти товари');
+    }
+
+    const products = await response.json();
+
+    // Не показываем результаты устаревшего запроса
+    if (productSearchController !== controller) return;
+
+    productSearchResults.replaceChildren();
+
+    if (products.length === 0) {
+      const empty = document.createElement('p');
+      empty.textContent = 'Товарів не знайдено';
+      productSearchResults.appendChild(empty);
+      return;
+    }
+
+    products.forEach((product) => {
+      const result = document.createElement('div');
+      result.className = 'product-search-result';
+
+      const info = document.createElement('div');
+      info.className = 'product-search-info';
+
+      const name = document.createElement('strong');
+      name.textContent = product.name;
+
+      const details = document.createElement('p');
+      details.textContent = [
+        product.manufacturer_name,
+        product.diameter ? `Ø ${product.diameter}` : '',
+        product.weight ? `Вага: ${product.weight}` : '',
+      ]
+        .filter(Boolean)
+        .join(' / ');
+
+      const price = document.createElement('p');
+      price.textContent = `Ціна в каталозі: ${Number(product.price_retail || 0).toFixed(2)} грн`;
+
+      info.append(name, details, price);
+
+      const addButton = document.createElement('button');
+      addButton.type = 'button';
+      addButton.textContent = 'Додати';
+
+      addButton.addEventListener('click', () => {
+        const existingItem = currentOrderItems.find(
+          (item) => Number(item.product_id) === Number(product.id)
+        );
+
+        if (existingItem) {
+          alert('Цей товар уже є в замовленні');
+          return;
+        }
+
+        currentOrderItems.push({
+          product_id: Number(product.id),
+          product_name: product.name,
+          product_manufacturer: product.manufacturer_name || '',
+          diameter: product.diameter || '',
+          weight: product.weight || '',
+          price: Number(product.price_retail || 0),
+          quantity: 1,
+          selected_type: 'retail',
+        });
+
+        renderOrderItems(true);
+      });
+
+      result.append(info, addButton);
+      productSearchResults.appendChild(result);
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+
+    console.error('Помилка пошуку товарів:', error);
+
+    productSearchResults.replaceChildren();
+
+    const errorMessage = document.createElement('p');
+    errorMessage.textContent = 'Помилка пошуку. Спробуйте ще раз.';
+    productSearchResults.appendChild(errorMessage);
+  }
+});
+
 // Завантаження замовлень
 async function loadOrders() {
   try {

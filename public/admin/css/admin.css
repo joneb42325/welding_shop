@@ -528,6 +528,84 @@ textarea:focus {
   text-decoration: none;
 }
 
+
+.add-product-section {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.add-product-section h3 {
+  margin: 0 0 12px;
+}
+
+.add-product-section #product-search {
+  margin-bottom: 10px;
+}
+
+.product-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product-search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.product-search-info {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.product-search-info p {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #555;
+}
+
+.product-search-result button {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  color: #fff;
+  background: #0d6efd;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.product-search-result button:hover {
+  background: #0b5ed7;
+}
+
+@media (max-width: 600px) {
+  .product-search-result {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .modal-content.modal-large {
+    width: 96%;
+    max-height: 94vh;
+    padding: 16px;
+  }
+
+  #modal-edit-fields input,
+  #modal-edit-fields textarea {
+    font-size: 16px;
+  }
+}
+
+
 @media (max-width: 768px) {
   .admin-container {
     margin: 10px;

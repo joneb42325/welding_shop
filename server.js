@@ -695,6 +695,49 @@ app.delete('/admin/categories/:id', adminAuth, (req, res) => {
   });
 });
 
+app.get('/admin/products/search', adminAuth, (req, res) => {
+  const search = String(req.query.q || '').trim();
+
+  if (search.length < 2) {
+    return res.json([]);
+  }
+
+  const term = `%${search}%`;
+
+  const sql = `
+    SELECT
+      p.id,
+      p.name,
+      p.diameter,
+      p.weight,
+      p.unit,
+      p.price_retail,
+      m.name AS manufacturer_name
+    FROM products p
+    LEFT JOIN manufacturers m
+      ON p.manufacturer_id = m.id
+    WHERE
+      p.name LIKE ?
+      OR p.diameter LIKE ?
+      OR p.weight LIKE ?
+      OR m.name LIKE ?
+    ORDER BY p.sort_order ASC, p.name ASC
+    LIMIT 10
+  `;
+
+  db.query(sql, [term, term, term, term], (err, products) => {
+    if (err) {
+      console.error('Помилка пошуку товарів:', err);
+
+      return res.status(500).json({
+        error: 'Помилка пошуку товарів',
+      });
+    }
+
+    res.json(products);
+  });
+});
+
 //GET
 app.get('/admin/products', adminAuth, (req, res) => {
   const categoryId = req.query.category_id;
