@@ -9,6 +9,14 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const { sendOrderEmail } = require('./services/email');
 const cloudinary = require('./cloudinaryConfig');
 
+const rateLimit = require('express-rate-limit');
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 мін
+  max: 5,
+  message: { error: 'Забагато спроб входу. Спробуйте через 15 хвилин.' },
+});
+
 const app = express();
 
 app.get('/product.html', (req, res, next) => {
@@ -497,6 +505,11 @@ const sessionStore = new MySQLStore({
   database: process.env.DB_NAME,
 });
 
+if (!process.env.SESSION_SECRET) {
+  console.error('❌ КРИТИЧНА ПОМИЛКА: SESSION_SECRET не вказано у .env файлі!');
+  process.exit(1);
+}
+
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -505,18 +518,25 @@ app.use(
     store: sessionStore,
     cookie: {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 1 день
     },
   })
 );
 
-app.post('/admin/login', (req, res) => {
+app.post('/admin/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
 
-  if (username === 'admin' && password === process.env.ADMIN_PASS) {
-    req.session.isAdmin = true;
-    return res.json({ success: true });
+  if (username === process.env.ADMIN_USER && password === process.env.ADMIN_PASS) {
+    return req.session.regenerate((err) => {
+      if (err) {
+        console.error('Помилка регенерації сесії:', err);
+        return res.status(500).json({ error: 'Помилка сервера при авторизації' });
+      }
+      req.session.isAdmin = true;
+      return res.json({ success: true });
+    });
   }
 
   res.status(401).json({ error: 'Невірний логін або пароль' });
@@ -1152,7 +1172,7 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
 async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-  const CHAT_IDS = ['1293237281', '5106522924'];
+  const CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',');
 
   let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
   message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
@@ -1651,7 +1671,7 @@ app.post('/api/quick-order', (req, res) => {
 
             // 4. Формируем сообщение в Telegram с учетом порезки и единиц измерения
             const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-            const CHAT_IDS = ['1293237281', '5106522924'];
+            const CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',');
 
             let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
             if (name && name.trim() !== '') message += `👤 <b>Клієнт:</b> ${name}\n`;
