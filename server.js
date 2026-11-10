@@ -1272,6 +1272,235 @@ app.get('/admin/orders/:id/items', adminAuth, (req, res) => {
   });
 });
 
+app.put('/admin/orders/:id', adminAuth, async (req, res) => {
+  const orderId = Number(req.params.id);
+
+  const { customer_name, customer_phone, customer_email, delivery_address, comment, items } =
+    req.body;
+
+  if (!Number.isInteger(orderId) || orderId <= 0) {
+    return res.status(400).json({
+      error: 'Некоректний ID замовлення',
+    });
+  }
+
+  if (
+    typeof customer_name !== 'string' ||
+    !customer_name.trim() ||
+    typeof customer_phone !== 'string' ||
+    !customer_phone.trim() ||
+    typeof customer_email !== 'string' ||
+    !customer_email.trim() ||
+    typeof delivery_address !== 'string' ||
+    !delivery_address.trim()
+  ) {
+    return res.status(400).json({
+      error: "Заповніть ім'я, телефон, email та адресу доставки",
+    });
+  }
+
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({
+      error: 'У замовленні має бути хоча б один товар',
+    });
+  }
+
+  // Проверяем все позиции до обращения к БД
+  for (const item of items) {
+    const productId = Number(item.product_id);
+    const price = Number(item.price);
+    const quantity = Number(item.quantity);
+
+    if (
+      !Number.isInteger(productId) ||
+      productId <= 0 ||
+      !Number.isFinite(price) ||
+      price < 0 ||
+      !Number.isInteger(quantity) ||
+      quantity < 1
+    ) {
+      return res.status(400).json({
+        error: 'Перевірте ID товарів, ціни та кількість',
+      });
+    }
+
+    if (
+      item.selected_type != null &&
+      !['retail', 'company', 'wholesale'].includes(item.selected_type)
+    ) {
+      return res.status(400).json({
+        error: 'Некоректний тип ціни',
+      });
+    }
+  }
+
+  let connection;
+  let transactionStarted = false;
+
+  const query = (sql, params = []) =>
+    new Promise((resolve, reject) => {
+      connection.query(sql, params, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+
+  try {
+    // Получаем соединение из пула mysql2
+    connection = await new Promise((resolve, reject) => {
+      db.getConnection((err, conn) => {
+        if (err) return reject(err);
+        resolve(conn);
+      });
+    });
+
+    await new Promise((resolve, reject) => {
+      connection.beginTransaction((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    transactionStarted = true;
+
+    // Проверяем существование заказа
+    const orders = await query('SELECT id FROM orders WHERE id = ? FOR UPDATE', [orderId]);
+
+    if (orders.length === 0) {
+      const error = new Error('Замовлення не знайдено');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Получаем актуальные данные товаров
+    const productIds = [...new Set(items.map((item) => Number(item.product_id)))];
+
+    const products = await query(
+      `SELECT
+         p.id,
+         p.name,
+         p.diameter,
+         p.weight,
+         m.name AS manufacturer_name
+       FROM products p
+       LEFT JOIN manufacturers m
+         ON p.manufacturer_id = m.id
+       WHERE p.id IN (?)`,
+      [productIds]
+    );
+
+    const productsMap = new Map(products.map((product) => [Number(product.id), product]));
+
+    if (productsMap.size !== productIds.length) {
+      const error = new Error('Один або декілька товарів не знайдені');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    // Цена вводится администратором вручную
+    let totalPrice = 0;
+
+    const itemsData = items.map((item) => {
+      const product = productsMap.get(Number(item.product_id));
+      const price = Number(Number(item.price).toFixed(2));
+      const quantity = Number(item.quantity);
+
+      totalPrice += price * quantity;
+
+      return [
+        orderId,
+        product.id,
+        product.name,
+        product.manufacturer_name || '',
+        product.diameter || '',
+        product.weight || '',
+        price,
+        quantity,
+        item.selected_type || 'retail',
+      ];
+    });
+
+    totalPrice = Number(totalPrice.toFixed(2));
+
+    // Обновляем данные клиента и итоговую сумму
+    await query(
+      `UPDATE orders
+       SET customer_name = ?,
+           customer_phone = ?,
+           customer_email = ?,
+           delivery_address = ?,
+           comment = ?,
+           total_price = ?
+       WHERE id = ?`,
+      [
+        customer_name.trim(),
+        customer_phone.trim(),
+        customer_email.trim(),
+        delivery_address.trim(),
+        typeof comment === 'string' ? comment : '',
+        totalPrice,
+        orderId,
+      ]
+    );
+
+    // Заменяем старые позиции новыми
+    await query('DELETE FROM order_items WHERE order_id = ?', [orderId]);
+
+    await query(
+      `INSERT INTO order_items
+       (
+         order_id,
+         product_id,
+         product_name,
+         product_manufacturer,
+         diameter,
+         weight,
+         price,
+         quantity,
+         selected_type
+       )
+       VALUES ?`,
+      [itemsData]
+    );
+
+    await new Promise((resolve, reject) => {
+      connection.commit((err) => {
+        if (err) return reject(err);
+        resolve();
+      });
+    });
+
+    transactionStarted = false;
+
+    return res.json({
+      success: true,
+      total_price: totalPrice,
+    });
+  } catch (err) {
+    if (connection && transactionStarted) {
+      await new Promise((resolve) => {
+        connection.rollback(() => resolve());
+      });
+    }
+
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({
+        error: err.message,
+      });
+    }
+
+    console.error('Помилка оновлення замовлення:', err);
+
+    return res.status(500).json({
+      error: 'Помилка збереження замовлення',
+    });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
+});
+
 app.put('/admin/orders/:id/status', adminAuth, (req, res) => {
   const { status } = req.body;
   const query = 'UPDATE orders SET status = ? WHERE id = ?';

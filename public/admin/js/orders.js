@@ -2,9 +2,273 @@ const tbody = document.querySelector('#orders-table tbody');
 const modal = document.getElementById('items-modal');
 const closeModal = document.querySelector('.close-modal');
 
+const editFields = document.getElementById('modal-edit-fields');
+const editActions = document.getElementById('modal-edit-actions');
+const commentView = document.getElementById('modal-comment-view');
+
+const saveOrderBtn = document.getElementById('save-order-btn');
+const cancelEditBtn = document.getElementById('cancel-edit-btn');
+
+saveOrderBtn.addEventListener('click', async () => {
+  if (!currentOrderId) {
+    alert('Замовлення не вибрано');
+    return;
+  }
+
+  const customerName = document.getElementById('edit-customer-name').value.trim();
+
+  const customerPhone = document.getElementById('edit-customer-phone').value.trim();
+
+  const customerEmail = document.getElementById('edit-customer-email').value.trim();
+
+  const deliveryAddress = document.getElementById('edit-delivery-address').value.trim();
+
+  const comment = document.getElementById('edit-comment').value;
+
+  if (!customerName || !customerPhone) {
+    alert("Вкажіть ім'я та телефон клієнта");
+    return;
+  }
+
+  if (currentOrderItems.length === 0) {
+    alert('У замовленні має залишитися хоча б один товар');
+    return;
+  }
+
+  const items = currentOrderItems.map((item) => ({
+    product_id: Number(item.product_id),
+    price: Number(item.price),
+    quantity: Number(item.quantity),
+    selected_type: item.selected_type || 'retail',
+  }));
+
+  // Дополнительная проверка перед отправкой
+  const invalidItem = items.some(
+    (item) =>
+      !Number.isInteger(item.product_id) ||
+      item.product_id <= 0 ||
+      !Number.isFinite(item.price) ||
+      item.price < 0 ||
+      !Number.isInteger(item.quantity) ||
+      item.quantity < 1
+  );
+
+  if (invalidItem) {
+    alert('Перевірте ціни та кількість товарів');
+    return;
+  }
+
+  saveOrderBtn.disabled = true;
+  saveOrderBtn.textContent = 'Збереження...';
+
+  try {
+    const response = await fetch(`/admin/orders/${currentOrderId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail,
+        delivery_address: deliveryAddress,
+        comment,
+        items,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Не вдалося зберегти замовлення');
+    }
+
+    alert(`Замовлення збережено. Сума: ${Number(result.total_price).toFixed(2)} грн`);
+
+    setModalMode(false);
+    modal.classList.remove('active');
+
+    currentOrderId = null;
+    currentOrderItems = [];
+
+    await loadOrders();
+  } catch (error) {
+    console.error('Помилка збереження замовлення:', error);
+    alert(error.message || 'Помилка збереження замовлення');
+  } finally {
+    saveOrderBtn.disabled = false;
+    saveOrderBtn.textContent = 'Зберегти зміни';
+  }
+});
+
+let currentOrderId = null;
+let currentOrderItems = [];
+
+cancelEditBtn.addEventListener('click', () => {
+  setModalMode(false);
+  modal.classList.remove('active');
+
+  currentOrderId = null;
+  currentOrderItems = [];
+});
+
 async function checkAuth() {
   const res = await fetch('/admin/check');
   if (res.status === 401) window.location.href = '/admin/login.html';
+}
+
+function setModalMode(isEditing) {
+  editFields.hidden = !isEditing;
+  editActions.hidden = !isEditing;
+  commentView.hidden = isEditing;
+}
+
+async function openOrderEditor(orderId) {
+  try {
+    const ordersResponse = await fetch('/admin/orders');
+
+    if (!ordersResponse.ok) {
+      throw new Error('Не вдалося завантажити замовлення');
+    }
+
+    const orders = await ordersResponse.json();
+    const order = orders.find((item) => String(item.id) === String(orderId));
+
+    if (!order) {
+      throw new Error('Замовлення не знайдено');
+    }
+
+    const itemsResponse = await fetch(`/admin/orders/${orderId}/items`);
+
+    if (!itemsResponse.ok) {
+      throw new Error('Не вдалося завантажити товари');
+    }
+
+    const items = await itemsResponse.json();
+
+    currentOrderId = orderId;
+    currentOrderItems = items.map((item) => ({ ...item }));
+
+    document.getElementById('modal-order-id').textContent = orderId;
+
+    document.getElementById('edit-customer-name').value = order.customer_name || '';
+
+    document.getElementById('edit-customer-phone').value = order.customer_phone || '';
+
+    document.getElementById('edit-customer-email').value = order.customer_email || '';
+
+    document.getElementById('edit-delivery-address').value = order.delivery_address || '';
+
+    document.getElementById('edit-comment').value = order.comment || '';
+
+    renderOrderItems(true);
+    setModalMode(true);
+    modal.classList.add('active');
+  } catch (error) {
+    console.error(error);
+    alert('Не вдалося відкрити замовлення для редагування');
+  }
+}
+
+function renderOrderItems(isEditing = false) {
+  const itemsBody = document.getElementById('modal-items-body');
+  itemsBody.replaceChildren();
+
+  currentOrderItems.forEach((item, index) => {
+    const row = document.createElement('tr');
+
+    if (!isEditing) {
+      const name = document.createElement('td');
+      name.textContent = item.product_name || '';
+
+      const options = document.createElement('td');
+      options.textContent = [item.product_manufacturer, item.diameter, item.weight]
+        .filter(Boolean)
+        .join(' / ');
+
+      const type = document.createElement('td');
+      type.textContent = formatType(item.selected_type);
+
+      const priceQuantity = document.createElement('td');
+      priceQuantity.textContent = `${item.price} × ${item.quantity} шт`;
+
+      const sum = document.createElement('td');
+      sum.textContent = (Number(item.price) * Number(item.quantity)).toFixed(2);
+
+      row.append(name, options, type, priceQuantity, sum);
+    } else {
+      const name = document.createElement('td');
+      name.textContent = item.product_name || '';
+
+      const options = document.createElement('td');
+      options.textContent = [item.product_manufacturer, item.diameter, item.weight]
+        .filter(Boolean)
+        .join(' / ');
+
+      const type = document.createElement('td');
+      const typeSelect = document.createElement('select');
+
+      ['retail', 'company', 'wholesale'].forEach((value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = formatType(value);
+        option.selected = value === item.selected_type;
+        typeSelect.appendChild(option);
+      });
+
+      typeSelect.addEventListener('change', () => {
+        currentOrderItems[index].selected_type = typeSelect.value;
+      });
+
+      type.appendChild(typeSelect);
+
+      const priceQuantity = document.createElement('td');
+
+      const priceInput = document.createElement('input');
+      priceInput.type = 'number';
+      priceInput.min = '0';
+      priceInput.step = '0.01';
+      priceInput.value = item.price;
+
+      priceInput.addEventListener('change', () => {
+        currentOrderItems[index].price = Number(priceInput.value);
+        renderOrderItems(true);
+      });
+
+      const quantityInput = document.createElement('input');
+      quantityInput.type = 'number';
+      quantityInput.min = '1';
+      quantityInput.step = '1';
+      quantityInput.value = item.quantity;
+
+      quantityInput.addEventListener('change', () => {
+        currentOrderItems[index].quantity = Number(quantityInput.value);
+        renderOrderItems(true);
+      });
+
+      priceQuantity.append(priceInput, document.createTextNode(' × '), quantityInput);
+
+      const sum = document.createElement('td');
+      sum.textContent = (Number(item.price) * Number(item.quantity)).toFixed(2);
+
+      row.append(name, options, type, priceQuantity, sum);
+
+      const removeCell = document.createElement('td');
+      const removeButton = document.createElement('button');
+      removeButton.type = 'button';
+      removeButton.textContent = 'Видалити';
+
+      removeButton.addEventListener('click', () => {
+        currentOrderItems.splice(index, 1);
+        renderOrderItems(true);
+      });
+
+      removeCell.appendChild(removeButton);
+      row.appendChild(removeCell);
+    }
+
+    itemsBody.appendChild(row);
+  });
 }
 
 // Завантаження замовлень
@@ -52,6 +316,7 @@ async function loadOrders() {
         </td>
         <td>
           <button class="view-btn" data-id="${order.id}" data-comment="${order.comment || 'Немає'}">Деталі</button>
+          <button class="edit-btn-table" data-id="${order.id}">Редагувати</button>
           <button class="delete-btn-table" data-id="${order.id}">Видалити</button>
         </td>
       `;
@@ -98,7 +363,16 @@ tbody.addEventListener('click', async (e) => {
         </tr>
       `;
     });
+    setModalMode(false);
     modal.classList.add('active');
+  }
+
+  const editButton = e.target.closest('.edit-btn-table');
+
+  if (editButton) {
+    const orderId = editButton.dataset.id;
+    await openOrderEditor(orderId);
+    return;
   }
 });
 

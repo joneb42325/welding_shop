@@ -32,10 +32,34 @@
     </div>
 
     <div id="items-modal" class="modal">
-      <div class="modal-content">
+      <div class="modal-content modal-large">
         <span class="close-modal">&times;</span>
         <h3>Товари замовлення №<span id="modal-order-id"></span></h3>
-        <p><strong>Коментар клієнта:</strong> <span id="modal-comment"></span></p>
+        <p id="modal-comment-view">
+          <strong>Коментар клієнта:</strong>
+          <span id="modal-comment"></span>
+        </p>
+
+        <!-- Поля редактирования заказа -->
+        <div id="modal-edit-fields" hidden>
+          <h3>Дані замовлення</h3>
+
+          <label for="edit-customer-name">Ім'я клієнта</label>
+          <input id="edit-customer-name" type="text" required>
+
+          <label for="edit-customer-phone">Телефон</label>
+          <input id="edit-customer-phone" type="text" required>
+
+          <label for="edit-customer-email">Email</label>
+          <input id="edit-customer-email" type="email">
+
+          <label for="edit-delivery-address">Адреса доставки</label>
+          <input id="edit-delivery-address" type="text">
+
+          <label for="edit-comment">Коментар</label>
+          <textarea id="edit-comment"></textarea>
+        </div>
+
         <table>
           <thead>
             <tr>
@@ -48,6 +72,17 @@
           </thead>
           <tbody id="modal-items-body"></tbody>
         </table>
+
+        <div id="modal-edit-actions" hidden>
+          <button type="button" id="save-order-btn">
+            Зберегти зміни
+          </button>
+
+          <button type="button" id="cancel-edit-btn">
+            Скасувати
+          </button>
+        </div>
+
       </div>
     </div>
 
