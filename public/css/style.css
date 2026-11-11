@@ -3000,7 +3000,7 @@ textarea:-webkit-autofill:focus {
     justify-content: space-between;
     align-items: center;
     gap: 15px;
-    padding: 15px;
+    padding: 8px 12px;
   }
 
   .header-left {
@@ -3019,6 +3019,11 @@ textarea:-webkit-autofill:focus {
 
   .logo {
     transform: translateY(3px);
+  }
+
+  .logo img {
+    max-height: 45px;
+    padding: 0 5px;
   }
 
   .search-container {
