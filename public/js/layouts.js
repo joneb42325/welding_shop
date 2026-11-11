@@ -287,12 +287,23 @@ function renderSearchResult(items, container, query) {
     const itemsHtml = items
       .slice(0, maxItemsToShow)
       .map((item) => {
-        const imgSrc = item.image.startsWith('http') ? item.image : `images/${item.image}`;
+        const imgSrc = item.image.startsWith('http') ? item.image : `/images/${item.image}`;
+        const productSlug = item.slug || item.id;
+        // 1. Проверяем наличие производителя
+        const manufacturerHtml = item.manufacturer_name
+          ? `<span class="search-manufacturer">${item.manufacturer_name}</span>`
+          : '';
+        // 2. Получаем актуальную цену
+        const price = parseFloat(item.price_retail) || 0;
+        const priceHtml =
+          price > 0 ? `<span class="search-price">${price.toFixed(2)} грн</span>` : '';
         return `
-          <a href="product.html?productId=${item.id}" class="search-item">
+          <a href="/product/${productSlug}-${item.id}" class="search-item">
             <img src="${imgSrc}" alt="${item.name}">
             <div class="search-info">
+              ${manufacturerHtml}
               <span class="search-name">${item.name}</span>
+              ${priceHtml}
             </div>
           </a>
         `;
