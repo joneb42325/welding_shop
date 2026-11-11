@@ -95,6 +95,7 @@ function renderTable(product) {
   let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
   const priceCells = row.querySelectorAll('.price-cell');
 
+  // Установка состояния ячеек
   priceCells.forEach((cell) => {
     cell.classList.toggle('active', cell.dataset.type === selectedType && isAvailable);
     if (isWholesaleOnly && cell.dataset.type !== 'wholesale') {
@@ -106,58 +107,75 @@ function renderTable(product) {
   const getBasePrice = () =>
     parseFloat(product[`price_${selectedType}`] ?? product.price_retail) || 0;
 
-  const calculateTotal = (qty) => {
-    const basePrice = getBasePrice();
-    if (product.has_dynamic_pricing) {
-      const tempItem = {
-        selectedType,
-        price: basePrice,
-        price_retail: product.price_retail,
-        price_wholesale: product.price_wholesale,
-        wholesale_threshold: product.wholesale_threshold,
-        markup_tier1: product.markup_tier1,
-        markup_tier2: product.markup_tier2,
-        markup_tier3: product.markup_tier3,
-        cut_fee: product.cut_fee,
-      };
-      return calculateDynamicPrice(tempItem, qty).totalPrice;
-    }
-    return basePrice * qty;
-  };
-
+  // Главная функция обновления ценников и суммы
   const updateTotalSum = () => {
     const qty = parseInt(qtyInput.value, 10) || initialQty;
-    const finalTotal = calculateTotal(qty);
-    if (totalValEl) totalValEl.textContent = Number(finalTotal).toFixed(0);
+    const basePrice = getBasePrice();
 
-    const hintEl = row.querySelector('.dynamic-pricing-hint');
-    if (!hintEl) return;
-    if (!product.has_dynamic_pricing) {
-      hintEl.textContent = '';
-      return;
+    let finalTotal = 0;
+    let pricePerUnit = basePrice;
+    let discountPercent = 0;
+    let cutFee = 0;
+
+    if (product.has_dynamic_pricing) {
+      const tempItem = {
+        ...product,
+        selectedType,
+        price: basePrice,
+      };
+      const calcResult = calculateDynamicPrice(tempItem, qty);
+      finalTotal = calcResult.totalPrice;
+      pricePerUnit = calcResult.pricePerKg;
+      discountPercent = calcResult.discountPercent;
+      cutFee = calcResult.cutFee;
+    } else {
+      finalTotal = basePrice * qty;
     }
 
-    const threshold = minWholesaleQty;
-    const cutFee = product.cut_fee !== undefined ? parseFloat(product.cut_fee) || 0 : 40;
-    let discountPercent = 0;
+    // 1. ОБНОВЛЯЕМ ЦЕННИК В АКТИВНОЙ КАРТОЧКЕ/ЯЧЕЙКЕ (Перечёркиваем старую цену при скидке)
+    const activeCell = row.querySelector('.price-cell.active');
+    if (activeCell) {
+      let priceValEl = activeCell.querySelector('.price-val') || activeCell;
 
-    if (qty >= 10 && qty < threshold)
-      discountPercent = Math.round((parseFloat(product.markup_tier3) || 0.3) * 100);
-    else if (qty >= 5 && qty < 10)
-      discountPercent = Math.round((parseFloat(product.markup_tier2) || 0.15) * 100);
+      if (product.has_dynamic_pricing && pricePerUnit < basePrice) {
+        const badgeText = qty >= minWholesaleQty ? 'ОПТ' : `-${discountPercent}%`;
+        priceValEl.innerHTML = `
+          <div class="price-dynamic-wrap" style="display: flex; flex-direction: column; align-items: center;">
+            <span class="old-price" style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em;">
+              ${basePrice.toFixed(2)} грн
+            </span>
+            <span class="new-price" style="color: #4ade80; font-weight: bold; font-size: 1.1em;">
+              ${pricePerUnit.toFixed(2)} грн / ${unit}
+            </span>
+            <span class="discount-badge" style="background: #22c55e; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-top: 2px;">
+              ${badgeText}
+            </span>
+          </div>
+        `;
+      } else {
+        priceValEl.innerHTML = `${basePrice.toFixed(2)} грн / ${unit}`;
+      }
+    }
 
-    if (qty >= threshold) {
-      hintEl.textContent = '✓ Застосовано оптову ціну';
-      hintEl.style.color = '#4ade80';
-    } else {
-      let text = '';
-      if (discountPercent > 0) {
-        text = `(знижка -${discountPercent}%`;
-        if (cutFee > 0) text += `, вкл. порізку ${cutFee} грн`;
-        text += ')';
-      } else if (cutFee > 0) text = `(вкл. порізку ${cutFee} грн)`;
-      hintEl.textContent = text;
-      hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
+    // 2. ОБНОВЛЯЕМ ИТОГОВУЮ СУММУ (Разом)
+    if (totalValEl) totalValEl.textContent = Number(finalTotal).toFixed(0);
+
+    // 3. ОБНОВЛЯЕМ ПОДСКАЗКУ ПО ПОРЕЗКЕ И СКИДКЕ
+    const hintEl = row.querySelector('.dynamic-pricing-hint');
+    if (hintEl) {
+      if (!product.has_dynamic_pricing) {
+        hintEl.textContent = '';
+      } else if (qty >= minWholesaleQty) {
+        hintEl.textContent = '✓ Застосовано оптову ціну (порізка безкоштовно)';
+        hintEl.style.color = '#4ade80';
+      } else {
+        let textParts = [];
+        if (discountPercent > 0) textParts.push(`знижка -${discountPercent}%`);
+        if (cutFee > 0) textParts.push(`вкл. порізку ${cutFee} грн`);
+
+        hintEl.textContent = textParts.length > 0 ? `(${textParts.join(', ')})` : '';
+        hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
+      }
     }
   };
 
@@ -234,7 +252,7 @@ function renderTable(product) {
     const quantity = parseInt(qtyInput.value, 10) || initialQty;
     const price = getBasePrice();
     showToast(
-      `${product.name} (${quantity} ${unit}) додано до кошика!  <strong class="toast-action-link">Перейти ➔</strong>`
+      `${product.name} (${quantity} ${unit}) додано до кошика! <strong class="toast-action-link">Перейти ➔</strong>`
     );
 
     addToCart({
@@ -265,7 +283,12 @@ function renderTable(product) {
   row.querySelector('.quick-order-btn')?.addEventListener('click', () => {
     if (!isAvailable) return;
     const quantity = parseInt(qtyInput.value, 10) || initialQty;
-    openQuickOrderModal(product, calculateTotal(quantity), quantity, selectedType);
+    const tempItem = { ...product, selectedType, price: getBasePrice() };
+    const currentTotal = product.has_dynamic_pricing
+      ? calculateDynamicPrice(tempItem, quantity).totalPrice
+      : getBasePrice() * quantity;
+
+    openQuickOrderModal(product, currentTotal, quantity, selectedType);
   });
 
   if (isAvailable) updateTotalSum();
