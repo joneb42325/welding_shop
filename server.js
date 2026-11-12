@@ -1225,94 +1225,222 @@ async function sendTelegramNotification(customer, items, totalPrice, orderId) {
   }
 }
 
-// POST - Створення нового замовлення
-app.post('/api/orders', (req, res) => {
-  const { customer, items, totalPrice } = req.body;
+// POST — створення нового замовлення
+app.post('/api/orders', async (req, res) => {
+  const { customer, items } = req.body || {};
 
-  let calculatedTotalPrice = 0;
+  // 1. Перевірка даних покупця та кошика
+  if (
+    !customer ||
+    typeof customer !== 'object' ||
+    Array.isArray(customer) ||
+    typeof customer.name !== 'string' ||
+    !customer.name.trim() ||
+    typeof customer.phone !== 'string' ||
+    !customer.phone.trim() ||
+    typeof customer.delivery !== 'string' ||
+    !customer.delivery.trim()
+  ) {
+    return res.status(400).json({ error: 'Перевірте дані покупця' });
+  }
 
-  const validatedItems = items.map((item) => {
-    let finalItemPrice = parseFloat(item.price) || 0;
+  if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
+    return res.status(400).json({ error: 'Кошик порожній або містить забагато товарів' });
+  }
 
-    if (item.has_dynamic_pricing) {
-      const calc = calculateDynamicPrice(item, item.quantity, item.price_retail || item.price);
+  const allowedTypes = ['retail', 'company', 'wholesale'];
+  const requestedItems = [];
 
-      finalItemPrice = calc.pricePerKg; // цена за 1 кг с учетом наценки
-      calculatedTotalPrice += calc.totalPrice; // добавляем полную стоимость позиции (+40 грн резки)
-    } else {
-      calculatedTotalPrice += finalItemPrice * parseInt(item.quantity);
+  for (const item of items) {
+    const productId = Number(item.productId);
+    const quantity = Number(item.quantity);
+    const selectedType = item.selectedType;
+
+    if (
+      !Number.isSafeInteger(productId) ||
+      productId <= 0 ||
+      !Number.isSafeInteger(quantity) ||
+      quantity <= 0 ||
+      !allowedTypes.includes(selectedType)
+    ) {
+      return res.status(400).json({ error: 'Некоректні дані товару або кількості' });
     }
 
-    return {
-      ...item,
-      price: finalItemPrice,
-    };
-  });
+    requestedItems.push({ productId, quantity, selectedType });
+  }
 
-  // 1. Спочатку створюємо запис у таблиці orders
-  const insertOrderQuery = `
-    INSERT INTO orders (customer_name, customer_phone, customer_email, delivery_address, comment, total_price) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
+  // 2. Відкриваємо з'єднання та транзакцію
+  let connection;
+  try {
+    connection = await db.promise().getConnection();
+    await connection.beginTransaction();
 
-  db.query(
-    insertOrderQuery,
-    [
-      customer.name,
-      customer.phone,
-      customer.email || '',
-      customer.delivery,
-      customer.comment || '',
-      calculatedTotalPrice,
-    ],
-    (err, orderResult) => {
-      if (err) {
-        console.error('Помилка при створенні замовлення:', err);
-        return res.status(500).json({ error: 'Помилка збереження замовлення' });
+    // 3. Отримуємо актуальні товари з БД
+    const productIds = [...new Set(requestedItems.map((i) => i.productId))];
+    const [products] = await connection.query(
+      `SELECT
+        p.id, p.name, p.image, p.manufacturer_id,
+        m.name AS manufacturer_name,
+        p.diameter, p.weight, p.price_retail, p.price_company, p.price_wholesale,
+        p.wholesale_threshold, p.unit, p.has_dynamic_pricing,
+        p.is_wholesale, p.markup_tier1, p.markup_tier2, p.markup_tier3, p.cut_fee
+      FROM products p
+      LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+      WHERE p.id IN (?)`,
+      [productIds]
+    );
+
+    const productsById = new Map(products.map((p) => [Number(p.id), p]));
+
+    // 4. Рахуємо ціни за даними з БД
+    let calculatedTotalPrice = 0;
+    const validatedItems = [];
+
+    for (const reqItem of requestedItems) {
+      const product = productsById.get(reqItem.productId);
+      if (!product) {
+        throw { status: 400, message: `Товар з ID ${reqItem.productId} не знайдено` };
       }
 
-      // Отримуємо ID щойно створеного замовлення
-      const orderId = orderResult.insertId;
+      const { quantity, selectedType } = reqItem;
+      const hasDynamicPricing = Number(product.has_dynamic_pricing) === 1;
+      let finalItemPrice;
+      let itemTotal;
 
-      // 2. Тепер додаємо всі товари з кошика у таблицю order_items
-      const insertItemsQuery = `
-      INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type) 
-      VALUES ?
-    `;
+      if (!hasDynamicPricing && selectedType === 'wholesale') {
+        const threshold = product.wholesale_threshold || 50;
+        if (quantity < threshold) {
+          throw {
+            status: 400,
+            message: `Оптова ціна для "${product.name}" доступна лише від ${threshold} ${product.unit || 'шт'}`,
+          };
+        }
+      }
 
-      // Формуємо масив масивів для масової вставки (Bulk Insert) у MySQL
-      const itemsData = validatedItems.map((item) => [
-        orderId,
-        item.productId,
-        item.name,
-        item.manufacturer,
-        item.diameter || '',
-        item.weight || '',
-        item.price,
-        item.quantity,
-        item.selectedType,
-      ]);
+      if (hasDynamicPricing) {
+        const calc = calculateDynamicPrice(product, quantity);
+        finalItemPrice = Number(calc.pricePerKg);
+        itemTotal = Number(calc.totalPrice);
 
-      db.query(insertItemsQuery, [itemsData], (itemErr) => {
-        if (itemErr) {
-          console.error('Помилка при збереженні товарів замовлення:', itemErr);
-          return res.status(500).json({ error: 'Помилка збереження товарів' });
+        if (
+          !Number.isFinite(finalItemPrice) ||
+          finalItemPrice < 0 ||
+          !Number.isFinite(itemTotal) ||
+          itemTotal < 0
+        ) {
+          throw { status: 400, message: `Некоректна ціна динамічного товару ID ${product.id}` };
+        }
+      } else {
+        const priceFields = {
+          retail: 'price_retail',
+          company: 'price_company',
+          wholesale: 'price_wholesale',
+        };
+        finalItemPrice = Number(product[priceFields[selectedType]]);
+
+        if (!Number.isFinite(finalItemPrice) || finalItemPrice <= 0) {
+          throw { status: 400, message: `Для товару "${product.name}" не задана коректна ціна` };
         }
 
-        sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId);
+        itemTotal = finalItemPrice * quantity;
+      }
 
-        if (customer.email) {
-          sendOrderEmail(customer, validatedItems, calculatedTotalPrice, orderId).catch((err) => {
-            console.error(`Не удалось отправить email для заказа №${orderId}:`, err.message);
-          });
-        }
+      calculatedTotalPrice += itemTotal;
 
-        res
-          .status(201)
-          .json({ success: true, message: 'Замовлення успішно створено', orderId: orderId });
+      validatedItems.push({
+        productId: Number(product.id),
+        name: product.name,
+        image: product.image,
+        manufacturer: product.manufacturer_name || '',
+        diameter: product.diameter || '',
+        weight: product.weight || '',
+        unit: product.unit || 'шт',
+        quantity,
+        selectedType,
+        price: finalItemPrice,
+        has_dynamic_pricing: hasDynamicPricing,
+        is_wholesale: product.is_wholesale,
+        price_retail: product.price_retail,
+        price_company: product.price_company,
+        price_wholesale: product.price_wholesale,
+        wholesale_threshold: product.wholesale_threshold,
+        markup_tier1: product.markup_tier1,
+        markup_tier2: product.markup_tier2,
+        markup_tier3: product.markup_tier3,
+        cut_fee: product.cut_fee,
       });
     }
-  );
+
+    calculatedTotalPrice = Number(calculatedTotalPrice.toFixed(2));
+
+    // 5. Зберігаємо замовлення та позиції
+    const [orderResult] = await connection.query(
+      `INSERT INTO orders (customer_name, customer_phone, customer_email, delivery_address, comment, total_price)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        customer.name.trim(),
+        customer.phone.trim(),
+        typeof customer.email === 'string' ? customer.email.trim() : '',
+        customer.delivery.trim(),
+        typeof customer.comment === 'string' ? customer.comment.trim() : '',
+        calculatedTotalPrice,
+      ]
+    );
+
+    const orderId = orderResult.insertId;
+
+    const itemsData = validatedItems.map((item) => [
+      orderId,
+      item.productId,
+      item.name,
+      item.manufacturer,
+      item.diameter,
+      item.weight,
+      item.price,
+      item.quantity,
+      item.selectedType,
+    ]);
+
+    await connection.query(
+      `INSERT INTO order_items (order_id, product_id, product_name, product_manufacturer, diameter, weight, price, quantity, selected_type)
+       VALUES ?`,
+      [itemsData]
+    );
+
+    // 6. Підтверджуємо транзакцію
+    await connection.commit();
+
+    // 7. Надсилаємо сповіщення у фоні
+    Promise.resolve(
+      sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId)
+    ).catch((err) => console.error('Помилка Telegram:', err));
+
+    if (typeof customer.email === 'string' && customer.email.trim()) {
+      sendOrderEmail(customer, validatedItems, calculatedTotalPrice, orderId).catch((err) =>
+        console.error(`Не вдалося надіслати email для замовлення №${orderId}:`, err.message)
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: 'Замовлення успішно створено',
+      orderId,
+      totalPrice: calculatedTotalPrice,
+    });
+  } catch (err) {
+    if (connection) {
+      await connection.rollback().catch(() => {});
+    }
+    if (err.status) {
+      return res.status(err.status).json({ error: err.message });
+    }
+    console.error('Помилка оформлення замовлення:', err);
+    return res.status(500).json({ error: 'Помилка оформлення замовлення' });
+  } finally {
+    if (connection) {
+      connection.release();
+    }
+  }
 });
 
 app.get('/admin/orders', adminAuth, (req, res) => {
