@@ -370,6 +370,10 @@ productSearch.addEventListener('input', async () => {
         });
 
         renderOrderItems(true);
+        alert(`Товар "${product.name}" додано до замовлення`);
+
+        productSearch.value = '';
+        productSearchResults.replaceChildren();
       });
 
       result.append(info, addButton);
