@@ -1171,57 +1171,124 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
   });
 });
 
-async function sendTelegramNotification(customer, items, totalPrice, orderId) {
-  const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+function escapeHtml(value) {
+  if (value === null || value === undefined) return '';
+  return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
-  const CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '').split(',');
+function formatTelegramOrderMessage(customer, items, totalPrice, orderId, isUpdate = false) {
+  let message = isUpdate
+    ? `✏️ <b>ОНОВЛЕНО ЗАМОВЛЕННЯ #${escapeHtml(orderId)}!</b>\n\n`
+    : `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${escapeHtml(orderId)}!</b>\n\n`;
 
-  let message = `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
-  message += `👤 <b>Клієнт:</b> ${customer.name}\n`;
-  message += `📞 <b>Телефон:</b> ${customer.phone}\n`;
-  if (customer.email) message += `📧 <b>Email:</b> ${customer.email}\n`;
-  message += `📍 <b>Доставка:</b> ${customer.delivery}\n`;
-  if (customer.comment) message += `💬 <b>Коментар:</b> ${customer.comment}\n\n`;
+  message += `👤 <b>Клієнт:</b> ${escapeHtml(customer.name)}\n`;
+  message += `📞 <b>Телефон:</b> ${escapeHtml(customer.phone)}\n`;
+  if (customer.email) message += `📧 <b>Email:</b> ${escapeHtml(customer.email)}\n`;
+  message += `📍 <b>Доставка:</b> ${escapeHtml(customer.delivery)}\n`;
+  if (customer.comment) message += `💬 <b>Коментар:</b> ${escapeHtml(customer.comment)}\n\n`;
 
   message += `🛒 <b>ТОВАРИ:</b>\n`;
   items.forEach((item, index) => {
-    message += `${index + 1}. ${item.name} `;
-    if (item.diameter) message += `(Ø ${item.diameter}) `;
-    if (item.weight && !item.has_dynamic_pricing) message += `[${item.weight} кг] `;
+    message += `${index + 1}. ${escapeHtml(item.name)} `;
+    if (item.diameter) message += `(Ø ${escapeHtml(item.diameter)}) `;
+    if (item.weight && !item.has_dynamic_pricing) message += `[${escapeHtml(item.weight)} кг] `;
 
     if (item.manufacturer) {
-      const brandName = item.manufacturer;
-      message += `\n  <b>Виробник:</b> ${brandName}`;
+      message += `\n  <b>Виробник:</b> ${escapeHtml(item.manufacturer)}`;
     }
+
     if (item.has_dynamic_pricing) {
       const calc = calculateDynamicPrice(item, item.quantity);
-      message += `\n К-ть: ${item.quantity} кг (${calc.pricePerKg} грн/кг + порізка ${calc.cutFee} грн) | Сума: ${calc.totalPrice} грн\n`;
+      message += `\n К-ть: ${escapeHtml(item.quantity)} кг (${escapeHtml(calc.pricePerKg)} грн/кг + порізка ${escapeHtml(calc.cutFee)} грн) | Сума: ${escapeHtml(calc.totalPrice)} грн\n`;
     } else {
       const unitPrice = parseFloat(item.price).toFixed(2);
-      const sum = (parseFloat(item.price) * parseInt(item.quantity)).toFixed(2);
-      message += `\n  Ціна: ${unitPrice} грн/шт.| К-ть: ${item.quantity} шт. | Сума: ${sum} грн\n`;
+      const sum = (parseFloat(item.price) * parseInt(item.quantity, 10)).toFixed(2);
+      message += `\n  Ціна: ${unitPrice} грн/шт.| К-ть: ${escapeHtml(item.quantity)} шт. | Сума: ${sum} грн\n`;
     }
   });
 
-  message += `\n💰 <b>Всього до сплати: ${totalPrice} грн</b>`;
+  message += `\n💰 <b>Всього до сплати: ${Number(totalPrice).toFixed(2)} грн</b>`;
+  return message;
+}
 
+async function sendTelegramNotification(
+  customer,
+  items,
+  totalPrice,
+  orderId,
+  existingMessages = null,
+  isUpdate = false
+) {
+  const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const CHAT_IDS = (process.env.TELEGRAM_CHAT_IDS || '')
+    .split(',')
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  if (!TELEGRAM_TOKEN || CHAT_IDS.length === 0) return;
+
+  const message = formatTelegramOrderMessage(customer, items, totalPrice, orderId, isUpdate);
+
+  // Достаём ID исходных сообщений из БД
+  let savedMap = {};
+  if (existingMessages) {
+    try {
+      savedMap =
+        typeof existingMessages === 'string' ? JSON.parse(existingMessages) : existingMessages;
+    } catch {
+      savedMap = {};
+    }
+  }
+
+  const newMap = { ...savedMap };
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
 
   for (const chatId of CHAT_IDS) {
     try {
-      await fetch(url, {
+      const payload = {
+        chat_id: chatId,
+        text: message,
+        parse_mode: 'HTML',
+      };
+
+      // Если это обновление и есть ID исходного сообщения — прикрепляем как reply
+      if (isUpdate && savedMap[chatId]) {
+        payload.reply_parameters = {
+          message_id: savedMap[chatId],
+          allow_sending_without_reply: true, // Не упадёт, даже если исходное сообщение удалили в чате
+        };
+      }
+
+      const resp = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'HTML',
-        }),
+        body: JSON.stringify(payload),
       });
-      console.log(`Повідомлення для замовлення #${orderId} відправлено в ТГ (${chatId})!`);
+      const data = await resp.json();
+
+      if (data.ok && data.result && data.result.message_id) {
+        // Сохраняем ID самого первого сообщения (или первого после обновления для старых заказов)
+        if (!newMap[chatId]) {
+          newMap[chatId] = data.result.message_id;
+        }
+        console.log(`Повідомлення для замовлення #${orderId} відправлено в ТГ (${chatId})!`);
+      } else {
+        console.error(`Помилка ТГ API для ${chatId}:`, data);
+      }
     } catch (err) {
       console.error(`Помилка відправки в ТГ для ${chatId}:`, err);
     }
+  }
+
+  // Сохраняем карту message_id в БД, если она обновилась
+  if (Object.keys(newMap).length > 0 && JSON.stringify(newMap) !== JSON.stringify(savedMap)) {
+    await db
+      .promise()
+      .query('UPDATE orders SET telegram_messages = ? WHERE id = ?', [
+        JSON.stringify(newMap),
+        orderId,
+      ])
+      .catch((err) => console.error('Помилка збереження telegram_messages:', err));
   }
 }
 
@@ -1555,7 +1622,9 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
     transactionStarted = true;
 
     // Проверяем существование заказа
-    const orders = await query('SELECT id FROM orders WHERE id = ? FOR UPDATE', [orderId]);
+    const orders = await query('SELECT id, telegram_messages FROM orders WHERE id = ? FOR UPDATE', [
+      orderId,
+    ]);
 
     if (orders.length === 0) {
       const error = new Error('Замовлення не знайдено');
@@ -1664,6 +1733,34 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
     });
 
     transactionStarted = false;
+
+    const tgItems = items.map((item) => {
+      const product = productsMap.get(Number(item.product_id));
+      return {
+        name: product.name,
+        diameter: product.diameter || '',
+        weight: product.weight || '',
+        manufacturer: product.manufacturer_name || '',
+        price: Number(Number(item.price).toFixed(2)),
+        quantity: Number(item.quantity),
+        has_dynamic_pricing: false,
+      };
+    });
+
+    sendTelegramNotification(
+      {
+        name: customer_name.trim(),
+        phone: customer_phone.trim(),
+        email: safeEmail,
+        delivery: delivery_address.trim(),
+        comment: typeof comment === 'string' ? comment.trim() : '',
+      },
+      tgItems,
+      totalPrice,
+      orderId,
+      orders[0].telegram_messages,
+      true
+    ).catch((err) => console.error('Помилка оновлення Telegram:', err));
 
     return res.json({
       success: true,
