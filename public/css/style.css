@@ -530,12 +530,6 @@ body.no-scroll {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.about-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-  border-color: rgba(255, 215, 0, 0.4);
-}
-
 .delivery-title {
   display: flex;
   align-items: center;
@@ -2917,7 +2911,7 @@ textarea:-webkit-autofill:focus {
 
 @media (max-width: 480px) {
   .contact-widget {
-    bottom: 60px;
+    bottom: 80px;
     right: 15px;
   }
   .contact-main-btn {
@@ -3973,4 +3967,19 @@ textarea:-webkit-autofill:focus {
     transform: scale(1.2); /* Принудительно увеличиваем объект на 20% */
     object-fit: contain;
   }
+
+  .cart-summary {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 990;
+    background: rgba(30, 34, 43, 0.96);
+    padding: 12px 15px;
+    border-top: 1px solid rgba(255, 215, 0, 0.4);
+    border-radius: 0;
+    justify-content: space-between;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+  }
+
 }
