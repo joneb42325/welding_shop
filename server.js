@@ -1482,13 +1482,11 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
     !customer_name.trim() ||
     typeof customer_phone !== 'string' ||
     !customer_phone.trim() ||
-    typeof customer_email !== 'string' ||
-    !customer_email.trim() ||
     typeof delivery_address !== 'string' ||
     !delivery_address.trim()
   ) {
     return res.status(400).json({
-      error: "Заповніть ім'я, телефон, email та адресу доставки",
+      error: "Заповніть ім'я, телефон та адресу доставки",
     });
   }
 
@@ -1615,6 +1613,8 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
 
     totalPrice = Number(totalPrice.toFixed(2));
 
+    const safeEmail = typeof customer_email === 'string' ? customer_email.trim() : '';
+
     // Обновляем данные клиента и итоговую сумму
     await query(
       `UPDATE orders
@@ -1628,7 +1628,7 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
       [
         customer_name.trim(),
         customer_phone.trim(),
-        customer_email.trim(),
+        safeEmail,
         delivery_address.trim(),
         typeof comment === 'string' ? comment : '',
         totalPrice,
