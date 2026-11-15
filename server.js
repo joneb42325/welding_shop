@@ -520,7 +520,7 @@ app.get('/product/:slugAndId', (req, res) => {
           res.render('product', {
             product,
             relatedProducts: [...currentRelated, ...(fallbackResults || [])],
-            isMixedRelated: extra.length > 0,
+            isMixedRelated: currentRelated.length <= 2 && extra.length > 0,
             createSlug,
           });
         });
