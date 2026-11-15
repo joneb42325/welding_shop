@@ -1,7 +1,66 @@
 const tableBody = document.querySelector('#products-table tbody');
+const searchInput = document.getElementById('admin-product-search');
 
 const urlParams = new URLSearchParams(window.location.search);
 const categoryFilterId = urlParams.get('categoryId');
+
+let allProducts = [];
+
+function renderProducts(products) {
+  tableBody.innerHTML = '';
+
+  if (products.length === 0) {
+    tableBody.innerHTML =
+      '<tr><td colspan="13" style="text-align:center;">Товарів не знайдено</td></tr>';
+    return;
+  }
+
+  products.forEach((prod) => {
+    const tr = document.createElement('tr');
+    const pRetail = prod.price_retail || 0;
+    const pCompany = prod.price_company || 0;
+    const pWholesale = prod.price_wholesale || 0;
+    const fullName = prod.manufacturer_name ? `${prod.name} ${prod.manufacturer_name}` : prod.name;
+    const stock = prod.stock || 0;
+    const unit = prod.unit || 'шт';
+
+    const editUrl = categoryFilterId
+      ? `product-edit.html?id=${prod.id}&categoryId=${categoryFilterId}`
+      : `product-edit.html?id=${prod.id}`;
+
+    tr.innerHTML = `
+      <td><input type="checkbox" class="product-select" data-id="${prod.id}"></td>
+      <td>${fullName}</td>
+      <td><img src="${prod.image}"></td>
+      <td><a href="products.html?categoryId=${prod.category_id}">
+          ${prod.category_name}
+      </a></td>
+      <td class="description-cell" title="${prod.description}">
+          ${prod.description || 'Немає опису'}
+      </td>
+      <td>
+        <input type="number" class="price-input" data-id="${prod.id}" data-field="price_retail" value="${pRetail}" step="0.01" style="width: 75px; text-align: center;">
+      </td>
+      <td>
+        <input type="number" class="price-input" data-id="${prod.id}" data-field="price_company" value="${pCompany}" step="0.01" style="width: 75px; text-align: center;">
+      </td>
+      <td>
+        <input type="number" class="price-input" data-id="${prod.id}" data-field="price_wholesale" value="${pWholesale}" step="0.01" style="width: 75px; text-align: center;">
+      </td>
+      <td>${stock} ${unit}</td>
+      <td>${prod.wholesale_threshold}</td>
+      <td>${prod.is_special ? '✅' : '-'}</td>
+      <td><input type="number" class="sort-input" data-id="${prod.id}" value="${prod.sort_order || 0}"
+      style="width: 60px; text-align: center;"></td>
+      <td>
+        <button class="edit-btn" onclick="location.href='${editUrl}'">Редагувати</button>
+        <button class="duplicate-btn" onclick="location.href='product-add.html?duplicateId=${prod.id}'" style="background-color: #f39c12; color: white;">Дублювати</button>
+        <button class="delete-btn" data-id="${prod.id}">Видалити</button>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
 
 async function loadProducts() {
   try {
@@ -10,12 +69,12 @@ async function loadProducts() {
       fetchUrl += `?category_id=${categoryFilterId}`;
     }
     const res = await fetch(fetchUrl);
-    const products = await res.json();
+    allProducts = await res.json();
     const pageTitle = document.getElementById('page-title');
 
     if (categoryFilterId) {
-      if (products.length > 0) {
-        pageTitle.textContent = `Товари: ${products[0].category_name}`;
+      if (allProducts.length > 0) {
+        pageTitle.textContent = `Товари: ${allProducts[0].category_name}`;
       } else {
         pageTitle.textContent = `Товари в обраній категорії`;
       }
@@ -33,63 +92,38 @@ async function loadProducts() {
       actionsDiv.appendChild(clearBtn);
     }
 
-    if (products.length === 0) {
-      tableBody.innerHTML =
-        '<tr><td colspan="6" style="text-align:center;">У цій категорії ще немає товарів</td></tr>';
-      return;
-    }
-
-    products.forEach((prod) => {
-      const tr = document.createElement('tr');
-      const pRetail = prod.price_retail || 0;
-      const pCompany = prod.price_company || 0;
-      const pWholesale = prod.price_wholesale || 0;
-      const fullName = prod.manufacturer_name
-        ? `${prod.name} ${prod.manufacturer_name}`
-        : prod.name;
-      const stock = prod.stock || 0;
-      const unit = prod.unit || 'шт';
-
-      const editUrl = categoryFilterId
-        ? `product-edit.html?id=${prod.id}&categoryId=${categoryFilterId}`
-        : `product-edit.html?id=${prod.id}`;
-
-      tr.innerHTML = `
-<td><input type="checkbox" class="product-select" data-id="${prod.id}"></td>
-        <td>${fullName}</td>
-        <td><img src="${prod.image}"></td>
-        <td><a href="products.html?categoryId=${prod.category_id}">
-            ${prod.category_name}
-        </a></td>
-        <td class="description-cell" title="${prod.description}">
-            ${prod.description || 'Немає опису'}
-        </td>
-       <td> 
-       <input type="number" class="price-input" data-id="${prod.id}" data-field="price_retail" value="${pRetail}" step="0.01" style="width: 75px; text-align: center;">
-        </td>
-       <td>
-          <input type="number" class="price-input" data-id="${prod.id}" data-field="price_company" value="${pCompany}" step="0.01" style="width: 75px; text-align: center;">
-      </td>
-       <td>
-            <input type="number" class="price-input" data-id="${prod.id}" data-field="price_wholesale" value="${pWholesale}" step="0.01" style="width: 75px; text-align: center;">
-        </td>
-       <td> ${stock} ${unit}</td>
-        <td>${prod.wholesale_threshold}</td>
-        <td>${prod.is_special ? '✅' : '-'}</td>
-        <td><input type="number" class="sort-input" data-id="${prod.id}" value="${prod.sort_order || 0}"
-        style="width: 60px; text-align: center;"></td>
-        <td>
-          <button class="edit-btn" onclick="location.href='${editUrl}'">Редагувати</button>
-          <button class="duplicate-btn" onclick="location.href='product-add.html?duplicateId=${prod.id}'" style="background-color: #f39c12; color: white;">Дублювати</button>
-          <button class="delete-btn" data-id="${prod.id}">Видалити</button>
-        </td>
-      `;
-      tableBody.appendChild(tr);
-    });
+    renderProducts(allProducts);
   } catch (err) {
     console.error('Помилка завантаження товарів:', err);
   }
 }
+
+searchInput?.addEventListener('input', () => {
+  const query = searchInput.value.trim().toLowerCase();
+
+  if (!query) {
+    renderProducts(allProducts);
+    return;
+  }
+
+  const filtered = allProducts.filter((prod) => {
+    const haystack = [
+      prod.id,
+      prod.name,
+      prod.manufacturer_name,
+      prod.category_name,
+      prod.diameter,
+      prod.weight,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+
+  renderProducts(filtered);
+});
 
 tableBody.addEventListener('click', async (e) => {
   if (e.target.classList.contains('delete-btn')) {
