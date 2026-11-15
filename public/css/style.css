@@ -2909,6 +2909,10 @@ textarea:-webkit-autofill:focus {
   border-radius: 4px;
 }
 
+.mobile-all-categories {
+  display: none;
+}
+
 @media (max-width: 480px) {
   .contact-widget {
     bottom: 80px;
@@ -2996,6 +3000,38 @@ textarea:-webkit-autofill:focus {
 
   .manufacturer-block table {
     min-width: 650px; /* Таблица скроллится внутри своего блока */
+  }
+}
+
+@media (max-width: 1024px) {
+  .mobile-all-categories {
+    display: block;
+    margin: 18px 0 12px;
+  }
+
+  .btn-all-categories {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 13px 16px;
+    background: rgba(30, 34, 43, 0.85);
+    color: #FFD700;
+    border: 1px solid rgba(255, 215, 0, 0.45);
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s ease;
+  }
+
+  .btn-all-categories:hover,
+  .btn-all-categories:active {
+    background: rgba(255, 215, 0, 0.12);
+    border-color: #FFD700;
+    transform: translateY(-1px);
   }
 }
 
@@ -3981,5 +4017,4 @@ textarea:-webkit-autofill:focus {
     justify-content: space-between;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
   }
-
 }
