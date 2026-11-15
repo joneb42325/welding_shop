@@ -283,7 +283,9 @@
         <% if (typeof relatedProducts !== 'undefined' && relatedProducts && relatedProducts.length > 0) { %>
             <section class="related-section" aria-labelledby="related-title">
                 <div class="related-header">
-                    <h3 id="related-title">Схожі товари</h3>
+                    <h3 id="related-title">
+                        <%= typeof isMixedRelated !== 'undefined' && isMixedRelated ? 'Популярні товари та пропозиції' : 'Схожі товари' %>
+                    </h3>
                     <div class="slider-arrows">
                         <button id="related-prev" type="button" aria-label="Попередні товари">‹</button>
                         <button id="related-next" type="button" aria-label="Наступні товари">›</button>

@@ -444,38 +444,88 @@ app.get('/product/:slugAndId', (req, res) => {
       return res.redirect(301, correctUrl);
     }
 
+    const RELATED_LIMIT = 35;
+    const MIN_RELATED = 12;
+
+    const productFields = `
+      p.id, p.category_id, p.name, p.image, p.is_special, p.manufacturer_id,
+      p.diameter, p.weight, p.price_retail, p.price_company, p.price_wholesale,
+      p.stock, p.wholesale_threshold, p.unit, p.sort_order,
+      p.has_dynamic_pricing, p.markup_tier1, p.markup_tier2, p.markup_tier3,
+      p.cut_fee, p.is_wholesale,
+      m.name AS manufacturer_name,
+      c.name AS category_name
+    `;
+
     const relatedSql = `
-  SELECT
-    p.*,
-    m.name AS manufacturer_name,
-    c.name AS category_name
-  FROM products p
-  LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
-  LEFT JOIN categories c ON p.category_id = c.id
-  WHERE p.category_id = ?
-    AND p.id != ?
-  ORDER BY p.id DESC
-  LIMIT 16
-`;
+      SELECT ${productFields}
+      FROM products p
+      LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.category_id = ?
+        AND p.id != ?
+      ORDER BY (p.stock > 0) DESC, p.sort_order ASC, p.id DESC
+      LIMIT ?
+    `;
 
-    db.query(relatedSql, [product.category_id, product.id], (relatedErr, relatedResults) => {
-      if (relatedErr) {
-        console.error('Помилка завантаження схожих товарів:', relatedErr);
+    db.query(
+      relatedSql,
+      [product.category_id, product.id, RELATED_LIMIT],
+      (relatedErr, relatedResults) => {
+        if (relatedErr) {
+          console.error('Помилка завантаження схожих товарів:', relatedErr);
+          return res.render('product', {
+            product,
+            relatedProducts: [],
+            createSlug,
+          });
+        }
 
-        // Основная страница всё равно должна открыться
-        return res.render('product', {
-          product,
-          relatedProducts: [],
-          createSlug,
+        const currentRelated = relatedResults || [];
+
+        if (currentRelated.length >= MIN_RELATED) {
+          return res.render('product', {
+            product,
+            relatedProducts: currentRelated,
+            createSlug,
+          });
+        }
+
+        const needed = RELATED_LIMIT - currentRelated.length;
+        const excludeIds = [product.id, ...currentRelated.map((item) => item.id)];
+
+        const fallbackSql = `
+        SELECT ${productFields}
+        FROM products p
+        LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.id NOT IN (?)
+          AND p.stock > 0
+        ORDER BY p.is_special DESC, p.sort_order ASC, p.id DESC
+        LIMIT ?
+      `;
+
+        db.query(fallbackSql, [excludeIds, needed], (fallbackErr, fallbackResults) => {
+          if (fallbackErr) {
+            console.error('Помилка дозавантаження рекомендованих товарів:', fallbackErr);
+            return res.render('product', {
+              product,
+              relatedProducts: currentRelated,
+              createSlug,
+            });
+          }
+
+          const extra = fallbackResults || [];
+
+          res.render('product', {
+            product,
+            relatedProducts: [...currentRelated, ...(fallbackResults || [])],
+            isMixedRelated: extra.length > 0,
+            createSlug,
+          });
         });
       }
-
-      res.render('product', {
-        product,
-        relatedProducts: relatedResults,
-        createSlug,
-      });
-    });
+    );
   });
 });
 
