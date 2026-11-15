@@ -35,7 +35,7 @@ app.get('/product.html', (req, res, next) => {
     }
 
     if (!results || results.length === 0) {
-      return res.status(404).send('Товар не знайдено');
+      return res.status(404).render('pages/404', { message: 'Товар не знайдено' });
     }
 
     const product = results[0];
@@ -150,10 +150,6 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-});
-
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -251,7 +247,7 @@ app.get('/category/:slugAndId', (req, res) => {
   // Отримуємо інформацію про категорію
   db.query('SELECT * FROM categories WHERE id = ?', [categoryId], (err, catResults) => {
     if (err || catResults.length === 0) {
-      return res.status(404).send('Категорію не знайдено');
+      return res.status(404).render('pages/404', { message: 'Категорію не знайдено' });
     }
 
     const category = catResults[0];
@@ -419,7 +415,7 @@ app.get('/product/:slugAndId', (req, res) => {
   const match = param.match(/(?:^|-)(\d+)$/);
 
   if (!match) {
-    return res.status(404).send('Товар не знайдено');
+    return res.status(404).render('pages/404', { message: 'Товар не знайдено' });
   }
 
   const productId = match[1];
@@ -431,7 +427,7 @@ app.get('/product/:slugAndId', (req, res) => {
     }
 
     if (!results || results.length === 0) {
-      return res.status(404).send('Товар не знайдено');
+      return res.status(404).render('pages/404', { message: 'Товар не знайдено' });
     }
 
     const product = results[0];
@@ -539,7 +535,7 @@ app.get('/api/products/:id', (req, res) => {
       return res.status(500).json({ error: 'Server error' });
     }
 
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
       return res.status(404).json({ error: 'Товар не знайдено' });
     }
 
@@ -2157,4 +2153,12 @@ app.get('/sitemap.xml', (req, res) => {
       res.send(xml);
     });
   });
+});
+
+app.use((req, res) => {
+  res.status(404).render('pages/404', { message: 'Сторінку не знайдено' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });

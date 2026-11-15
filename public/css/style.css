@@ -2913,6 +2913,78 @@ textarea:-webkit-autofill:focus {
   display: none;
 }
 
+.error-404-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 20px 0;
+}
+.error-404-card {
+  max-width: 620px;
+  width: 100%;
+  padding: 40px 32px;
+  text-align: center;
+  background: rgba(18, 22, 30, 0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.55);
+}
+.error-404-code {
+  font-size: clamp(68px, 14vw, 115px);
+  font-weight: 800;
+  line-height: 1;
+  color: #FFD700;
+  text-shadow: 0 4px 20px rgba(255, 215, 0, 0.25);
+  margin-bottom: 12px;
+}
+.error-404-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 14px 0;
+}
+.error-404-text {
+  color: #e2e8f0;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0 0 28px 0;
+}
+.error-404-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.btn-404-primary {
+  background: #FFD700;
+  color: #111827;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.btn-404-primary:hover {
+  background: #facc15;
+  transform: translateY(-2px);
+}
+.btn-404-secondary {
+  background: rgba(38, 44, 58, 0.95);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.btn-404-secondary:hover {
+  border-color: #FFD700;
+  color: #FFD700;
+}
+
 @media (max-width: 480px) {
   .contact-widget {
     bottom: 80px;
