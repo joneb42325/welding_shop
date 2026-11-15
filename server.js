@@ -114,7 +114,7 @@ app.get('/', (req, res) => {
     LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
     WHERE p.is_special = 1
     ORDER BY p.sort_order ASC, p.id DESC
-    LIMIT 12
+    LIMIT 25;
   `;
 
   // Запит 2: Активні категорії для сітки на головній
