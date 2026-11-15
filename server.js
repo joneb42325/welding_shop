@@ -63,6 +63,7 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 
 app.use((req, res, next) => {
+  res.locals.activeCategoryId = null;
   // 1. Хелпер оптимізації зображень (доступний у всіх EJS шаблонах)
   res.locals.getOptimizedImg = (url, width = 500) => {
     if (!url) return '/images/logo.webp';
@@ -275,6 +276,7 @@ app.get('/category/:slugAndId', (req, res) => {
         category,
         products,
         createSlug,
+        activeCategoryId: category.id,
       });
     });
   });
@@ -474,6 +476,7 @@ app.get('/product/:slugAndId', (req, res) => {
             product,
             relatedProducts: [],
             createSlug,
+            activeCategoryId: product.category_id,
           });
         }
 
@@ -484,6 +487,7 @@ app.get('/product/:slugAndId', (req, res) => {
             product,
             relatedProducts: currentRelated,
             createSlug,
+            activeCategoryId: product.category_id,
           });
         }
 
@@ -508,6 +512,7 @@ app.get('/product/:slugAndId', (req, res) => {
               product,
               relatedProducts: currentRelated,
               createSlug,
+              activeCategoryId: product.category_id,
             });
           }
 
@@ -518,6 +523,7 @@ app.get('/product/:slugAndId', (req, res) => {
             relatedProducts: [...currentRelated, ...(fallbackResults || [])],
             isMixedRelated: currentRelated.length <= 2 && extra.length > 0,
             createSlug,
+            activeCategoryId: product.category_id,
           });
         });
       }

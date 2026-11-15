@@ -937,7 +937,7 @@ body.no-scroll {
 
 .manufacturer-block table {
   width: 100%;
-  font-size: 14px;
+  font-size: 16px;
   border-collapse: separate;
   border-spacing: 0 8px;
 }
@@ -947,6 +947,7 @@ body.no-scroll {
   color: white;
   padding: 8px;
   text-align: center;
+  font-size: 14px;
 }
 
 .manufacturer-block td {
@@ -2378,7 +2379,7 @@ textarea:-webkit-autofill:focus {
    ХЛЕБНЫЕ КРОШКИ
    ========================================================================== */
 .breadcrumbs {
-  font-size: 13px;
+  font-size: 14px;
   color: #94a3b8;
   margin-bottom: 12px;
   display: flex;
@@ -2417,7 +2418,7 @@ textarea:-webkit-autofill:focus {
 }
 
 .stock-status {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   margin-top: 6px;
   margin-bottom: 12px;
@@ -2983,6 +2984,14 @@ textarea:-webkit-autofill:focus {
 .btn-404-secondary:hover {
   border-color: #FFD700;
   color: #FFD700;
+}
+
+#catalog-list a.active {
+  background: rgba(37, 99, 235, 0.25);
+  color: #FFD700;
+  font-weight: 600;
+  border-left: 3px solid #FFD700;
+padding-left: 10px;
 }
 
 @media (max-width: 480px) {
