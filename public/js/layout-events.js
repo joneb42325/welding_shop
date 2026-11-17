@@ -1,3 +1,4 @@
+import { getOptimizedImg } from './script.js';
 (function (c, l, a, r, i, t, y) {
   c[a] =
     c[a] ||
@@ -179,7 +180,7 @@ function renderSearchResult(items, container, query) {
     const itemsHtml = items
       .slice(0, maxItemsToShow)
       .map((item) => {
-        const imgSrc = item.image.startsWith('http') ? item.image : `/images/${item.image}`;
+        const imgSrc = getOptimizedImg(item.image, 100);
         const productSlug = item.slug || item.id;
         // 1. Проверяем наличие производителя
         const manufacturerHtml = item.manufacturer_name

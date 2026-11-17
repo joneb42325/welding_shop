@@ -6,6 +6,14 @@ const categoryFilterId = urlParams.get('categoryId');
 
 let allProducts = [];
 
+function getOptimizedAdminImg(url, width = 100) {
+  if (!url) return '/images/logo.webp';
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
+  }
+  return url;
+}
+
 function renderProducts(products) {
   tableBody.innerHTML = '';
 
@@ -23,6 +31,7 @@ function renderProducts(products) {
     const fullName = prod.manufacturer_name ? `${prod.name} ${prod.manufacturer_name}` : prod.name;
     const stock = prod.stock || 0;
     const unit = prod.unit || 'шт';
+    const thumbImg = getOptimizedAdminImg(prod.image, 100);
 
     const editUrl = categoryFilterId
       ? `product-edit.html?id=${prod.id}&categoryId=${categoryFilterId}`
@@ -31,7 +40,7 @@ function renderProducts(products) {
     tr.innerHTML = `
       <td><input type="checkbox" class="product-select" data-id="${prod.id}"></td>
       <td>${fullName}</td>
-      <td><img src="${prod.image}"></td>
+      <td><img src="${thumbImg}" loading="lazy" alt="${fullName}"></td>
       <td><a href="products.html?categoryId=${prod.category_id}">
           ${prod.category_name}
       </a></td>

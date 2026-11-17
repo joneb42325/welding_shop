@@ -22,7 +22,8 @@
     <meta property="og:site_name" content="Wolfram Shop">
     <meta property="og:title" content="<%= category.name %> — Wolfram Shop">
     <meta property="og:url" content="<%= canonicalUrl %>">
-    <% if (rawCategoryImg) { %><meta property="og:image" content="<%= rawCategoryImg %>"><% } %>
+    <% const ogCategoryImg = getOptimizedImg(rawCategoryImg, 800); %>
+    <% if (ogCategoryImg) { %><meta property="og:image" content="<%= ogCategoryImg %>"><% } %>
 
     <link rel="icon" type="image/png" href="/images/logo.webp" />
     <link rel="stylesheet" href="/css/style.css" />

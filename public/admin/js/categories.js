@@ -1,5 +1,13 @@
 const tableBody = document.querySelector('#categories-table tbody');
 
+function getOptimizedAdminImg(url, width = 100) {
+  if (!url) return '/images/logo.webp';
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`);
+  }
+  return url;
+}
+
 async function loadCategories() {
   try {
     const res = await fetch('/admin/categories');
@@ -7,11 +15,12 @@ async function loadCategories() {
     tableBody.innerHTML = '';
     categories.forEach((cat) => {
       const tr = document.createElement('tr');
+      const thumbImg = getOptimizedAdminImg(cat.image, 100);
       tr.innerHTML = `
         <td><a href="products.html?categoryId=${cat.id}">
             ${cat.name}
         </a></td>
-        <td><img src="${cat.image}" alt="${cat.name}"></td>
+        <td><img src="${thumbImg}" loading="lazy" alt="${cat.name}"></td>
         <td>
             <a href="category-edit.html?catId=${cat.id}">
                  <button class="edit-btn" data-id="${cat.id}">Редагувати</button>

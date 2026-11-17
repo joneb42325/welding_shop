@@ -287,7 +287,9 @@ function renderSearchResult(items, container, query) {
     const itemsHtml = items
       .slice(0, maxItemsToShow)
       .map((item) => {
-        const imgSrc = item.image.startsWith('http') ? item.image : `/images/${item.image}`;
+        const imgSrc = item.image
+          ? item.image.replace('/upload/', '/upload/f_auto,q_auto,w_100,c_limit/')
+          : '';
         const productSlug = item.slug || item.id;
         // 1. Проверяем наличие производителя
         const manufacturerHtml = item.manufacturer_name

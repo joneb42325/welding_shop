@@ -81,7 +81,7 @@ export function initProductCard(card, product) {
       addToCart({
         productId: product.id,
         name: product.name,
-        image: product.image,
+        image: getOptimizedImg(product.image, 150),
         manufacturer: product.manufacturer_name || '',
         diameter: product.diameter || '',
         weight: product.weight || '',
