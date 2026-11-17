@@ -2995,6 +2995,25 @@ textarea:-webkit-autofill:focus {
 padding-left: 10px;
 }
 
+/* Інтерактивні рядки у таблиці знижок від об'єму */
+.volume-table tbody tr.tier-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.volume-table tbody tr.tier-row:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.volume-table tbody tr.tier-row.active-tier {
+  background-color: rgba(74, 222, 128, 0.15);
+  box-shadow: inset 3px 0 0 #4ade80;
+}
+
+.volume-table tbody tr.tier-row.active-tier td {
+  color: #ffffff;
+}
+
 @media (max-width: 480px) {
   .contact-widget {
     bottom: 80px;
@@ -3392,13 +3411,13 @@ padding-left: 10px;
     margin-bottom: 4px;
   }
 
-  #manufacturer-tables table,
-  #manufacturer-tables tbody {
+  .manufacturer-block table,
+  .manufacturer-block tbody {
     display: block;
     width: 100%;
   }
 
-  #manufacturer-tables .add-to-cart {
+  .manufacturer-block .add-to-cart {
     padding: 10px 12px !important;
     font-size: 15px !important;
   }
@@ -3412,11 +3431,11 @@ padding-left: 10px;
     padding: 0 0 !important;
   }
 
-  #manufacturer-tables thead {
+  .manufacturer-block thead {
     display: none;
   }
 
-  #manufacturer-tables tr {
+  .manufacturer-block tr {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -3431,17 +3450,17 @@ padding-left: 10px;
   }
 
   /* 1. ПРИОРИТЕТ 1: Цены (Роздріб, ФОП, Опт) идут САМЫМИ ПЕРВЫМИ */
-  #manufacturer-tables td:nth-child(3),
-  #manufacturer-tables td:nth-child(4),
-  #manufacturer-tables td:nth-child(5) {
+  .manufacturer-block td:nth-child(3),
+  .manufacturer-block td:nth-child(4),
+  .manufacturer-block td:nth-child(5) {
     width: 33.33%;
     margin-bottom: 4px;
     order: 1; /* Поднимаем вверх */
   }
 
   /* 2. ПРИОРИТЕТ 2: Диаметр и Вес уходят НИЖЕ цен */
-  #manufacturer-tables td:nth-child(1),
-  #manufacturer-tables td:nth-child(2) {
+  .manufacturer-block td:nth-child(1),
+  .manufacturer-block td:nth-child(2) {
     width: 50%;
     margin-bottom: 4px;
     border-top: 1px dashed rgba(255, 255, 255, 0.2); /* Пунктир сверху */
@@ -3452,58 +3471,58 @@ padding-left: 10px;
   }
 
   /* 3. ПРИОРИТЕТ 3: Количество и Кнопка "В корзину" в самом низу карточки */
-  #manufacturer-tables td:nth-child(6),
-  #manufacturer-tables td:last-child {
+  .manufacturer-block td:nth-child(6),
+  .manufacturer-block td:last-child {
     width: 100%;
     margin-top: 2px;
     padding: 0;
     order: 2; /* Самый низ */
   }
 
-  #manufacturer-tables td:nth-child(6) {
+  .manufacturer-block td:nth-child(6) {
     width: 100%;
     margin-top: 0px !important; /* Уменьшаем или обнуляем верхний отступ */
     margin-bottom: 4px !important; /* Небольшой отступ до надписи "Разом:" */
     order: 2;
   }
 
-  #manufacturer-tables .add-to-cart {
+  .manufacturer-block .add-to-cart {
     width: 100%;
     padding: 14px;
     font-size: 16px;
     border-radius: 6px;
   }
 
-  #manufacturer-tables td {
+  .manufacturer-block td {
     display: flex;
     flex-direction: column;
     border: none;
     font-size: 16px;
   }
 
-  #manufacturer-tables td::before {
+  .manufacturer-block td::before {
     font-size: 14px;
     color: #aaa;
     margin-bottom: 4px;
   }
 
-  #manufacturer-tables td:nth-child(1)::before {
+  .manufacturer-block td:nth-child(1)::before {
     content: "Діаметр";
   }
 
-  #manufacturer-tables td:nth-child(2)::before {
+  .manufacturer-block td:nth-child(2)::before {
     content: "Вага";
   }
 
-  #manufacturer-tables td:nth-child(3)::before {
+  .manufacturer-block td:nth-child(3)::before {
     content: "Роздріб";
   }
 
-  #manufacturer-tables td:nth-child(4)::before {
+  .manufacturer-block td:nth-child(4)::before {
     content: "ФОП";
   }
 
-  #manufacturer-tables td:nth-child(5)::before {
+  .manufacturer-block td:nth-child(5)::before {
     content: "Опт";
   }
 
@@ -4024,51 +4043,6 @@ padding-left: 10px;
   .slider-arrows button {
     width: 34px;
     height: 34px;
-  }
-
-  /* === ЗАЩИТА ТАБЛИЦЫ СКИДОК ОТ ОБЪЕМА НА МОБИЛЬНЫХ === */
-  #volume-discounts-block {
-    width: 100% !important;
-    box-sizing: border-box !important;
-
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-    padding: 12px !important;
-  }
-
-  #volume-discounts-block table {
-    display: table !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  #volume-discounts-block thead {
-    display: table-header-group !important;
-  }
-
-  #volume-discounts-block tbody {
-    display: table-row-group !important;
-  }
-
-  #volume-discounts-block tr {
-    display: table-row !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-
-  #volume-discounts-block td,
-  #volume-discounts-block th {
-    display: table-cell !important;
-    width: auto !important;
-    padding: 8px 4px !important;
-    font-size: 12px !important;
-    text-align: left !important;
-  }
-
-  #volume-discounts-block td::before {
-    content: none !important; /* Убираем подставление фейковых заголовков */
   }
 
   .modal {

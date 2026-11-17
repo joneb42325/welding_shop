@@ -90,6 +90,16 @@ function renderTable(product) {
   const totalValEl = row.querySelector('.total-val');
   const unit = product.unit || 'шт';
 
+  const tierRows = document.querySelectorAll('#volume-discounts-block .tier-row');
+
+  const updateActiveTierRow = (currentQty) => {
+    tierRows.forEach((tierRow) => {
+      const min = parseInt(tierRow.dataset.min, 10) || 1;
+      const max = parseInt(tierRow.dataset.max, 10) || 999999;
+      tierRow.classList.toggle('active-tier', currentQty >= min && currentQty <= max);
+    });
+  };
+
   if (!qtyInput) return;
 
   let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
@@ -177,6 +187,7 @@ function renderTable(product) {
         hintEl.style.color = discountPercent > 0 ? '#4ade80' : '#94a3b8';
       }
     }
+    updateActiveTierRow(qty);
   };
 
   const checkWholesaleThreshold = () => {
@@ -246,6 +257,17 @@ function renderTable(product) {
     checkWholesaleThreshold();
     updateTotalSum();
   });
+
+  if (tierRows.length > 0 && !qtyInput.disabled) {
+    tierRows.forEach((tierRow) => {
+      tierRow.addEventListener('click', () => {
+        const targetQty = parseInt(tierRow.dataset.qty, 10) || 1;
+        qtyInput.value = targetQty;
+        checkWholesaleThreshold();
+        updateTotalSum();
+      });
+    });
+  }
 
   row.querySelector('.add-to-cart')?.addEventListener('click', () => {
     if (!isAvailable) return;
