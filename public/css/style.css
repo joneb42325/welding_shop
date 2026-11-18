@@ -4243,4 +4243,44 @@ padding-left: 10px;
     width: 100%;
     text-align: center;
   }
+
+  .about-description,
+  .about-warehouse,
+  .about-features,
+  .search-cta-box {
+    margin-bottom: 12px !important;
+    margin-top: 0 !important;
+  }
+
+  .about-grid {
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .about-warehouse {
+    padding: 18px 14px;
+  }
+
+  .warehouse-gallery {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .about-hero {
+    margin-bottom: 12px;
+  }
+
+  .about-description > p {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    padding: 14px 15px;
+    margin-bottom: 12px;
+  }
+
+  .about-highlight {
+    font-size: 1rem;
+    line-height: 1.45;
+    padding: 15px;
+    margin-bottom: 12px;
+  }
 }
