@@ -102,8 +102,12 @@ app.use((req, res, next) => {
   });
 });
 
-app.get('/delivery.html', (req, res) => {
+app.get(['/delivery', '/delivery.html'], (req, res) => {
   res.render('pages/delivery');
+});
+
+app.get(['/about', '/about.html'], (req, res) => {
+  res.render('pages/about');
 });
 
 // ГОЛОВНА СТОРІНКА (SSR)
