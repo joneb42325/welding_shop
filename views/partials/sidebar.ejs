@@ -1,18 +1,34 @@
 <aside class="sidebar">
     <div class="catalog">
         <h2>🗂️ Категорії</h2>
-        <ul id="catalog-list">
-            <% if (locals.categories) { %>
-                <% categories.forEach(cat => { %>
-                    <% const isActive = Number(locals.activeCategoryId) === Number(cat.id); %>
-                    <li>
-                        <a href="/category/<%= cat.slug %>-<%= cat.id %>"
-                           class="<%= isActive ? 'active' : '' %>">
-                            <%= cat.name %>
-                        </a>
-                    </li>
+        <% if (locals.groupedCategories && groupedCategories.length > 0) { %>
+            <div class="catalog-groups">
+                <% groupedCategories.forEach(group => { %>
+                    <%
+                        // Перевіряємо, чи є в цій групі поточна активна категорія
+                        const hasActiveChild = group.items.some(
+                                cat => Number(locals.activeCategoryId) === Number(cat.id)
+                        );
+                    %>
+                    <details class="catalog-group" open>
+                        <summary class="catalog-group-title <%= hasActiveChild ? 'has-active' : '' %>">
+                            <span><%= group.title %></span>
+                            <span class="group-arrow">▾</span>
+                        </summary>
+                        <ul id="catalog-list" class="catalog-group-list">
+                            <% group.items.forEach(cat => { %>
+                                <% const isActive = Number(locals.activeCategoryId) === Number(cat.id); %>
+                                <li>
+                                    <a href="/category/<%= cat.slug %>-<%= cat.id %>"
+                                       class="<%= isActive ? 'active' : '' %>">
+                                        <%= cat.name %>
+                                    </a>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </details>
                 <% }); %>
-            <% } %>
-        </ul>
+            </div>
+        <% } %>
     </div>
 </aside>

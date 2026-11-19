@@ -55,9 +55,30 @@
             <span class="toggle-icon">▼</span>
         </div>
         <ul id="mobile-categories-list" class="mobile-categories-list collapsed">
-            <% if (locals.categories) { %>
-                <% categories.forEach(cat => { %>
-                    <li><a href="/category/<%= cat.slug %>-<%= cat.id %>"><%= cat.name %></a></li>
+            <% if (locals.groupedCategories && groupedCategories.length > 0) { %>
+                <% groupedCategories.forEach(group => { %>
+                    <%
+                        const hasActiveChild = group.items.some(
+                                cat => Number(locals.activeCategoryId) === Number(cat.id)
+                        );
+                    %>
+                    <details class="mobile-cat-group" <%= hasActiveChild ? 'open' : '' %>>
+                        <summary class="mobile-cat-group-title">
+                            <span><%= group.title %> (<%= group.items.length %>)</span>
+                            <span class="group-arrow">▾</span>
+                        </summary>
+                        <ul class="mobile-subcategories-list">
+                            <% group.items.forEach(cat => { %>
+                                <% const isActive = Number(locals.activeCategoryId) === Number(cat.id); %>
+                                <li>
+                                    <a href="/category/<%= cat.slug %>-<%= cat.id %>"
+                                       class="<%= isActive ? 'active' : '' %>">
+                                        <%= cat.name %>
+                                    </a>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </details>
                 <% }); %>
             <% } %>
         </ul>

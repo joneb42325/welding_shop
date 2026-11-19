@@ -91,12 +91,38 @@ app.use((req, res, next) => {
 
   db.query(catQuery, (err, categories) => {
     if (!err && categories) {
-      res.locals.categories = categories.map((cat) => ({
+      const formattedCategories = categories.map((cat) => ({
         ...cat,
         slug: createSlug(cat.name),
       }));
+
+      res.locals.categories = formattedCategories;
+
+      // Фіксований порядок відображення груп
+      const groupOrder = [
+        'Зварювальний дріт та прутки',
+        'Зварювальні електроди',
+        'Дріт технічний та промисловий',
+      ];
+
+      const groupsMap = new Map();
+      groupOrder.forEach((title) => groupsMap.set(title, []));
+
+      formattedCategories.forEach((cat) => {
+        const groupTitle = cat.group_name || 'Інше';
+        if (!groupsMap.has(groupTitle)) {
+          groupsMap.set(groupTitle, []);
+        }
+        groupsMap.get(groupTitle).push(cat);
+      });
+
+      // Перетворюємо в масив тільки непорожніх груп
+      res.locals.groupedCategories = Array.from(groupsMap.entries())
+        .filter(([, items]) => items.length > 0)
+        .map(([title, items]) => ({ title, items }));
     } else {
       res.locals.categories = [];
+      res.locals.groupedCategories = [];
     }
     next();
   });
