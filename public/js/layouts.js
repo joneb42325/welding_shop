@@ -104,14 +104,7 @@ export function injectHeader() {
       <div class="mobile-menu-brand">
           <p>WOLFRAM</p>
       </div>
-      <a href="/">🏠 Головна</a>
-      <a href="/about.html">ℹ️ Про нас</a>
-      <a href="/delivery.html">🚚 Доставка і оплата</a>
-      <hr>
-      <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
-      <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
-      
-      <!-- НОВИЙ БЛОК: Випадаючий список категорій -->
+          <!-- НОВИЙ БЛОК: Випадаючий список категорій -->
   <div class="mobile-categories-section">
     <div class="mobile-cat-toggle" id="mobile-cat-toggle">
       <h4>📁 КАТАЛОГ ТОВАРІВ</h4>
@@ -122,8 +115,13 @@ export function injectHeader() {
       <!-- Сюди JS додасть категорії -->
     </ul>
   </div>
-  
-  
+      <a href="/">🏠 Головна</a>
+      <a href="/about.html">ℹ️ Про нас</a>
+      <a href="/delivery.html">🚚 Доставка і оплата</a>
+      <hr>
+      <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
+      <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
+      
       <div class="mobile-contacts">
         <h4>Контакти</h4>
         <!-- Клік по телефону у мобільному меню -->
