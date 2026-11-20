@@ -4415,6 +4415,26 @@ padding-left: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
   }
 
+  .category-header {
+    min-height: 92px;
+    height: auto;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+
+  .category-header-content h1,
+  #category-title {
+    font-size: 1.3rem;
+    line-height: 1.25;
+  }
+
+  .category-controls {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+
   /* ==========================================================================
    ФІЛЬТРИ ТА СОРТУВАННЯ (category.html)
    ========================================================================== */
