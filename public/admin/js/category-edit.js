@@ -21,12 +21,15 @@ async function loadCategory() {
   const res = await fetch(`/admin/categories/${id}`);
   const category = await res.json();
   document.getElementById('current-name-display').textContent = category.name;
+  document.getElementById('category-group').value =
+    category.group_name || 'Зварювальний дріт та прутки';
   const nameInput = document.getElementById('name');
   nameInput.value = category.name;
 
   const currentImgDisplay = document.getElementById('current-image-display');
 
   currentImgDisplay.src = `${category.image}`;
+
   currentImgDisplay.classList.remove('hidden');
 }
 

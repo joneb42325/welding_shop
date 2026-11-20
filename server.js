@@ -686,11 +686,12 @@ app.get('/admin/categories/:id', adminAuth, (req, res) => {
 //POST
 app.post('/admin/categories', adminAuth, upload.single('image'), (req, res) => {
   const name = req.body.name;
+  const groupName = req.body.group_name || 'Зварювальний дріт та прутки';
   const image = req.file.path;
 
-  const query = 'INSERT INTO categories (name, image) VALUES (?, ?)';
+  const query = 'INSERT INTO categories (name, group_name, image) VALUES (?, ?, ?)';
 
-  db.query(query, [name, image], (err) => {
+  db.query(query, [name, groupName, image], (err) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Server error' });
@@ -703,6 +704,7 @@ app.post('/admin/categories', adminAuth, upload.single('image'), (req, res) => {
 // PUT (Оновлення категорії)
 app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) => {
   const { name } = req.body;
+  const groupName = req.body.group_name || 'Зварювальний дріт та прутки';
   const id = req.params.id;
   const getOldImgQuery = 'SELECT image FROM categories WHERE id = ?';
 
@@ -720,10 +722,10 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
 
     if (req.file) {
       const newImage = req.file.path;
-      const query = 'UPDATE categories SET name = ?, image = ? WHERE id = ?';
+      const query = 'UPDATE categories SET name = ?,group_name = ?, image = ? WHERE id = ?';
 
       // Видаляємо старий файл з диска, якщо він був
-      if (oldImageName) {
+      if (oldImageName && oldImageName !== 'no-image.png') {
         try {
           const parts = oldImageName.split('/');
           const fileName = parts.pop();
@@ -737,7 +739,7 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
         }
       }
 
-      db.query(query, [name, newImage, id], (err) => {
+      db.query(query, [name, groupName, newImage, id], (err) => {
         if (err) {
           console.error('Помилка оновлення категорії з фото:', err);
           return res.status(500).json({ error: 'Server error' });
@@ -745,9 +747,9 @@ app.put('/admin/categories/:id', adminAuth, upload.single('image'), (req, res) =
         res.json({ success: true });
       });
     } else {
-      const query = 'UPDATE categories SET name = ? WHERE id = ?';
+      const query = 'UPDATE categories SET name = ?, group_name = ? WHERE id = ?';
 
-      db.query(query, [name, id], (err) => {
+      db.query(query, [name, groupName, id], (err) => {
         if (err) {
           console.error('Помилка оновлення категорії без фото:', err);
           return res.status(500).json({ error: 'Server error' });
