@@ -2416,6 +2416,11 @@ textarea:-webkit-autofill:focus {
   margin-bottom: 12px;
 }
 
+
+.stock-status.available {
+  color: #10b981; /* Зелёный */
+}
+
 .stock-status.out-of-stock {
   color: #ef4444; /* Красный */
 }
