@@ -63,37 +63,6 @@
 
             <div id="filter-overlay" class="filter-overlay"></div>
 
-            <div id="filter-sidebar" class="filter-sidebar">
-                <div class="filter-header">
-                    <h3>Фільтри</h3>
-                    <button id="close-filter-btn" class="close-filter-btn">✕</button>
-                </div>
-                <div class="filter-group">
-                    <label class="custom-checkbox">
-                        <input type="checkbox" id="filter-instock" checked>
-                        <span>Тільки в наявності</span>
-                    </label>
-                </div>
-                <div class="filter-group collapsible active">
-                    <div class="filter-group-header">
-                        <h4 id="diameter-filter-title">Діаметр, мм</h4>
-                        <span class="toggle-arrow">↓</span>
-                    </div>
-                    <div class="filter-options" id="filter-diameters"></div>
-                </div>
-                <div class="filter-group collapsible active">
-                    <div class="filter-group-header">
-                        <h4>Бренд</h4>
-                        <span class="toggle-arrow">↓</span>
-                    </div>
-                    <div class="filter-options" id="filter-brands"></div>
-                </div>
-                <div class="filter-actions">
-                    <button id="apply-filters-btn" class="apply-filters-btn">Застосувати</button>
-                    <button id="reset-filters" class="reset-filters-btn">Очистити</button>
-                </div>
-            </div>
-
             <div id="category-products-container" class="catalog-grid">
                 <%
                 const initialProducts = (products || [])
@@ -166,6 +135,36 @@
             </div>
         </section>
     </div>
+    <aside id="filter-sidebar" class="filter-sidebar">
+        <div class="filter-header">
+            <h3>Фільтри</h3>
+            <button id="close-filter-btn" class="close-filter-btn">✕</button>
+        </div>
+        <div class="filter-group">
+            <label class="custom-checkbox">
+                <input type="checkbox" id="filter-instock" checked>
+                <span>Тільки в наявності</span>
+            </label>
+        </div>
+        <div class="filter-group collapsible active">
+            <div class="filter-group-header">
+                <h4 id="diameter-filter-title">Діаметр, мм</h4>
+                <span class="toggle-arrow">↓</span>
+            </div>
+            <div class="filter-options" id="filter-diameters"></div>
+        </div>
+        <div class="filter-group collapsible active">
+            <div class="filter-group-header">
+                <h4>Бренд</h4>
+                <span class="toggle-arrow">↓</span>
+            </div>
+            <div class="filter-options" id="filter-brands"></div>
+        </div>
+        <div class="filter-actions">
+            <button id="apply-filters-btn" class="apply-filters-btn">Застосувати</button>
+            <button id="reset-filters" class="reset-filters-btn">Очистити</button>
+        </div>
+    </aside>
 </main>
 
 <%- include('partials/footer') %>
