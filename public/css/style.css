@@ -3270,6 +3270,25 @@ padding-left: 10px;
   position: relative;
 }
 
+.footer-dev {
+  margin-top: 8px;
+  font-size: 1em;
+  color: #cbd5e1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.footer-dev a {
+  color: #FFD700;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.2s ease;
+}
+
+.footer-dev a:hover {
+  opacity: 0.8;
+}
+
 /* 1. Мобильные и планшеты (до 1024px):
    Прячем доставку в шапке, оставляем только ту, что под ценами */
 @media (max-width: 1024px) {
