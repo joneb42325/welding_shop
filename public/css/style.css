@@ -868,11 +868,11 @@ body.no-scroll {
 }
 
 .category-header {
-  height: 220px;
+  height: 150px;
   background-size: cover;
   background-position: center;
   border-radius: 12px;
-  margin-bottom: 30px;
+  margin-bottom: 14px;
   position: relative;
   display: flex;
   align-items: center;
@@ -4643,11 +4643,6 @@ padding-left: 10px;
 
   .about-warehouse {
     padding: 18px 14px;
-  }
-
-  .warehouse-gallery {
-    grid-template-columns: 1fr;
-    gap: 12px;
   }
 
   .about-hero {
