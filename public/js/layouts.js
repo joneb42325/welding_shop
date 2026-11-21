@@ -83,8 +83,8 @@ export function injectHeader() {
       </div>
       <nav class="nav">
         <a href="/">Головна</a>
-        <a href="/about.html">Про нас</a>
-        <a href="/delivery.html">Доставка і оплата</a>
+        <a href="/about">Про нас</a>
+        <a href="/delivery">Доставка і оплата</a>
       </nav>
       <div class="header-right">
         <div class="search-container" data-clarity-unmask="true">
@@ -116,8 +116,8 @@ export function injectHeader() {
     </ul>
   </div>
       <a href="/">🏠 Головна</a>
-      <a href="/about.html">ℹ️ Про нас</a>
-      <a href="/delivery.html">🚚 Доставка і оплата</a>
+      <a href="/about">ℹ️ Про нас</a>
+      <a href="/delivery">🚚 Доставка і оплата</a>
       <hr>
       <a href="/favorites.html" class="fav-mobile">❤️ Обране <span class="fav-count">0</span></a>
       <a href="/cart.html" class="cart-mobile">🛒 Корзина <span class="cart-count">0</span></a>
@@ -179,8 +179,9 @@ export function injectFooter() {
         <div class="footer-column">
           <h4>Швидкі посилання</h4>
           <a href="/">Головна</a>
-          <a href="/about.html">Про нас</a>
-          <a href="/delivery.html">Доставка і оплата</a>
+          <a href="/about">Про нас</a>
+          <a href="/delivery">Доставка і оплата</a>
+          <a href="/terms">Публічний договір (оферта) та конфіденційність</a>
         </div>
       </div>
       <div class="footer-bottom">

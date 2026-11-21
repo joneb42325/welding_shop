@@ -348,6 +348,9 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
           <div class="quick-form-group">
             <input type="tel" id="quick-phone" placeholder="Номер телефону *" required autofocus>
           </div>
+          <p style="font-size: 11px; color: #94a3b8; margin-top: 8px; text-align: center;">
+          Натискаючи кнопку, ви погоджуєтесь з умовами <a href="/terms.html" target="_blank" style="color: #FFD700;">Публічної оферти та Політики конфіденційності</a>
+        </p>
           <button type="submit" class="quick-submit-btn">Підтвердити замовлення</button>
         </form>
       </div>

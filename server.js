@@ -136,6 +136,10 @@ app.get(['/about', '/about.html'], (req, res) => {
   res.render('pages/about');
 });
 
+app.get(['/terms.html', '/terms'], (req, res) => {
+  res.render('pages/terms');
+});
+
 // ГОЛОВНА СТОРІНКА (SSR)
 app.get('/', (req, res) => {
   // Запит 1: Спеціальні пропозиції
