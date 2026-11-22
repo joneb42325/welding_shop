@@ -2425,6 +2425,11 @@ textarea:-webkit-autofill:focus {
   color: #ef4444; /* Красный */
 }
 
+.stock-status .dispatch-hint {
+  color: #cbd5e1;
+  font-weight: 400;
+}
+
 /* ==========================================================================
    МОДАЛКА "ЗАМОВИТИ В 1 КЛІК"
    ========================================================================== */
@@ -3475,22 +3480,20 @@ padding-left: 10px;
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    margin: 0 0 16px 0;
+    padding: 0;
+    background: none;
+    border: none;
+    font-size: 15px;
+    margin: 0 0 14px 0;
   }
 
   .product-header .stock-status.available {
     color: #34d399;
-    background: rgba(16, 185, 129, 0.18);
-    border-color: rgba(52, 211, 153, 0.45);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
   }
 
   .product-header .stock-status.out-of-stock {
-    background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
   }
 
   .product-header .product-delivery-info {
