@@ -441,6 +441,90 @@ function getProductById(productId, callback) {
   db.query(sql, [productId], callback);
 }
 
+function parseNum(val) {
+  if (val === null || val === undefined) return Number.POSITIVE_INFINITY;
+  const firstPart = String(val).split('/')[0].replace(',', '.').trim();
+  const num = parseFloat(firstPart);
+  return Number.isFinite(num) ? num : Number.POSITIVE_INFINITY;
+}
+
+function cleanAttr(val) {
+  if (val === null || val === undefined) return '';
+  const s = String(val).trim();
+  return s === '' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined' ? '' : s;
+}
+
+function getVariantChips(product, callback) {
+  if (!product || !product.model_id || !product.manufacturer_id) {
+    return callback(null, { diameterChips: [], weightChips: [] });
+  }
+
+  const sql = `
+    SELECT id, name, diameter, weight, stock, price_retail
+    FROM products
+    WHERE model_id = ?
+      AND manufacturer_id = ?
+    ORDER BY id ASC
+  `;
+
+  db.query(sql, [product.model_id, product.manufacturer_id], (err, rows) => {
+    if (err) return callback(err);
+
+    const siblings = Array.isArray(rows) ? rows : [];
+    if (siblings.length <= 1) {
+      return callback(null, { diameterChips: [], weightChips: [] });
+    }
+
+    const curD = cleanAttr(product.diameter);
+    const curW = cleanAttr(product.weight);
+
+    // 1. Чипсы диаметров (по всем вариантам модели + производителя)
+    const uniqueDiameters = [
+      ...new Set(siblings.map((r) => cleanAttr(r.diameter)).filter(Boolean)),
+    ].sort((a, b) => parseNum(a) - parseNum(b));
+
+    const diameterChips = uniqueDiameters.map((d) => {
+      const sameD = siblings.filter((r) => cleanAttr(r.diameter) === d);
+      const target = sameD.find((r) => cleanAttr(r.weight) === curW) || sameD[0];
+      return {
+        value: d,
+        label: `${d} мм`,
+        productId: target.id,
+        url: `/product/${createSlug(target.name)}-${target.id}`,
+        isCurrent: d === curD,
+        inStock: Number(target.stock) > 0,
+      };
+    });
+
+    // 2. Чипсы фасовок (weight) — ТОЛЬКО для текущего диаметра curD
+    const sameDiameterSiblings = curD
+      ? siblings.filter((r) => cleanAttr(r.diameter) === curD)
+      : siblings;
+
+    const uniqueWeights = [
+      ...new Set(sameDiameterSiblings.map((r) => cleanAttr(r.weight)).filter(Boolean)),
+    ].sort((a, b) => parseNum(a) - parseNum(b));
+
+    const weightChips = uniqueWeights.map((w) => {
+      const target =
+        sameDiameterSiblings.find((r) => cleanAttr(r.weight) === w) || sameDiameterSiblings[0];
+      return {
+        value: w,
+        label: `${w} кг`,
+        productId: target.id,
+        url: `/product/${createSlug(target.name)}-${target.id}`,
+        isCurrent: w === curW,
+        inStock: Number(target.stock) > 0,
+      };
+    });
+
+    callback(null, {
+      diameterChips: diameterChips.length > 1 ? diameterChips : [],
+      weightChips: weightChips.length > 1 ? weightChips : [],
+    });
+  });
+}
+
 // HTML-страница товара для браузера и поисковых систем
 
 app.get('/product/:slugAndId', (req, res) => {
@@ -476,10 +560,17 @@ app.get('/product/:slugAndId', (req, res) => {
       return res.redirect(301, correctUrl);
     }
 
-    const RELATED_LIMIT = 35;
-    const MIN_RELATED = 12;
+    getVariantChips(product, (chipsErr, chips) => {
+      if (chipsErr) {
+        console.error('Помилка завантаження варіантів товару:', chipsErr);
+      }
 
-    const productFields = `
+      const safeChips = chips || { diameterChips: [], weightChips: [] };
+
+      const RELATED_LIMIT = 35;
+      const MIN_RELATED = 12;
+
+      const productFields = `
       p.id, p.category_id, p.name, p.image, p.is_special, p.manufacturer_id,
       p.diameter, p.weight, p.price_retail, p.price_company, p.price_wholesale,
       p.stock, p.wholesale_threshold, p.unit, p.sort_order,
@@ -489,7 +580,7 @@ app.get('/product/:slugAndId', (req, res) => {
       c.name AS category_name
     `;
 
-    const relatedSql = `
+      const relatedSql = `
       SELECT ${productFields}
       FROM products p
       LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
@@ -500,35 +591,39 @@ app.get('/product/:slugAndId', (req, res) => {
       LIMIT ?
     `;
 
-    db.query(
-      relatedSql,
-      [product.category_id, product.id, RELATED_LIMIT],
-      (relatedErr, relatedResults) => {
-        if (relatedErr) {
-          console.error('Помилка завантаження схожих товарів:', relatedErr);
-          return res.render('product', {
-            product,
-            relatedProducts: [],
-            createSlug,
-            activeCategoryId: product.category_id,
-          });
-        }
+      db.query(
+        relatedSql,
+        [product.category_id, product.id, RELATED_LIMIT],
+        (relatedErr, relatedResults) => {
+          if (relatedErr) {
+            console.error('Помилка завантаження схожих товарів:', relatedErr);
+            return res.render('product', {
+              product,
+              relatedProducts: [],
+              createSlug,
+              activeCategoryId: product.category_id,
+              diameterChips: safeChips.diameterChips,
+              weightChips: safeChips.weightChips,
+            });
+          }
 
-        const currentRelated = relatedResults || [];
+          const currentRelated = relatedResults || [];
 
-        if (currentRelated.length >= MIN_RELATED) {
-          return res.render('product', {
-            product,
-            relatedProducts: currentRelated,
-            createSlug,
-            activeCategoryId: product.category_id,
-          });
-        }
+          if (currentRelated.length >= MIN_RELATED) {
+            return res.render('product', {
+              product,
+              relatedProducts: currentRelated,
+              createSlug,
+              activeCategoryId: product.category_id,
+              diameterChips: safeChips.diameterChips,
+              weightChips: safeChips.weightChips,
+            });
+          }
 
-        const needed = RELATED_LIMIT - currentRelated.length;
-        const excludeIds = [product.id, ...currentRelated.map((item) => item.id)];
+          const needed = RELATED_LIMIT - currentRelated.length;
+          const excludeIds = [product.id, ...currentRelated.map((item) => item.id)];
 
-        const fallbackSql = `
+          const fallbackSql = `
         SELECT ${productFields}
         FROM products p
         LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
@@ -539,29 +634,34 @@ app.get('/product/:slugAndId', (req, res) => {
         LIMIT ?
       `;
 
-        db.query(fallbackSql, [excludeIds, needed], (fallbackErr, fallbackResults) => {
-          if (fallbackErr) {
-            console.error('Помилка дозавантаження рекомендованих товарів:', fallbackErr);
-            return res.render('product', {
+          db.query(fallbackSql, [excludeIds, needed], (fallbackErr, fallbackResults) => {
+            if (fallbackErr) {
+              console.error('Помилка дозавантаження рекомендованих товарів:', fallbackErr);
+              return res.render('product', {
+                product,
+                relatedProducts: currentRelated,
+                createSlug,
+                activeCategoryId: product.category_id,
+                diameterChips: safeChips.diameterChips,
+                weightChips: safeChips.weightChips,
+              });
+            }
+
+            const extra = fallbackResults || [];
+
+            res.render('product', {
               product,
-              relatedProducts: currentRelated,
+              relatedProducts: [...currentRelated, ...(fallbackResults || [])],
+              isMixedRelated: currentRelated.length <= 2 && extra.length > 0,
               createSlug,
               activeCategoryId: product.category_id,
+              diameterChips: safeChips.diameterChips,
+              weightChips: safeChips.weightChips,
             });
-          }
-
-          const extra = fallbackResults || [];
-
-          res.render('product', {
-            product,
-            relatedProducts: [...currentRelated, ...(fallbackResults || [])],
-            isMixedRelated: currentRelated.length <= 2 && extra.length > 0,
-            createSlug,
-            activeCategoryId: product.category_id,
           });
-        });
-      }
-    );
+        }
+      );
+    });
   });
 });
 
@@ -900,6 +1000,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
   const {
     name,
     category_id,
+    model_id,
     description,
     is_special,
     is_wholesale,
@@ -921,6 +1022,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
   } = req.body;
 
   const image = req.file ? req.file.path : existing_image || null;
+  const modelId = model_id ? Number(model_id) : null;
   const isSpecial = is_special ? 1 : 0;
   const isWholesale =
     is_wholesale === '1' || is_wholesale === 'true' || is_wholesale === true ? 1 : 0;
@@ -929,8 +1031,8 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
 
   const sql = `
       INSERT INTO products
-      (name, category_id, description, image, is_special, is_wholesale, has_dynamic_pricing, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock, markup_tier1, markup_tier2, markup_tier3, cut_fee)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (name, category_id, model_id, description, image, is_special, is_wholesale, has_dynamic_pricing, manufacturer_id, diameter, weight, price_retail, price_company, price_wholesale, unit, wholesale_threshold, stock, markup_tier1, markup_tier2, markup_tier3, cut_fee)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   db.query(
@@ -938,6 +1040,7 @@ app.post('/admin/products', adminAuth, upload.single('image'), (req, res) => {
     [
       name,
       category_id,
+      modelId,
       description,
       image,
       isSpecial,
@@ -1034,6 +1137,7 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
   const {
     name,
     category_id,
+    model_id,
     description,
     is_special,
     is_wholesale,
@@ -1063,7 +1167,9 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       : 0;
 
   // Форматування типів даних для БД
+  const cId = category_id ? parseInt(category_id, 10) : null;
   const mId = manufacturer_id ? parseInt(manufacturer_id) : null;
+  const modelId = model_id ? parseInt(model_id, 10) : null;
   const pRetail = parseFloat(price_retail) || 0;
   const pCompany = parseFloat(price_company) || 0;
   const pWholesale = parseFloat(price_wholesale) || 0;
@@ -1091,14 +1197,15 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       // Якщо завантажено нове фото
       query = `
         UPDATE products SET
-                          name = ?, category_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+                          name = ?, category_id = ?, model_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
                           diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
                           markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?, image = ?
         WHERE id = ?
       `;
       params = [
         name,
-        category_id,
+        cId,
+        modelId,
         description,
         isSpecial,
         isWholesale,
@@ -1123,14 +1230,15 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
       // Якщо фото не змінювалось
       query = `
         UPDATE products SET
-                          name = ?, category_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
+                          name = ?, category_id = ?, model_id = ?, description = ?, is_special = ?, is_wholesale = ?, has_dynamic_pricing = ?, manufacturer_id = ?,
                           diameter = ?, weight = ?, price_retail = ?, price_company = ?, price_wholesale = ?, unit = ?, wholesale_threshold = ?, stock = ?,
                           markup_tier1 = ?, markup_tier2 = ?, markup_tier3 = ?, cut_fee = ?
         WHERE id = ?
       `;
       params = [
         name,
-        category_id,
+        cId,
+        modelId,
         description,
         isSpecial,
         isWholesale,
@@ -1256,6 +1364,68 @@ app.delete('/admin/manufacturers/:id', adminAuth, (req, res) => {
   db.query(query, [id], (err) => {
     if (err) return res.status(500).json({ error: 'Помилка БД' });
     res.json({ success: true });
+  });
+});
+
+// GET all models
+app.get('/admin/models', adminAuth, (req, res) => {
+  const query = 'SELECT * FROM product_models ORDER BY id';
+  db.query(query, (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    res.json(results);
+  });
+});
+
+// GET model by ID
+app.get('/admin/models/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const query = 'SELECT * FROM product_models WHERE id = ?';
+  db.query(query, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Server error' });
+    if (results.length === 0) return res.status(404).json({ error: 'Лінійку не знайдено' });
+    res.json(results[0]);
+  });
+});
+
+// POST new model
+app.post('/admin/models', adminAuth, (req, res) => {
+  const name = (req.body.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Введіть назву лінійки' });
+
+  const query = 'INSERT INTO product_models (name) VALUES (?)';
+  db.query(query, [name], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true, id: result.insertId });
+  });
+});
+
+// PUT update model
+app.put('/admin/models/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+  const name = (req.body.name || '').trim();
+  if (!name) return res.status(400).json({ error: 'Введіть назву лінійки' });
+
+  const query = 'UPDATE product_models SET name = ? WHERE id = ?';
+  db.query(query, [name, id], (err) => {
+    if (err) return res.status(500).json({ error: 'Помилка БД' });
+    res.json({ success: true });
+  });
+});
+
+// DELETE model
+app.delete('/admin/models/:id', adminAuth, (req, res) => {
+  const id = req.params.id;
+
+  // Якщо у товарів є зовнішній ключ без ON DELETE SET NULL, спочатку знімаємо прив'язку
+  const unlinkQuery = 'UPDATE products SET model_id = NULL WHERE model_id = ?';
+  db.query(unlinkQuery, [id], (unlinkErr) => {
+    if (unlinkErr) return res.status(500).json({ error: 'Помилка БД' });
+
+    const query = 'DELETE FROM product_models WHERE id = ?';
+    db.query(query, [id], (err) => {
+      if (err) return res.status(500).json({ error: 'Помилка БД' });
+      res.json({ success: true });
+    });
   });
 });
 

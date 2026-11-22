@@ -3289,6 +3289,95 @@ padding-left: 10px;
   opacity: 0.8;
 }
 
+.variant-chips-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0 12px 0;
+  padding: 10px 14px;
+  background: rgba(18, 22, 30, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.variant-chips-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.variant-chips-label {
+  font-weight: 600;
+  min-width: 84px;
+  color: #cbd5e1;
+  font-size: 13.5px;
+}
+
+.variant-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.variant-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  text-decoration: none;
+  color: #e2e8f0;
+  font-size: 13.5px;
+  font-weight: 500;
+  background: rgba(30, 34, 43, 0.85);
+  transition: all 0.2s ease;
+}
+
+.variant-chip:hover {
+  border-color: #FFD700;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.variant-chip.active {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: #FFD700;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+.variant-chip.out-of-stock-chip:not(.active) {
+  opacity: 0.45;
+  border-style: dashed;
+}
+
+.variant-chips-group:not(.expanded) .variant-chip-extra {
+  display: none;
+}
+
+.variant-chip-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 215, 0, 0.55);
+  border-radius: 8px;
+  background: rgba(255, 215, 0, 0.08);
+  color: #FFD700;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.variant-chip-toggle:hover {
+  background: rgba(255, 215, 0, 0.18);
+  border-color: #FFD700;
+  transform: translateY(-1px);
+}
+
 /* 1. Мобильные и планшеты (до 1024px):
    Прячем доставку в шапке, оставляем только ту, что под ценами */
 @media (max-width: 1024px) {
@@ -3315,11 +3404,19 @@ padding-left: 10px;
   .product-header .stock-status {
     order: 3;
     align-self: center;
-    margin: 0 0 14px 0 !important;
+    margin: 0 0 10px 0;
+  }
+
+  .product-header .variant-chips-box {
+    order: 4;
+    width: 100%;
+    margin: 4px 0 10px 0;
+    gap: 6px;
+    align-items: center;
   }
 
   .product-header .product-image-wrapper {
-    order: 4;
+    order: 5;
     margin: 0 0 6px 0;
   }
 }
@@ -3853,6 +3950,23 @@ padding-left: 10px;
   .active-mobile a,
   .active-mobile ul {
     display: block !important;
+  }
+
+  .variant-chips-group {
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .variant-chips-label {
+    min-width: auto;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+
+  .variant-chip {
+    padding: 4px 9px;
+    font-size: 12.5px;
+    border-radius: 6px;
   }
 
   /* 1. Компактные внутренние отступы самой карточки */

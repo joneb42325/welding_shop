@@ -436,4 +436,17 @@ if (modal) {
   });
 }
 
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.variant-chip-toggle');
+  if (!btn) return;
+
+  const group = btn.closest('[data-chips-group]');
+  if (!group) return;
+
+  const expanded = group.classList.toggle('expanded');
+  const moreCount = btn.dataset.moreCount || '';
+  btn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  btn.textContent = expanded ? 'Згорнути' : `+ Ще (${moreCount})`;
+});
+
 initProductPage();

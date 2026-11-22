@@ -110,6 +110,74 @@
                     <p class="stock-status out-of-stock">✕ Немає в наявності</p>
                 <% } %>
 
+                <% const dChips = typeof diameterChips !== 'undefined' ? diameterChips : []; %>
+                <% const wChips = typeof weightChips !== 'undefined' ? weightChips : []; %>
+                <% const CHIPS_LIMIT = 8; %>
+
+                <% if (dChips.length > 0 || wChips.length > 0) { %>
+                    <div class="variant-chips-box" data-chips-limit="<%= CHIPS_LIMIT %>">
+                        <% if (dChips.length > 0) { %>
+                            <% const activeIdx = dChips.findIndex((c) => c.isCurrent); %>
+                            <% const needExpandByActive = activeIdx >= CHIPS_LIMIT; %>
+                            <div class="variant-chips-group <%= needExpandByActive ? 'expanded' : '' %>" data-chips-group>
+                                <span class="variant-chips-label">Діаметр:</span>
+                                <div class="variant-chips-list">
+                                    <% dChips.forEach((chip, idx) => { %>
+                                        <% const isExtra = idx >= CHIPS_LIMIT; %>
+                                        <a
+                                                href="<%= chip.url %>"
+                                                class="variant-chip <%= chip.isCurrent ? 'active' : '' %> <%= !chip.inStock ? 'out-of-stock-chip' : '' %> <%= isExtra ? 'variant-chip-extra' : '' %>"
+                                        >
+                                            <%= chip.label %>
+                                        </a>
+                                    <% }); %>
+
+                                    <% if (dChips.length > CHIPS_LIMIT) { %>
+                                        <button
+                                                type="button"
+                                                class="variant-chip-toggle"
+                                                data-more-count="<%= dChips.length - CHIPS_LIMIT %>"
+                                                aria-expanded="<%= needExpandByActive ? 'true' : 'false' %>"
+                                        >
+                                            <%= needExpandByActive ? 'Згорнути' : `+ Ще (${dChips.length - CHIPS_LIMIT})` %>
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+
+                        <% if (wChips.length > 0) { %>
+                            <% const activeWIdx = wChips.findIndex((c) => c.isCurrent); %>
+                            <% const needWExpand = activeWIdx >= CHIPS_LIMIT; %>
+                            <div class="variant-chips-group <%= needWExpand ? 'expanded' : '' %>" data-chips-group>
+                                <span class="variant-chips-label">Фасування:</span>
+                                <div class="variant-chips-list">
+                                    <% wChips.forEach((chip, idx) => { %>
+                                        <% const isExtra = idx >= CHIPS_LIMIT; %>
+                                        <a
+                                                href="<%= chip.url %>"
+                                                class="variant-chip <%= chip.isCurrent ? 'active' : '' %> <%= !chip.inStock ? 'out-of-stock-chip' : '' %> <%= isExtra ? 'variant-chip-extra' : '' %>"
+                                        >
+                                            <%= chip.label %>
+                                        </a>
+                                    <% }); %>
+
+                                    <% if (wChips.length > CHIPS_LIMIT) { %>
+                                        <button
+                                                type="button"
+                                                class="variant-chip-toggle"
+                                                data-more-count="<%= wChips.length - CHIPS_LIMIT %>"
+                                                aria-expanded="<%= needWExpand ? 'true' : 'false' %>"
+                                        >
+                                            <%= needWExpand ? 'Згорнути' : `+ Ще (${wChips.length - CHIPS_LIMIT})` %>
+                                        </button>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% } %>
+                    </div>
+                <% } %>
+
                 <!-- Блок інформації про доставку перенесено сюди -->
                 <div class="product-delivery-info">
                     <div class="delivery-item">

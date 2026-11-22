@@ -8,13 +8,13 @@ if (!productId) {
   window.location.href = 'products.html';
 }
 
-  function redirectBack() {
-    if (categoryId) {
-      window.location.href = `products.html?categoryId=${categoryId}`;
-    } else {
-      window.location.href = 'products.html';
-    }
+function redirectBack() {
+  if (categoryId) {
+    window.location.href = `products.html?categoryId=${categoryId}`;
+  } else {
+    window.location.href = 'products.html';
   }
+}
 
 const form = document.getElementById('edit-product-form');
 const categorySelect = document.getElementById('category-select');
@@ -23,6 +23,7 @@ const imageInput = document.getElementById('image-input');
 const currentImage = document.getElementById('current-image');
 
 const manufacturerSelect = document.getElementById('manufacturer-select');
+const modelSelect = document.getElementById('model-select');
 
 const cancelBtn = document.getElementById('cancel-btn');
 if (cancelBtn) {
@@ -39,6 +40,25 @@ async function loadManufacturers() {
     });
   } catch (err) {
     console.error('Error loading manufacturers:', err);
+  }
+}
+
+async function loadModels() {
+  if (!modelSelect) return;
+  try {
+    const res = await fetch('/admin/models');
+    if (!res.ok) return;
+    const models = await res.json();
+
+    modelSelect.innerHTML = '<option value="">Без лінійки</option>';
+    models.forEach((m) => {
+      const option = document.createElement('option');
+      option.value = m.id;
+      option.textContent = m.name;
+      modelSelect.appendChild(option);
+    });
+  } catch (err) {
+    console.error('Error loading models:', err);
   }
 }
 
@@ -76,6 +96,9 @@ async function loadProduct() {
     document.getElementById('description').value = product.description || '';
     document.getElementById('category-select').value = product.category_id;
     document.getElementById('manufacturer-select').value = product.manufacturer_id;
+    if (modelSelect) {
+      modelSelect.value = product.model_id || '';
+    }
     document.getElementById('is_special').checked = product.is_special === 1;
 
     if (isWholesaleCheckbox) {
@@ -135,6 +158,10 @@ form.addEventListener('submit', async (e) => {
 
   const formData = new FormData(form);
 
+  if (!formData.get('model_id')) {
+    formData.set('model_id', '');
+  }
+
   try {
     const res = await fetch(`/admin/products/${productId}`, {
       method: 'PUT',
@@ -181,5 +208,6 @@ if (dynamicCheckbox && dynamicSettings) {
   await checkAuth();
   await loadCategories();
   await loadManufacturers();
+  await loadModels();
   await loadProduct();
 })();

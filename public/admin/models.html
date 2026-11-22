@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Лінійки / Батьківські моделі</title>
+  <link rel="icon" type="image/png" href="/images/logo.png" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+<div class="admin-container">
+  <h2>Лінійки товарів</h2>
+
+  <div id="model-form-container">
+    <h3>Додати / Редагувати лінійку</h3>
+    <form id="model-form">
+      <input type="hidden" id="model-id" />
+      <div class="form-group">
+        <label>Назва лінійки</label>
+        <input type="text" id="model-name" required />
+      </div>
+      <button type="submit" class="save-btn">Зберегти</button>
+      <button type="button" id="cancel-btn" class="cancel-btn">Скасувати</button>
+      <button type="button" onclick="window.history.back()">Назад</button>
+    </form>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th>Назва</th>
+      <th>Дії</th>
+    </tr>
+    </thead>
+    <tbody id="model-table-body"></tbody>
+  </table>
+</div>
+
+<script src="js/models.js"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ const productForm = document.getElementById('product-form');
 const imageInput = document.getElementById('image-input');
 const preview = document.getElementById('preview');
 const manufacturerSelect = document.getElementById('manufacturer-select');
+const modelSelect = document.getElementById('model-select');
 
 async function loadCategories() {
   try {
@@ -32,6 +33,25 @@ async function loadManufacturers() {
   }
 }
 
+async function loadModels() {
+  if (!modelSelect) return;
+  try {
+    const res = await fetch('/admin/models');
+    if (!res.ok) return;
+    const models = await res.json();
+
+    modelSelect.innerHTML = '<option value="">Без лінійки</option>';
+    models.forEach((m) => {
+      const option = document.createElement('option');
+      option.value = m.id;
+      option.textContent = m.name;
+      modelSelect.appendChild(option);
+    });
+  } catch (err) {
+    console.error('Error loading models:', err);
+  }
+}
+
 imageInput.addEventListener('change', function () {
   const file = this.files[0];
   if (file) {
@@ -45,6 +65,10 @@ productForm.addEventListener('submit', async (e) => {
   const formData = new FormData(productForm);
 
   const categoryId = formData.get('category_id');
+
+  if (!formData.get('model_id')) {
+    formData.set('model_id', '');
+  }
 
   const res = await fetch('/admin/products', {
     method: 'POST',
@@ -101,9 +125,12 @@ async function checkDuplicateMode() {
     document.querySelector('h2').textContent = `Дублювання товару: ${prod.name}`;
 
     // Заполняем поля формы
-    productForm.querySelector('[name="name"]').value = `${prod.name} (копія)`;
+    productForm.querySelector('[name="name"]').value = `${prod.name}`;
     productForm.querySelector('[name="category_id"]').value = prod.category_id || '';
     productForm.querySelector('[name="manufacturer_id"]').value = prod.manufacturer_id || '';
+    if (modelSelect) {
+      modelSelect.value = prod.model_id || '';
+    }
     productForm.querySelector('[name="diameter"]').value = prod.diameter || '';
     productForm.querySelector('[name="weight"]').value = prod.weight || '';
     productForm.querySelector('[name="price_retail"]').value = prod.price_retail || 0;
@@ -160,10 +187,6 @@ async function checkDuplicateMode() {
   }
 }
 
-// Запускаем проверку после загрузки всех селектов
-Promise.all([loadCategories(), loadManufacturers()]).then(() => {
+Promise.all([loadCategories(), loadManufacturers(), loadModels()]).then(() => {
   checkDuplicateMode();
 });
-
-loadCategories();
-loadManufacturers();
