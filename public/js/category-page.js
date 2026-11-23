@@ -61,15 +61,95 @@ function init() {
   updateCartUI();
 }
 
+function normalizePackagingKey(val) {
+  if (val === null || val === undefined) return '';
+  const raw = String(val).trim();
+  if (!raw) return '';
+
+  // Если это диапазон вида "15/20" — оставляем как есть
+  if (raw.includes('/')) {
+    return raw.replace(/\s+/g, '');
+  }
+
+  // Приводим запятую к точке и парсим число
+  const normalizedNumStr = raw.replace(',', '.');
+  const num = Number(normalizedNumStr);
+
+  if (Number.isFinite(num)) {
+    // Убирает лишние нули: 1.0 -> "1", 3.50 -> "3.5"
+    return String(num);
+  }
+
+  return raw;
+}
+
+function escapeAttr(val) {
+  return String(val ?? '').replace(/"/g, '&quot;');
+}
+
+function getPackagingSortValue(key) {
+  const firstPart = String(key).split('/')[0].replace(',', '.');
+  const num = parseFloat(firstPart);
+  return Number.isFinite(num) ? num : Number.POSITIVE_INFINITY;
+}
+
 function buildFilters() {
+  const modelsContainer = document.getElementById('filter-models');
+  const modelsGroup = document.getElementById('filter-group-models');
+  const packagingContainer = document.getElementById('filter-packaging');
+  const packagingGroup = document.getElementById('filter-group-packaging');
   const brandsContainer = document.getElementById('filter-brands');
   const diametersContainer = document.getElementById('filter-diameters');
   if (!brandsContainer || !diametersContainer) return;
+
+  // 1. Марки (берём short_name, если пусто — fallback на model_name)
+  const models = [
+    ...new Set(
+      allProducts.map((p) => p.model_short_name || p.short_name || p.model_name).filter(Boolean)
+    ),
+  ].sort();
+
+  // 2. Фасовка (сортируем по числу: 1 кг, 5 кг, 15 кг, 90 кг...)
+  const getPackaging = (p) => p.weight;
+  const packagings = [
+    ...new Set(allProducts.map((p) => normalizePackagingKey(getPackaging(p))).filter(Boolean)),
+  ].sort((a, b) => getPackagingSortValue(a) - getPackagingSortValue(b));
 
   const brands = [...new Set(allProducts.map((p) => p.manufacturer_name).filter(Boolean))].sort();
   const diameters = [...new Set(allProducts.map((p) => p.diameter).filter(Boolean))].sort(
     (a, b) => parseFloat(a) - parseFloat(b)
   );
+
+  // Отрисовка марок (прячем блок, если в категории нет моделей)
+  if (modelsContainer && modelsGroup) {
+    if (models.length === 0) {
+      modelsGroup.style.display = 'none';
+    } else {
+      modelsGroup.style.display = '';
+      modelsContainer.innerHTML = models
+        .map(
+          (m) => `
+        <label class="custom-checkbox"><input type="checkbox" value="${m}" class="filter-model"><span>${m}</span></label>
+      `
+        )
+        .join('');
+    }
+  }
+
+  // Отрисовка фасовки (прячем блок, если в категории нет фасовок)
+  if (packagingContainer && packagingGroup) {
+    if (packagings.length === 0) {
+      packagingGroup.style.display = 'none';
+    } else {
+      packagingGroup.style.display = '';
+      packagingContainer.innerHTML = packagings
+        .map((pkg) => {
+          const label = /кг/i.test(pkg) ? pkg : `${pkg} кг`;
+          return `<label class="custom-checkbox"><input type="checkbox" value="${escapeAttr(pkg)}" class="filter-packaging"><span>${label}</span></label>`;
+        })
+        .join('');
+    }
+  }
 
   brandsContainer.innerHTML = brands
     .map(
@@ -93,13 +173,28 @@ function applyFiltersAndSort() {
   const selectedBrands = Array.from(document.querySelectorAll('.filter-brand:checked')).map(
     (cb) => cb.value
   );
+
+  const selectedModels = Array.from(document.querySelectorAll('.filter-model:checked')).map(
+    (cb) => cb.value
+  );
+
+  const selectedPackagings = Array.from(document.querySelectorAll('.filter-packaging:checked')).map(
+    (cb) => cb.value
+  );
+
   const selectedDiams = Array.from(document.querySelectorAll('.filter-diam:checked')).map(
     (cb) => cb.value
   );
   const sortVal = document.getElementById('sort-select')?.value || 'default';
 
   filteredProducts = allProducts.filter((p) => {
+    const productModel = p.model_short_name || p.short_name || p.model_name;
     if (inStockOnly && Number(p.total_stock) <= 0) return false;
+    if (selectedModels.length > 0 && !selectedModels.includes(productModel)) return false;
+    const productPackagingKey = normalizePackagingKey(p.packaging ?? p.weight);
+    if (selectedPackagings.length > 0 && !selectedPackagings.includes(productPackagingKey)) {
+      return false;
+    }
     if (selectedBrands.length > 0 && !selectedBrands.includes(p.manufacturer_name)) return false;
     if (selectedDiams.length > 0 && !selectedDiams.includes(p.diameter)) return false;
     return true;
@@ -181,6 +276,11 @@ function setupUIHandlers() {
   const filterOverlay = document.getElementById('filter-overlay');
 
   function openFilterModal() {
+    if (window.innerWidth < 1200 && filterSidebar) {
+      filterSidebar.querySelectorAll('.filter-group.active').forEach((group) => {
+        group.classList.remove('active');
+      });
+    }
     if (filterSidebar) filterSidebar.style.display = 'block';
     if (filterOverlay) filterOverlay.style.display = 'block';
     document.body.style.overflow = 'hidden';

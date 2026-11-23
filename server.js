@@ -296,9 +296,11 @@ app.get('/category/:slugAndId', (req, res) => {
 
     // Отримуємо товари для цієї категорії
     const prodQuery = `
-      SELECT p.*, p.stock AS total_stock, m.name AS manufacturer_name
+      SELECT p.*, p.stock AS total_stock, m.name AS manufacturer_name, pm.name AS model_name,
+             pm.short_name AS model_short_name
       FROM products p
       LEFT JOIN manufacturers m ON p.manufacturer_id = m.id
+      LEFT JOIN product_models pm ON p.model_id = pm.id
       WHERE p.category_id = ?
       ORDER BY p.sort_order ASC, p.id DESC
     `;
