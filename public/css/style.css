@@ -2200,7 +2200,7 @@ textarea:-webkit-autofill:focus {
   border: 1px solid rgba(255, 215, 0, 0.3);
   border-radius: 12px;
   padding: 24px;
-  z-index: 20;
+  z-index: 1000;
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
