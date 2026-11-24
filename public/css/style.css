@@ -3415,6 +3415,18 @@ padding-left: 10px;
   transform: translateY(-1px);
 }
 
+@media (min-width: 770px) {
+  .content h2 {
+    width: fit-content;
+    margin: 12px auto 18px auto;
+    padding: 8px 22px;
+    background: rgba(24, 28, 36, 0.75);
+    border: 1px solid rgba(255, 215, 0, 0.22);
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  }
+}
+
 /* 1. Мобильные и планшеты (до 1024px):
    Прячем доставку в шапке, оставляем только ту, что под ценами */
 @media (max-width: 1024px) {
