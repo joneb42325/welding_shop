@@ -38,6 +38,7 @@ saveOrderBtn.addEventListener('click', async () => {
   const items = currentOrderItems.map((item) => ({
     product_id: Number(item.product_id),
     price: Number(item.price),
+    cut_fee: Number(item.cut_fee) || 0,
     quantity: Number(item.quantity),
     selected_type: item.selected_type || 'retail',
   }));
@@ -49,6 +50,8 @@ saveOrderBtn.addEventListener('click', async () => {
       item.product_id <= 0 ||
       !Number.isFinite(item.price) ||
       item.price < 0 ||
+      !Number.isFinite(item.cut_fee) ||
+      item.cut_fee < 0 ||
       !Number.isInteger(item.quantity) ||
       item.quantity < 1
   );
@@ -147,7 +150,10 @@ async function openOrderEditor(orderId) {
     const items = await itemsResponse.json();
 
     currentOrderId = orderId;
-    currentOrderItems = items.map((item) => ({ ...item }));
+    currentOrderItems = items.map((item) => ({
+      ...item,
+      cut_fee: Number(item.cut_fee) || 0,
+    }));
 
     document.getElementById('modal-order-id').textContent = orderId;
 
@@ -176,6 +182,7 @@ function renderOrderItems(isEditing = false) {
 
   currentOrderItems.forEach((item, index) => {
     const row = document.createElement('tr');
+    const cutFee = Number(item.cut_fee) || 0;
 
     if (!isEditing) {
       const name = document.createElement('td');
@@ -190,10 +197,11 @@ function renderOrderItems(isEditing = false) {
       type.textContent = formatType(item.selected_type);
 
       const priceQuantity = document.createElement('td');
-      priceQuantity.textContent = `${item.price} × ${item.quantity} шт`;
+      const cutLabel = cutFee > 0 ? ` (+ порізка ${cutFee.toFixed(2)} грн)` : '';
+      priceQuantity.textContent = `${item.price} × ${item.quantity} шт${cutLabel}`;
 
       const sum = document.createElement('td');
-      sum.textContent = (Number(item.price) * Number(item.quantity)).toFixed(2);
+      sum.textContent = (Number(item.price) * Number(item.quantity) + cutFee).toFixed(2);
 
       row.append(name, options, type, priceQuantity, sum);
     } else {
@@ -246,10 +254,29 @@ function renderOrderItems(isEditing = false) {
         renderOrderItems(true);
       });
 
-      priceQuantity.append(priceInput, document.createTextNode(' × '), quantityInput);
+      const cutFeeInput = document.createElement('input');
+      cutFeeInput.type = 'number';
+      cutFeeInput.min = '0';
+      cutFeeInput.step = '0.01';
+      cutFeeInput.title = 'Порізка (грн)';
+      cutFeeInput.placeholder = 'Порізка';
+      cutFeeInput.value = cutFee;
+
+      cutFeeInput.addEventListener('change', () => {
+        currentOrderItems[index].cut_fee = Math.max(0, Number(cutFeeInput.value) || 0);
+        renderOrderItems(true);
+      });
+
+      priceQuantity.append(
+        priceInput,
+        document.createTextNode(' × '),
+        quantityInput,
+        document.createTextNode(' + порізка: '),
+        cutFeeInput
+      );
 
       const sum = document.createElement('td');
-      sum.textContent = (Number(item.price) * Number(item.quantity)).toFixed(2);
+      sum.textContent = (Number(item.price) * Number(item.quantity) + cutFee).toFixed(2);
 
       row.append(name, options, type, priceQuantity, sum);
 
@@ -365,6 +392,7 @@ productSearch.addEventListener('input', async () => {
           diameter: product.diameter || '',
           weight: product.weight || '',
           price: Number(product.price_retail || 0),
+          cut_fee: 0,
           quantity: 1,
           selected_type: 'retail',
         });
@@ -474,13 +502,16 @@ tbody.addEventListener('click', async (e) => {
     itemsBody.innerHTML = '';
 
     items.forEach((item) => {
+      const cutFee = Number(item.cut_fee) || 0;
+      const cutText = cutFee > 0 ? ` <small>(+ порізка ${cutFee.toFixed(2)} грн)</small>` : '';
+      const itemSum = (Number(item.price) || 0) * (Number(item.quantity) || 0) + cutFee;
       itemsBody.innerHTML += `
         <tr>
           <td><strong>${item.product_name}</strong></td>
           <td>${item.product_manufacturer} / ${item.diameter} / ${item.weight}</td>
           <td>${formatType(item.selected_type)}</td>
-          <td>${item.price} x ${item.quantity} шт</td>
-          <td><strong>${(item.price * item.quantity).toFixed(2)}</strong></td>
+          <td>${item.price} x ${item.quantity} шт ${cutText}</td>
+          <td><strong>${itemSum.toFixed(2)}</strong></td>
         </tr>
       `;
     });
