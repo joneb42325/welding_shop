@@ -309,10 +309,13 @@
                         const t2 = parseFloat(product.markup_tier2) || 0.15;
                         const t3 = parseFloat(product.markup_tier3) || 0.3;
 
-                        // Відновлено правильні математичні оператори
                         const p1 = (retail * (1 - t1)).toFixed(2);
                         const p2 = (retail * (1 - t2)).toFixed(2);
                         const p3 = (retail * (1 - t3)).toFixed(2);
+
+                        const wholesaleDiscountPct = (retail > 0 && wholesale > 0 && wholesale < retail)
+                                ? Math.round(((retail - wholesale) / retail) * 100)
+                                : 0;
                     %>
                     <div id="volume-discounts-block" class="volume-discounts-box">
                         <h4 class="volume-title">📊 Знижки від об'єму (порізка від 1 <%= unit %>):</h4>
@@ -345,7 +348,13 @@
                             </tr>
                             <tr class="tier-row" data-qty="<%= threshold %>" data-min="<%= threshold %>" data-max="999999">
                                 <td class="gold">від <%= threshold %> <%= unit %> (Опт)</td>
-                                <td class="gold">Оптова ціна</td>
+                                <td class="gold">
+                                    <% if (wholesaleDiscountPct > 0) { %>
+                                        Опт (-<%= wholesaleDiscountPct %>%)
+                                    <% } else { %>
+                                        Оптова ціна
+                                    <% } %>
+                                </td>
                                 <td class="gold"><strong><%= wholesale.toFixed(2) %> грн</strong></td>
                             </tr>
                             </tbody>

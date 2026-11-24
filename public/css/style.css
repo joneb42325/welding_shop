@@ -1696,11 +1696,13 @@ textarea:-webkit-autofill:focus {
   border-radius: 20px;
   font-size: 13px;
   font-weight: 600;
-  pointer-events: none;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   z-index: 100;
   animation: bounceHint 2s infinite ease-in-out;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  pointer-events: auto;
+  cursor: pointer;
+  border: none;
 }
 
 .scroll-hint.hidden-hint {

@@ -11,7 +11,7 @@ export function getOptimizedImg(url, width = 400) {
   return url;
 }
 
-function createSlug(text) {
+export function createSlug(text) {
   const transliteration = {
     а: 'a',
     б: 'b',

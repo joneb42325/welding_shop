@@ -6,7 +6,7 @@ import {
   updateCartUI,
   clearCart,
 } from './cart.js';
-import { getOptimizedImg } from './script.js';
+import { getOptimizedImg, createSlug } from './script.js';
 import { calculateDynamicPrice } from './pricing.js';
 
 refreshCart();
@@ -92,10 +92,11 @@ function renderCartPage() {
     const brandHTML = brandName
       ? `<span class="cart-item-brand">Виробник: ${brandName}</span>`
       : '';
+    const productUrl = `/product/${createSlug(item.name)}-${item.productId}`;
 
     row.innerHTML = `
       <td class="cart-product-cell">
-        <a href="product.html?productId=${item.productId}" class="cart-product-link">
+        <a href="${productUrl}" class="cart-product-link">
             <img src="${getOptimizedImg(item.image)}" alt="${item.name}">
             <div class="cart-product-info">
            <span>${item.name}</span> 
@@ -185,27 +186,46 @@ const orderButton = document.querySelector('.order-button');
 const checkoutForm = document.getElementById('checkout-form');
 const modalTotalPrice = document.getElementById('modal-total-price');
 
-// Функция управления подсказкой скролла
+let modalScrollHandler = null;
+
 function initModalScrollHint() {
   const modalContent = document.querySelector('.modal-content');
   const checkoutForm = document.getElementById('checkout-form');
   if (!modalContent || !checkoutForm) return;
 
-  // Удаляем старую подсказку, если она была
+  // 1. Удаляем старую подсказку и прошлый обработчик скролла
   const oldHint = document.getElementById('modal-scroll-hint');
   if (oldHint) oldHint.remove();
 
-  // Создаем элемент подсказки
-  const hint = document.createElement('div');
+  if (modalScrollHandler) {
+    modalContent.removeEventListener('scroll', modalScrollHandler);
+    modalScrollHandler = null;
+  }
+
+  modalContent.scrollTop = 0;
+
+  // 2. Если форма полностью помещается на экране — подсказку не создаём
+  if (modalContent.scrollHeight <= modalContent.clientHeight + 10) {
+    return;
+  }
+
+  // 3. Делаем плашку кнопкой, по клику на которую модалка плавно скроллится вниз
+  const hint = document.createElement('button');
+  hint.type = 'button';
   hint.id = 'modal-scroll-hint';
   hint.className = 'scroll-hint';
   hint.innerHTML = 'Прокрутіть вниз ⬇';
 
+  hint.addEventListener('click', () => {
+    modalContent.scrollTo({
+      top: modalContent.scrollHeight,
+      behavior: 'smooth',
+    });
+  });
+
   checkoutForm.appendChild(hint);
 
-  // Слушатель события скролла
-  const handleScroll = () => {
-    // Если пользователь проскроллил больше чем на 40px
+  modalScrollHandler = () => {
     if (modalContent.scrollTop > 40) {
       hint.classList.add('hidden-hint');
     } else {
@@ -213,10 +233,7 @@ function initModalScrollHint() {
     }
   };
 
-  // Сбрасываем скролл модалки в самый верх при открытии
-  modalContent.scrollTop = 0;
-  modalContent.removeEventListener('scroll', handleScroll);
-  modalContent.addEventListener('scroll', handleScroll);
+  modalContent.addEventListener('scroll', modalScrollHandler, { passive: true });
 }
 
 if (orderButton) {
@@ -239,8 +256,8 @@ if (closeModalBtn) {
   });
 }
 
-window.addEventListener('click', (e) => {
-  if (e.target === checkoutModal) {
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && checkoutModal && !checkoutModal.classList.contains('hidden')) {
     checkoutModal.classList.add('hidden');
   }
 });

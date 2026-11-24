@@ -25,23 +25,33 @@ export function getCartTotal() {
 }
 
 export function updateItemPrice(item) {
+  const threshold = parseInt(item.wholesale_threshold, 10) || 50;
+  const isWholesaleOnly = Boolean(item.is_wholesale);
+
+  // Синхронізуємо selectedType з поточною кількістю
+  if (isWholesaleOnly || item.quantity >= threshold) {
+    item.selectedType = 'wholesale';
+  } else if (item.selectedType === 'wholesale') {
+    item.selectedType = 'retail';
+  }
+
   if (item.has_dynamic_pricing) {
     const calc = calculateDynamicPrice(item, item.quantity);
     return calc.pricePerKg;
   }
 
   const retail = parseFloat(item.price_retail) || parseFloat(item.price) || 0;
+  const company = parseFloat(item.price_company) || retail;
   const wholesale = parseFloat(item.price_wholesale) || retail;
-  const threshold = parseInt(item.wholesale_threshold) || 999999;
 
-  if (item.quantity >= threshold) {
-    return wholesale;
-  }
+  if (item.selectedType === 'wholesale') return wholesale;
+  if (item.selectedType === 'company') return company;
   return retail;
 }
 
 export function addToCart(item) {
   const cart = getCart();
+  const addQty = Math.max(1, parseInt(item.quantity, 10) || 1);
 
   const existingIndex = cart.findIndex(
     (i) =>
@@ -49,15 +59,17 @@ export function addToCart(item) {
       i.diameter === item.diameter &&
       i.weight === item.weight &&
       i.manufacturer === item.manufacturer &&
-      i.selectedType === item.selectedType
+      (i.selectedType === item.selectedType ||
+        (['retail', 'wholesale'].includes(i.selectedType) &&
+          ['retail', 'wholesale'].includes(item.selectedType)))
   );
 
   if (existingIndex !== -1) {
-    changeQuantity(existingIndex, 1);
+    changeQuantity(existingIndex, addQty);
   } else {
     const newItem = {
       ...item,
-      quantity: item.quantity || 1,
+      quantity: addQty,
     };
     newItem.price = updateItemPrice(newItem);
 
@@ -88,16 +100,20 @@ export function changeQuantity(index, delta) {
 
   if (!item) return;
 
-  item.quantity += delta;
+  const isWholesaleOnly = Boolean(item.is_wholesale);
+  const minQty = isWholesaleOnly ? parseInt(item.wholesale_threshold, 10) || 50 : 1;
+  const nextQty = item.quantity + delta;
 
-  if (item.quantity < 1) {
+  if (nextQty < minQty) {
     if (confirm('Видалити товар з кошика?')) {
       cart.splice(index, 1);
       saveCart(cart);
       return;
     } else {
-      cart[index].quantity = 1;
+      item.quantity = minQty;
     }
+  } else {
+    item.quantity = nextQty;
   }
 
   item.price = updateItemPrice(item);
@@ -138,7 +154,7 @@ export function showToast(message, type = 'success') {
   `;
 
   toast.addEventListener('click', () => {
-    window.location.href = '/cart.html';
+    window.location.href = '/cart';
   });
 
   container.appendChild(toast);

@@ -105,8 +105,8 @@ function renderTable(product) {
   let selectedType = isWholesaleOnly ? 'wholesale' : 'retail';
   const priceCells = row.querySelectorAll('.price-cell');
 
-  // Установка состояния ячеек
   priceCells.forEach((cell) => {
+    cell.dataset.baseHtml = cell.innerHTML;
     cell.classList.toggle('active', cell.dataset.type === selectedType && isAvailable);
     if (isWholesaleOnly && cell.dataset.type !== 'wholesale') {
       cell.style.pointerEvents = 'none';
@@ -121,6 +121,12 @@ function renderTable(product) {
   const updateTotalSum = () => {
     const qty = parseInt(qtyInput.value, 10) || initialQty;
     const basePrice = getBasePrice();
+
+    priceCells.forEach((cell) => {
+      if (cell.dataset.baseHtml !== undefined) {
+        cell.innerHTML = cell.dataset.baseHtml;
+      }
+    });
 
     let finalTotal = 0;
     let pricePerUnit = basePrice;
@@ -148,7 +154,7 @@ function renderTable(product) {
       let priceValEl = activeCell.querySelector('.price-val') || activeCell;
 
       if (product.has_dynamic_pricing && pricePerUnit < basePrice) {
-        const badgeText = qty >= minWholesaleQty ? 'ОПТ' : `-${discountPercent}%`;
+        const badgeText = `-${discountPercent}%`;
         priceValEl.innerHTML = `
           <div class="price-dynamic-wrap" style="display: flex; flex-direction: column; align-items: center;">
             <span class="old-price" style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em;">
@@ -168,7 +174,12 @@ function renderTable(product) {
     }
 
     // 2. ОБНОВЛЯЕМ ИТОГОВУЮ СУММУ (Разом)
-    if (totalValEl) totalValEl.textContent = Number(finalTotal).toFixed(0);
+    const formatPrice = (val) => {
+      const num = Number(val) || 0;
+      return Number.isInteger(num) ? String(num) : num.toFixed(2);
+    };
+
+    if (totalValEl) totalValEl.textContent = formatPrice(finalTotal);
 
     // 3. ОБНОВЛЯЕМ ПОДСКАЗКУ ПО ПОРЕЗКЕ И СКИДКЕ
     const hintEl = row.querySelector('.dynamic-pricing-hint');
@@ -215,6 +226,11 @@ function renderTable(product) {
         if (qty < minWholesaleQty) {
           qtyInput.value = minWholesaleQty;
           showToast(`Встановлено оптову кількість: ${minWholesaleQty} ${unit}`);
+        }
+      } else {
+        const qty = parseInt(qtyInput.value, 10) || 1;
+        if (qty >= minWholesaleQty) {
+          qtyInput.value = 1;
         }
       }
       updateTotalSum();
@@ -320,7 +336,12 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   const existingModal = document.getElementById('quick-order-modal');
   if (existingModal) existingModal.remove();
 
-  const formattedTotal = typeof totalPrice === 'number' ? totalPrice.toFixed(0) : totalPrice;
+  const formatPrice = (val) => {
+    const num = Number(val) || 0;
+    return Number.isInteger(num) ? String(num) : num.toFixed(2);
+  };
+
+  const formattedTotal = formatPrice(totalPrice);
   let cutFeeText = '';
 
   if (product.has_dynamic_pricing) {
@@ -333,7 +354,7 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   const modalHTML = `
     <div id="quick-order-modal" class="quick-modal-overlay">
       <div class="quick-modal-box">
-        <button class="quick-modal-close">&times;</button>
+        <button type="button" class="quick-modal-close">&times;</button>
         <h3>Купити в 1 клік</h3>
         <p>Заповніть форму, і менеджер зателефонує вам для уточнення деталей (обробка замовлень: щодня з 10:00 до 17:00)</p>
         <div class="quick-order-summary">
@@ -361,14 +382,18 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
   const modal = document.getElementById('quick-order-modal');
   const closeBtn = modal.querySelector('.quick-modal-close');
 
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') closeModal();
+  };
+
   const closeModal = () => {
+    document.removeEventListener('keydown', handleEsc);
     modal.style.opacity = '0';
     setTimeout(() => modal.remove(), 250);
   };
+
   closeBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closeModal();
-  });
+  document.addEventListener('keydown', handleEsc);
 
   document.getElementById('quick-order-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -394,6 +419,14 @@ function openQuickOrderModal(product, totalPrice, quantity = 1, selectedType = '
         }),
       });
       if (res.ok) {
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'conversion', {
+            send_to: 'AW-18487453527/lSUhCIqu-4wdENfOwO9E',
+            value: parseFloat(totalPrice) || 1.0,
+            currency: 'UAH',
+            transaction_id: '',
+          });
+        }
         showToast('Дякуємо! Менеджер зателефонує вам найближчим часом.');
         closeModal();
       } else {

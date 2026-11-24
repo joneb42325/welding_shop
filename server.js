@@ -128,6 +128,10 @@ app.use((req, res, next) => {
   });
 });
 
+app.get(['/cart', '/cart.html'], (req, res) => {
+  res.render('cart');
+});
+
 app.get(['/delivery', '/delivery.html'], (req, res) => {
   res.render('pages/delivery');
 });
