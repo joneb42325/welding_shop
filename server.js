@@ -1747,10 +1747,16 @@ app.post('/api/orders', async (req, res) => {
     // 6. Підтверджуємо транзакцію
     await connection.commit();
 
+    const isTestSilent =
+      String(customer?.name || '').includes('TEST_SILENT') ||
+      String(customer?.comment || '').includes('TEST_SILENT');
+
     // 7. Надсилаємо сповіщення у фоні
-    Promise.resolve(
-      sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId)
-    ).catch((err) => console.error('Помилка Telegram:', err));
+    if (!isTestSilent) {
+      Promise.resolve(
+        sendTelegramNotification(customer, validatedItems, calculatedTotalPrice, orderId)
+      ).catch((err) => console.error('Помилка Telegram:', err));
+    }
 
     /*
     if (typeof customer.email === 'string' && customer.email.trim()) {
