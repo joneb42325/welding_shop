@@ -113,6 +113,41 @@ function initLayoutEvents() {
     });
   }
 
+  // 1.1 Акордеон груп категорій у мобільному меню
+  const mobileCatGroups = document.querySelectorAll('.mobile-cat-group');
+  const mobileCategoriesList = document.getElementById('mobile-categories-list');
+
+  mobileCatGroups.forEach((group) => {
+    group.addEventListener('toggle', () => {
+      if (!group.open) return;
+
+      // Закриваємо інші відкриті групи
+      mobileCatGroups.forEach((otherGroup) => {
+        if (otherGroup !== group && otherGroup.open) {
+          otherGroup.open = false;
+        }
+      });
+
+      // Плавно підкручуємо до відкритої групи
+      requestAnimationFrame(() => {
+        if (
+          mobileCategoriesList &&
+          mobileCategoriesList.scrollHeight > mobileCategoriesList.clientHeight
+        ) {
+          mobileCategoriesList.scrollTo({
+            top: Math.max(0, group.offsetTop - mobileCategoriesList.offsetTop),
+            behavior: 'smooth',
+          });
+        } else if (menu) {
+          menu.scrollTo({
+            top: Math.max(0, group.offsetTop - 16),
+            behavior: 'smooth',
+          });
+        }
+      });
+    });
+  });
+
   // 2. Віджет зв'язку у футері
   const contactToggle = document.getElementById('contact-toggle');
   const contactWidget = document.querySelector('.contact-widget');
