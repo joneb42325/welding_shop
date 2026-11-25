@@ -1441,6 +1441,7 @@ function escapeHtml(value) {
 }
 
 function formatTelegramOrderMessage(customer, items, totalPrice, orderId, isUpdate = false) {
+  const baseUrl = (process.env.SITE_URL || 'https://wolfram-shop.com.ua').replace(/\/+$/, '');
   let message = isUpdate
     ? `✏️ <b>ОНОВЛЕНО ЗАМОВЛЕННЯ #${escapeHtml(orderId)}!</b>\n\n`
     : `🚨 <b>НОВЕ ЗАМОВЛЕННЯ #${escapeHtml(orderId)}!</b>\n\n`;
@@ -1453,7 +1454,12 @@ function formatTelegramOrderMessage(customer, items, totalPrice, orderId, isUpda
 
   message += `🛒 <b>ТОВАРИ:</b>\n`;
   items.forEach((item, index) => {
-    message += `${index + 1}. ${escapeHtml(item.name)} `;
+    const productTitle = escapeHtml(item.name);
+    const productLine = item.productId
+      ? `<a href="${escapeHtml(`${baseUrl}/product/${createSlug(item.name)}-${item.productId}`)}">${productTitle}</a>`
+      : productTitle;
+
+    message += `${index + 1}. ${productLine} `;
     if (item.diameter) message += `(Ø ${escapeHtml(item.diameter)}) `;
     if (item.weight && !item.has_dynamic_pricing) message += `[${escapeHtml(item.weight)} кг] `;
 
@@ -1516,6 +1522,9 @@ async function sendTelegramNotification(
         chat_id: chatId,
         text: message,
         parse_mode: 'HTML',
+        link_preview_options: {
+          is_disabled: true,
+        },
       };
 
       // Если это обновление и есть ID исходного сообщения — прикрепляем как reply
@@ -2231,6 +2240,13 @@ app.post('/api/quick-order', (req, res) => {
               .map((id) => id.trim())
               .filter(Boolean);
 
+            const baseUrl = (process.env.SITE_URL || 'https://wolfram-shop.com.ua').replace(
+              /\/+$/,
+              ''
+            );
+            const productUrl = `${baseUrl}/product/${createSlug(productName)}-${parsedProductId}`;
+            const productLink = `<a href="${escapeHtml(productUrl)}">${escapeHtml(productName)}</a>`;
+
             let message = `⚡ <b>ШВИДКЕ ЗАМОВЛЕННЯ #${orderId}!</b>\n\n`;
             if (typeof name === 'string' && name.trim() !== '') {
               message += `👤 <b>Клієнт:</b> ${escapeHtml(name.trim())}\n`;
@@ -2239,7 +2255,7 @@ app.post('/api/quick-order', (req, res) => {
             message += `📍 <b>Доставка:</b> ${escapeHtml(deliveryAddress)}\n\n`;
 
             message += `🛒 <b>ТОВАР:</b>\n`;
-            message += `1. ${escapeHtml(productName)} `;
+            message += `1. ${productLink} `;
             if (product.diameter) message += `(Ø ${escapeHtml(product.diameter)} мм) `;
             if (product.weight && !hasDynamic) message += `[${escapeHtml(product.weight)} кг] `;
 
@@ -2268,6 +2284,9 @@ app.post('/api/quick-order', (req, res) => {
                       chat_id: chatId,
                       text: message,
                       parse_mode: 'HTML',
+                      link_preview_options: {
+                        is_disabled: true,
+                      },
                     }),
                   });
                 } catch (tgErr) {
