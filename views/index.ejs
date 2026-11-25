@@ -19,6 +19,53 @@
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@graph": [
+                {
+                    "@type": "Store",
+                    "@id": "https://wolfram-shop.com.ua/#store",
+                    "name": "Wolfram Shop",
+                    "url": "https://wolfram-shop.com.ua/",
+                    "logo": {
+                        "@type": "ImageObject",
+                        "url": "https://wolfram-shop.com.ua/images/logo.webp"
+                    },
+                    "image": "https://wolfram-shop.com.ua/images/logo.webp",
+                    "description": "Інтернет-магазин Wolfram: зварювальні електроди, дріт та матеріали у Харкові та Україні.",
+                    "telephone": [
+                        "+380634383823",
+                        "+380996871784"
+                    ],
+                    "sameAs": [
+                        "https://www.instagram.com/wolfram.shop",
+                        "https://www.tiktok.com/@wolfram.shop4"
+                    ],
+                    "address": {
+                        "@type": "PostalAddress",
+                        "addressLocality": "Харків",
+                        "addressCountry": "UA"
+                    },
+                    "areaServed": {
+                        "@type": "Country",
+                        "name": "Ukraine"
+                    }
+                },
+                {
+                    "@type": "WebSite",
+                    "@id": "https://wolfram-shop.com.ua/#website",
+                    "url": "https://wolfram-shop.com.ua/",
+                    "name": "Wolfram Shop",
+                    "inLanguage": "uk",
+                    "publisher": {
+                        "@id": "https://wolfram-shop.com.ua/#store"
+                    }
+                }
+            ]
+        }
+    </script>
 </head>
 <body>
 <%- include('partials/header') %>

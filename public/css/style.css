@@ -631,7 +631,7 @@ body.no-scroll {
 
 .special-banner {
   background: linear-gradient(to right, rgba(26, 29, 35, 0.8), transparent),
-  url("../images/AdobeStock_384574746-2048x1366.jpg");
+  url("../images/AdobeStock_384574746-2048x1366.webp");
   width: 100%;
   min-height: 350px;
   padding: 30px 20px;
