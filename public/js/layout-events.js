@@ -98,6 +98,13 @@ function initLayoutEvents() {
   const burger = document.querySelector('.burger');
   const menu = document.querySelector('.mobile-menu');
   const overlay = document.querySelector('.mobile-overlay');
+  const closeMenuBtn = document.querySelector('.mobile-menu-close');
+
+  const closeMobileMenu = () => {
+    menu?.classList.remove('active');
+    overlay?.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  };
 
   if (burger && menu && overlay) {
     burger.addEventListener('click', () => {
@@ -106,11 +113,8 @@ function initLayoutEvents() {
       document.body.classList.add('no-scroll');
     });
 
-    overlay.addEventListener('click', () => {
-      menu.classList.remove('active');
-      overlay.classList.remove('active');
-      document.body.classList.remove('no-scroll');
-    });
+    overlay.addEventListener('click', closeMobileMenu);
+    closeMenuBtn?.addEventListener('click', closeMobileMenu);
   }
 
   // 1.1 Акордеон груп категорій у мобільному меню
