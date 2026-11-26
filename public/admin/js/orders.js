@@ -428,7 +428,7 @@ async function loadOrders() {
     tbody.innerHTML = '';
 
     if (orders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center">Немає замовлень</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center">Немає замовлень</td></tr>';
       return;
     }
 
@@ -450,6 +450,20 @@ async function loadOrders() {
         <td>${order.customer_name}</td>
         <td>${order.customer_phone}<br><small>${order.customer_email || ''}</small></td>
         <td>${order.delivery_address}</td>
+        <td>
+          <div style="display:flex; gap:4px; align-items:center;">
+            <input
+              type="text"
+              class="ttn-input"
+              data-id="${order.id}"
+              value="${order.ttn || ''}"
+              placeholder="Номер ТТН"
+              style="width: 135px; padding: 4px;"
+            />
+            <button type="button" class="save-ttn-btn" data-id="${order.id}">OK</button>
+            ${order.ttn ? `<button type="button" class="copy-ttn-btn" data-id="${order.id}" title="Скопіювати ТТН">📋</button>` : ''}
+          </div>
+        </td>
         <td><strong>${order.total_price} грн</strong></td>
         <td>
           <select class="status-select ${statusClass}" data-id="${order.id}">
@@ -477,7 +491,7 @@ async function loadOrders() {
   }
 }
 
-// Обробка кліків у таблиці (Деталі, Видалення, Зміна статусу)
+// Обробка кліків у таблиці (Деталі, Видалення, Збереження ТТН)
 tbody.addEventListener('click', async (e) => {
   // 1. ВИДАЛЕННЯ
   if (e.target.classList.contains('delete-btn-table')) {
@@ -526,6 +540,53 @@ tbody.addEventListener('click', async (e) => {
     await openOrderEditor(orderId);
     return;
   }
+
+  if (e.target.classList.contains('save-ttn-btn')) {
+    const id = e.target.dataset.id;
+    const input = tbody.querySelector(`.ttn-input[data-id="${id}"]`);
+    const ttn = input ? input.value.trim() : '';
+
+    e.target.disabled = true;
+    try {
+      const res = await fetch(`/admin/orders/${id}/ttn`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ttn }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || 'Не вдалося зберегти ТТН');
+        return;
+      }
+
+      await loadOrders(); // Перезагрузит таблицу, покажет ТТН и сменит статус на "Відправлено"
+    } catch (err) {
+      console.error(err);
+      alert('Помилка збереження ТТН');
+    } finally {
+      e.target.disabled = false;
+    }
+  }
+
+  if (e.target.classList.contains('copy-ttn-btn')) {
+    const id = e.target.dataset.id;
+    const input = tbody.querySelector(`.ttn-input[data-id="${id}"]`);
+    const ttn = input ? input.value.trim() : '';
+    if (!ttn) return;
+
+    const copied = copyTextToClipboard(ttn);
+    if (copied) {
+      const prevText = e.target.textContent;
+      e.target.textContent = '✓';
+      setTimeout(() => {
+        e.target.textContent = prevText;
+      }, 1200);
+    } else {
+      alert('Не вдалося скопіювати ТТН');
+    }
+    return;
+  }
 });
 
 // 3. ЗМІНА СТАТУСУ (при зміні select)
@@ -561,6 +622,35 @@ window.addEventListener('click', (e) => {
 function formatType(type) {
   const types = { retail: 'ЧП (Роздріб)', company: 'ТОВ', wholesale: 'Опт' };
   return types[type] || type;
+}
+
+async function copyTextToClipboard(text) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    // Fallback ниже
+  }
+
+  const tempInput = document.createElement('input');
+  tempInput.value = text;
+  tempInput.setAttribute('readonly', '');
+  tempInput.style.position = 'fixed';
+  tempInput.style.left = '-9999px';
+  document.body.appendChild(tempInput);
+  tempInput.select();
+
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+
+  document.body.removeChild(tempInput);
+  return ok;
 }
 
 // Запуск
