@@ -1136,6 +1136,43 @@ app.put('/admin/products/update-prices', adminAuth, (req, res) => {
     });
 });
 
+function isImageUsedElsewhere(imageUrl, excludeProductId) {
+  return new Promise((resolve, reject) => {
+    if (!imageUrl) return resolve(false);
+
+    const sql = excludeProductId
+      ? 'SELECT COUNT(*) AS cnt FROM products WHERE image = ? AND id != ?'
+      : 'SELECT COUNT(*) AS cnt FROM products WHERE image = ?';
+    const params = excludeProductId ? [imageUrl, excludeProductId] : [imageUrl];
+
+    db.query(sql, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve((rows[0]?.cnt || 0) > 0);
+    });
+  });
+}
+
+async function safeDestroyCloudinaryImage(imageUrl, excludeProductId) {
+  if (!imageUrl || !imageUrl.startsWith('http') || !imageUrl.includes('cloudinary.com')) {
+    return;
+  }
+
+  const inUse = await isImageUsedElsewhere(imageUrl, excludeProductId);
+  if (inUse) {
+    console.log('Картинка використовується іншими товарами, з Cloudinary не видаляємо:', imageUrl);
+    return;
+  }
+
+  // Извлекаем public_id корректно даже при точках в имени файла:
+  // .../upload/(v123456/)(folder/)filename.ext
+  const uploadMatch = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)\.[a-zA-Z0-9]+(?:\?.*)?$/);
+  if (!uploadMatch) return;
+
+  const publicId = uploadMatch[1];
+  await cloudinary.uploader.destroy(publicId);
+  console.log('Видалено з Cloudinary:', publicId);
+}
+
 app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => {
   const productId = req.params.id;
 
@@ -1273,15 +1310,9 @@ app.put('/admin/products/:id', adminAuth, upload.single('image'), (req, res) => 
         return res.status(500).json({ error: 'Помилка при збереженні даних' });
       }
 
-      // 4. Якщо була нова картинка — видаляємо стару з Cloudinary
-      if (req.file && oldImage && oldImage.startsWith('http')) {
+      if (req.file && oldImage) {
         try {
-          const parts = oldImage.split('/');
-          const fileName = parts.pop();
-          const folder = parts.pop();
-          const publicId = `${folder}/${fileName.split('.')[0]}`;
-          await cloudinary.uploader.destroy(publicId);
-          console.log('Видалено з Cloudinary:', publicId);
+          await safeDestroyCloudinaryImage(oldImage, productId);
         } catch (cErr) {
           console.error('Помилка видалення старого фото:', cErr);
         }
@@ -1302,16 +1333,10 @@ app.delete('/admin/products/:id', adminAuth, (req, res) => {
     const imageName = results[0].image;
 
     // Видаляємо з Cloudinary
-    if (imageName && imageName.startsWith('http')) {
-      try {
-        const parts = imageName.split('/');
-        const fileName = parts.pop();
-        const folder = parts.pop();
-        const publicId = `${folder}/${fileName.split('.')[0]}`;
-        await cloudinary.uploader.destroy(publicId);
-      } catch (cErr) {
-        console.error('Cloudinary error:', cErr);
-      }
+    try {
+      await safeDestroyCloudinaryImage(imageName, id);
+    } catch (cErr) {
+      console.error('Cloudinary error:', cErr);
     }
 
     // Видаляємо тільки з однієї таблиці!
