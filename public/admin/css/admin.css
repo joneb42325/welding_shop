@@ -132,24 +132,6 @@ table button {
   margin-right: 10px;
 }
 
-@media (max-width: 600px) {
-  .login-container,
-  .admin-container {
-    width: 90%;
-    padding: 15px 20px;
-  }
-
-  table th,
-  table td {
-    padding: 8px;
-    font-size: 13px;
-  }
-
-  button {
-    font-size: 14px;
-  }
-}
-
 .current-info {
   margin-bottom: 30px;
   padding: 15px;
@@ -634,36 +616,19 @@ textarea:focus {
   padding: 12px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 768px) {
+
   .customer-grid {
     grid-template-columns: 1fr;
   }
-}
 
-@media (max-width: 600px) {
-  .product-search-result {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .modal-content.modal-large {
-    width: 96%;
-    max-height: 94vh;
-    padding: 16px;
-  }
-
-  #modal-edit-fields input,
-  #modal-edit-fields textarea {
-    font-size: 16px;
-  }
-}
-
-
-@media (max-width: 768px) {
   .admin-container {
-    margin: 10px;
-    padding: 15px;
+    width: auto;
+    max-width: 100%;
+    margin: 8px;
+    padding: 12px;
     border-radius: 8px;
+    box-sizing: border-box;
   }
 
   .login-container {
@@ -683,7 +648,7 @@ textarea:focus {
   }
 
   .dashboard-grid {
-    grid-template-columns: 1fr; /* Картки стають в одну колонку */
+    grid-template-columns: 1fr;
     gap: 15px;
   }
 
@@ -706,7 +671,7 @@ textarea:focus {
   .form-group input[type='file'],
   .form-group select,
   .form-group textarea {
-    font-size: 16px; /* Запобігає автозуму на iPhone при кліку на поле */
+    font-size: 16px;
   }
 
   .form-buttons {
@@ -717,32 +682,6 @@ textarea:focus {
 
   .form-buttons button {
     width: 100%;
-  }
-
-  .admin-container table,
-  #items-modal table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; /* Плавний скролл на iOS */
-    white-space: nowrap;
-    border: 1px solid #ddd;
-  }
-
-  .admin-container table th,
-  .admin-container table td {
-    padding: 8px 10px;
-  }
-
-  /* Кнопки всередині таблиці (Редагувати/Видалити) */
-  .admin-container table td button {
-    display: block;
-    width: 100%;
-    margin-bottom: 5px;
-  }
-
-  .admin-container table td button:last-child {
-    margin-bottom: 0;
   }
 
   .modal-content {
@@ -769,5 +708,243 @@ textarea:focus {
     padding: 10px;
     background: #fdfdfd;
     border: 1px solid #eee;
+  }
+
+  #payout-summary {
+    flex-wrap: wrap;
+    font-size: 14px;
+  }
+
+  /* Общее сброс-поведение таблиц на мобильных */
+  #orders-table,
+  #orders-table thead,
+  #orders-table tbody,
+  #orders-table tr,
+  #orders-table td,
+  #items-modal table,
+  #items-modal thead,
+  #items-modal tbody,
+  #items-modal tr,
+  #items-modal td,
+  #products-table,
+  #products-table thead,
+  #products-table tbody,
+  #products-table tr,
+  #products-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+  }
+
+  #orders-table,
+  #items-modal table,
+  #products-table {
+    border: none;
+  }
+
+  #orders-table thead,
+  #items-modal thead,
+  #products-table thead {
+    display: none;
+  }
+
+  #orders-table tbody td::before,
+  #products-table tbody td::before {
+    font-weight: 600;
+    color: #555;
+    font-size: 13px;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  #orders-table tbody td:last-child::before,
+  #products-table tbody td:last-child::before {
+    display: none;
+  }
+
+  /* 1. Таблица заказов -> карточки */
+  #orders-table tbody tr {
+    border: 1px solid #d5dbe3;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  #orders-table tbody td {
+    border: none;
+    border-bottom: 1px solid #f0f2f5;
+    padding: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    text-align: right;
+  }
+
+  #orders-table tbody td:last-child {
+    border-bottom: none;
+    padding-top: 10px;
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  #orders-table tbody td:nth-child(1)::before { content: 'Замовлення'; }
+  #orders-table tbody td:nth-child(2)::before { content: 'Клієнт'; }
+  #orders-table tbody td:nth-child(3)::before { content: 'Контакти'; }
+  #orders-table tbody td:nth-child(4)::before { content: 'Доставка'; }
+  #orders-table tbody td:nth-child(5)::before { content: 'ТТН'; }
+  #orders-table tbody td:nth-child(6)::before { content: 'Сума'; }
+  #orders-table tbody td:nth-child(7)::before { content: 'Статус'; }
+
+  #orders-table .ttn-input {
+    width: 100% !important;
+    min-width: 110px;
+    font-size: 15px;
+  }
+
+  #orders-table .status-select {
+    width: auto;
+    max-width: 180px;
+    font-size: 14px;
+  }
+
+  #orders-table tbody td:last-child button {
+    flex: 1 1 calc(33.33% - 6px);
+    margin: 0;
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+
+  /* 2. Таблица товаров в модалке -> карточки */
+  #items-modal tbody tr {
+    border: 1px solid #d5dbe3;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #fafafa;
+  }
+
+  #items-modal tbody td {
+    border: none;
+    border-bottom: 1px solid #eceff3;
+    padding: 6px 0;
+    font-size: 14px;
+  }
+
+  #items-modal tbody td:last-child {
+    border-bottom: none;
+    padding-top: 8px;
+  }
+
+  #items-modal tbody td:nth-child(1) {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  #items-modal tbody td:nth-child(3)::before { content: 'Тип ціни: '; font-weight: 600; color: #555; }
+  #items-modal tbody td:nth-child(4)::before { content: 'Ціна × К-сть: '; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+  #items-modal tbody td:nth-child(5)::before { content: 'Закупка: '; font-weight: 600; color: #555; display: block; margin-bottom: 4px; }
+  #items-modal tbody td:nth-child(6)::before { content: 'Сума: '; font-weight: 600; color: #555; }
+
+  #items-modal tbody td input,
+  #items-modal tbody td select {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 7px 9px;
+    margin: 3px 0;
+    font-size: 16px;
+  }
+
+  #items-modal tbody td:last-child button {
+    width: 100%;
+    padding: 8px;
+  }
+
+  /* 3. Поиск, массовые действия и таблица товаров -> карточки */
+  .admin-actions #admin-product-search {
+    min-width: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  .bulk-actions {
+    flex-wrap: wrap;
+  }
+
+  .bulk-actions select,
+  .bulk-actions input,
+  .bulk-actions button {
+    flex: 1 1 100%;
+    width: 100% !important;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  #products-table tbody tr {
+    border: 1px solid #d5dbe3;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  #products-table tbody td {
+    border: none;
+    border-bottom: 1px solid #f0f2f5;
+    padding: 6px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    text-align: right;
+  }
+
+  #products-table tbody td:last-child {
+    border-bottom: none;
+    padding-top: 10px;
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  #products-table tbody td:nth-child(1)::before { content: 'Обрати'; }
+  #products-table tbody td:nth-child(2)::before { content: 'Назва'; }
+  #products-table tbody td:nth-child(3)::before { content: 'Фото'; }
+  #products-table tbody td:nth-child(4)::before { content: 'Категорія'; }
+  #products-table tbody td:nth-child(5)::before { content: 'Опис'; }
+  #products-table tbody td:nth-child(6)::before { content: 'Роздріб'; }
+  #products-table tbody td:nth-child(7)::before { content: 'ФОП'; }
+  #products-table tbody td:nth-child(8)::before { content: 'Опт'; }
+  #products-table tbody td:nth-child(9)::before { content: 'Склад'; }
+  #products-table tbody td:nth-child(10)::before { content: 'Поріг опту'; }
+  #products-table tbody td:nth-child(11)::before { content: 'Акція'; }
+  #products-table tbody td:nth-child(12)::before { content: 'Порядок'; }
+
+  #products-table tbody td:nth-child(5) {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #products-table tbody td input[type='number'],
+  #products-table tbody td input[type='text'] {
+    max-width: 140px;
+    padding: 5px 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+
+  #products-table tbody td:last-child button,
+  #products-table tbody td:last-child a {
+    flex: 1 1 calc(50% - 4px);
+    margin: 0;
+    text-align: center;
   }
 }
