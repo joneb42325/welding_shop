@@ -1798,7 +1798,16 @@ app.post('/api/orders', async (req, res) => {
 });
 
 app.get('/admin/orders', adminAuth, (req, res) => {
-  const query = 'SELECT * FROM orders ORDER BY created_at DESC';
+  const query = `
+    SELECT
+      o.*,
+      COALESCE(SUM(oi.purchase_price * oi.quantity), 0) AS total_purchase_cost
+    FROM orders o
+    LEFT JOIN order_items oi ON oi.order_id = o.id
+    GROUP BY o.id
+    ORDER BY o.created_at DESC
+  `;
+
   db.query(query, (err, results) => {
     if (err) {
       console.error(err);
@@ -1856,6 +1865,13 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
     const price = Number(item.price);
     const quantity = Number(item.quantity);
     const cutFeeCheck = Number(item.cut_fee ?? 0);
+    const purchasePriceCheck = Number(item.purchase_price ?? 0);
+
+    if (!Number.isFinite(purchasePriceCheck) || purchasePriceCheck < 0) {
+      return res.status(400).json({
+        error: 'Некоректна закупівельна ціна',
+      });
+    }
 
     if (!Number.isFinite(cutFeeCheck) || cutFeeCheck < 0) {
       return res.status(400).json({
@@ -1951,12 +1967,37 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
       throw error;
     }
 
+    const existingItems = await query(
+      `SELECT
+         product_id,
+         price,
+         cut_fee,
+         quantity,
+         selected_type
+       FROM order_items
+       WHERE order_id = ?`,
+      [orderId]
+    );
+
+    const existingOrderRows = await query(
+      `SELECT
+         customer_name,
+         customer_phone,
+         customer_email,
+         delivery_address,
+         comment
+       FROM orders
+       WHERE id = ?`,
+      [orderId]
+    );
+
     // Цена вводится администратором вручную
     let totalPrice = 0;
 
     const itemsData = items.map((item) => {
       const product = productsMap.get(Number(item.product_id));
       const price = Number(Number(item.price).toFixed(2));
+      const purchasePrice = Math.max(0, Number(Number(item.purchase_price || 0).toFixed(2)));
       const cutFee = Math.max(0, Number(Number(item.cut_fee || 0).toFixed(2)));
       const quantity = Number(item.quantity);
 
@@ -1970,6 +2011,7 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
         product.diameter || '',
         product.weight || '',
         price,
+        purchasePrice,
         cutFee,
         quantity,
         item.selected_type || 'retail',
@@ -2014,6 +2056,7 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
          diameter,
          weight,
          price,
+         purchase_price,
          cut_fee,
          quantity,
          selected_type
@@ -2027,6 +2070,45 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
         resolve();
       });
     });
+
+    const prevOrder = existingOrderRows[0] || {};
+    const nextName = customer_name.trim();
+    const nextPhone = customer_phone.trim();
+    const nextEmail = safeEmail;
+    const nextDelivery = delivery_address.trim();
+    const nextComment = typeof comment === 'string' ? comment.trim() : '';
+    const prevComment = typeof prevOrder.comment === 'string' ? prevOrder.comment.trim() : '';
+
+    const customerOrCommentChanged =
+      (prevOrder.customer_name || '').trim() !== nextName ||
+      (prevOrder.customer_phone || '').trim() !== nextPhone ||
+      (prevOrder.customer_email || '').trim() !== nextEmail ||
+      (prevOrder.delivery_address || '').trim() !== nextDelivery ||
+      prevComment !== nextComment;
+
+    const normalizeComparableItems = (arr) =>
+      arr
+        .map((x) => ({
+          product_id: Number(x.product_id),
+          price: Number(Number(x.price).toFixed(2)),
+          cut_fee: Math.max(0, Number(Number(x.cut_fee || 0).toFixed(2))),
+          quantity: Number(x.quantity),
+          selected_type: x.selected_type || 'retail',
+        }))
+        .sort(
+          (a, b) =>
+            a.product_id - b.product_id ||
+            String(a.selected_type).localeCompare(String(b.selected_type)) ||
+            a.price - b.price ||
+            a.cut_fee - b.cut_fee ||
+            a.quantity - b.quantity
+        );
+
+    const itemsChanged =
+      JSON.stringify(normalizeComparableItems(existingItems)) !==
+      JSON.stringify(normalizeComparableItems(items));
+
+    const shouldNotifyTelegram = customerOrCommentChanged || itemsChanged;
 
     transactionStarted = false;
 
@@ -2045,20 +2127,22 @@ app.put('/admin/orders/:id', adminAuth, async (req, res) => {
       };
     });
 
-    sendTelegramNotification(
-      {
-        name: customer_name.trim(),
-        phone: customer_phone.trim(),
-        email: safeEmail,
-        delivery: delivery_address.trim(),
-        comment: typeof comment === 'string' ? comment.trim() : '',
-      },
-      tgItems,
-      totalPrice,
-      orderId,
-      orders[0].telegram_messages,
-      true
-    ).catch((err) => console.error('Помилка оновлення Telegram:', err));
+    if (shouldNotifyTelegram) {
+      sendTelegramNotification(
+        {
+          name: customer_name.trim(),
+          phone: customer_phone.trim(),
+          email: safeEmail,
+          delivery: delivery_address.trim(),
+          comment: typeof comment === 'string' ? comment.trim() : '',
+        },
+        tgItems,
+        totalPrice,
+        orderId,
+        orders[0].telegram_messages,
+        true
+      ).catch((err) => console.error('Помилка оновлення Telegram:', err));
+    }
 
     return res.json({
       success: true,

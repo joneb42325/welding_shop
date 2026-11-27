@@ -9,6 +9,71 @@ const commentView = document.getElementById('modal-comment-view');
 const saveOrderBtn = document.getElementById('save-order-btn');
 const cancelEditBtn = document.getElementById('cancel-edit-btn');
 
+let currentOrderId = null;
+let currentOrderItems = [];
+
+function calcItemSaleSum(item) {
+  const price = Number(item.price) || 0;
+  const qty = Number(item.quantity) || 0;
+  const cutFee = Number(item.cut_fee) || 0;
+  return price * qty + cutFee;
+}
+
+function calcItemPurchaseSum(item) {
+  const purchasePrice = Number(item.purchase_price) || 0;
+  const qty = Number(item.quantity) || 0;
+  return purchasePrice * qty;
+}
+
+function updatePayoutSummary(orders = []) {
+  const amountEl = document.getElementById('payout-due-amount');
+  const countEl = document.getElementById('payout-orders-count');
+  if (!amountEl) return;
+
+  let totalDue = 0;
+  let countedOrders = 0;
+
+  orders.forEach((order) => {
+    const status = String(order.status || '').trim();
+    const totalPrice = Number(order.total_price) || 0;
+    const totalPurchase = Number(order.total_purchase_cost) || 0;
+
+    // Не учитываем уже оплаченные ("Виконано 💰") и отменённые ("Скасовано")
+    if (status === 'Виконано 💰' || status === 'Скасовано') return;
+
+    // Учитываем только заказы, где закупка реально введена
+    if (totalPurchase <= 0) return;
+
+    const netProfit = totalPrice - totalPurchase;
+    const share25 = netProfit * 0.25;
+
+    totalDue += share25;
+    countedOrders++;
+  });
+
+  amountEl.textContent = totalDue.toFixed(2);
+  if (countEl) {
+    countEl.textContent = `(замовлень: ${countedOrders})`;
+  }
+}
+
+function updateProfitSummary() {
+  const totalSale = currentOrderItems.reduce((sum, item) => sum + calcItemSaleSum(item), 0);
+  const totalCost = currentOrderItems.reduce((sum, item) => sum + calcItemPurchaseSum(item), 0);
+  const netProfit = totalSale - totalCost;
+  const myShare25 = netProfit * 0.25;
+
+  const saleEl = document.getElementById('profit-total-sale');
+  const costEl = document.getElementById('profit-total-cost');
+  const netEl = document.getElementById('profit-net');
+  const shareEl = document.getElementById('profit-share-25');
+
+  if (saleEl) saleEl.textContent = totalSale.toFixed(2);
+  if (costEl) costEl.textContent = totalCost.toFixed(2);
+  if (netEl) netEl.textContent = netProfit.toFixed(2);
+  if (shareEl) shareEl.textContent = myShare25.toFixed(2);
+}
+
 saveOrderBtn.addEventListener('click', async () => {
   if (!currentOrderId) {
     alert('Замовлення не вибрано');
@@ -16,13 +81,9 @@ saveOrderBtn.addEventListener('click', async () => {
   }
 
   const customerName = document.getElementById('edit-customer-name').value.trim();
-
   const customerPhone = document.getElementById('edit-customer-phone').value.trim();
-
   const customerEmail = document.getElementById('edit-customer-email').value.trim();
-
   const deliveryAddress = document.getElementById('edit-delivery-address').value.trim();
-
   const comment = document.getElementById('edit-comment').value;
 
   if (!customerName || !customerPhone) {
@@ -38,18 +99,20 @@ saveOrderBtn.addEventListener('click', async () => {
   const items = currentOrderItems.map((item) => ({
     product_id: Number(item.product_id),
     price: Number(item.price),
+    purchase_price: Number(item.purchase_price) || 0,
     cut_fee: Number(item.cut_fee) || 0,
     quantity: Number(item.quantity),
     selected_type: item.selected_type || 'retail',
   }));
 
-  // Дополнительная проверка перед отправкой
   const invalidItem = items.some(
     (item) =>
       !Number.isInteger(item.product_id) ||
       item.product_id <= 0 ||
       !Number.isFinite(item.price) ||
       item.price < 0 ||
+      !Number.isFinite(item.purchase_price) ||
+      item.purchase_price < 0 ||
       !Number.isFinite(item.cut_fee) ||
       item.cut_fee < 0 ||
       !Number.isInteger(item.quantity) ||
@@ -57,7 +120,7 @@ saveOrderBtn.addEventListener('click', async () => {
   );
 
   if (invalidItem) {
-    alert('Перевірте ціни та кількість товарів');
+    alert('Перевірте ціни, закупівлю та кількість товарів');
     return;
   }
 
@@ -103,9 +166,6 @@ saveOrderBtn.addEventListener('click', async () => {
     saveOrderBtn.textContent = 'Зберегти зміни';
   }
 });
-
-let currentOrderId = null;
-let currentOrderItems = [];
 
 cancelEditBtn.addEventListener('click', () => {
   setModalMode(false);
@@ -153,18 +213,14 @@ async function openOrderEditor(orderId) {
     currentOrderItems = items.map((item) => ({
       ...item,
       cut_fee: Number(item.cut_fee) || 0,
+      purchase_price: Number(item.purchase_price) || 0,
     }));
 
     document.getElementById('modal-order-id').textContent = orderId;
-
     document.getElementById('edit-customer-name').value = order.customer_name || '';
-
     document.getElementById('edit-customer-phone').value = order.customer_phone || '';
-
     document.getElementById('edit-customer-email').value = order.customer_email || '';
-
     document.getElementById('edit-delivery-address').value = order.delivery_address || '';
-
     document.getElementById('edit-comment').value = order.comment || '';
 
     renderOrderItems(true);
@@ -183,6 +239,9 @@ function renderOrderItems(isEditing = false) {
   currentOrderItems.forEach((item, index) => {
     const row = document.createElement('tr');
     const cutFee = Number(item.cut_fee) || 0;
+    const purchasePrice = Number(item.purchase_price) || 0;
+    const itemCostSum = calcItemPurchaseSum(item);
+    const itemSaleSum = calcItemSaleSum(item);
 
     if (!isEditing) {
       const name = document.createElement('td');
@@ -200,10 +259,13 @@ function renderOrderItems(isEditing = false) {
       const cutLabel = cutFee > 0 ? ` (+ порізка ${cutFee.toFixed(2)} грн)` : '';
       priceQuantity.textContent = `${item.price} × ${item.quantity} шт${cutLabel}`;
 
-      const sum = document.createElement('td');
-      sum.textContent = (Number(item.price) * Number(item.quantity) + cutFee).toFixed(2);
+      const purchaseCell = document.createElement('td');
+      purchaseCell.textContent = `${purchasePrice.toFixed(2)} (разом: ${itemCostSum.toFixed(2)})`;
 
-      row.append(name, options, type, priceQuantity, sum);
+      const sum = document.createElement('td');
+      sum.textContent = itemSaleSum.toFixed(2);
+
+      row.append(name, options, type, priceQuantity, purchaseCell, sum);
     } else {
       const name = document.createElement('td');
       name.textContent = item.product_name || '';
@@ -275,10 +337,28 @@ function renderOrderItems(isEditing = false) {
         cutFeeInput
       );
 
-      const sum = document.createElement('td');
-      sum.textContent = (Number(item.price) * Number(item.quantity) + cutFee).toFixed(2);
+      const purchaseCell = document.createElement('td');
+      const purchaseInput = document.createElement('input');
+      purchaseInput.type = 'number';
+      purchaseInput.min = '0';
+      purchaseInput.step = '0.01';
+      purchaseInput.title = 'Закупівельна ціна за одиницю (грн)';
+      purchaseInput.placeholder = 'Закупка';
+      purchaseInput.value = purchasePrice;
 
-      row.append(name, options, type, priceQuantity, sum);
+      purchaseInput.addEventListener('change', () => {
+        currentOrderItems[index].purchase_price = Math.max(0, Number(purchaseInput.value) || 0);
+        renderOrderItems(true);
+      });
+
+      const costTotalLabel = document.createElement('div');
+      costTotalLabel.style.fontSize = '12px';
+      costTotalLabel.textContent = `Разом: ${itemCostSum.toFixed(2)} грн`;
+
+      purchaseCell.append(purchaseInput, costTotalLabel);
+
+      const sum = document.createElement('td');
+      sum.textContent = itemSaleSum.toFixed(2);
 
       const removeCell = document.createElement('td');
       const removeButton = document.createElement('button');
@@ -291,11 +371,13 @@ function renderOrderItems(isEditing = false) {
       });
 
       removeCell.appendChild(removeButton);
-      row.appendChild(removeCell);
+      row.append(name, options, type, priceQuantity, purchaseCell, sum, removeCell);
     }
 
     itemsBody.appendChild(row);
   });
+
+  updateProfitSummary();
 }
 
 const productSearch = document.getElementById('product-search');
@@ -335,7 +417,6 @@ productSearch.addEventListener('input', async () => {
 
     const products = await response.json();
 
-    // Не показываем результаты устаревшего запроса
     if (productSearchController !== controller) return;
 
     productSearchResults.replaceChildren();
@@ -392,6 +473,7 @@ productSearch.addEventListener('input', async () => {
           diameter: product.diameter || '',
           weight: product.weight || '',
           price: Number(product.price_retail || 0),
+          purchase_price: 0,
           cut_fee: 0,
           quantity: 1,
           selected_type: 'retail',
@@ -425,6 +507,7 @@ async function loadOrders() {
   try {
     const res = await fetch('/admin/orders');
     const orders = await res.json();
+    updatePayoutSummary(orders);
     tbody.innerHTML = '';
 
     if (orders.length === 0) {
@@ -435,11 +518,20 @@ async function loadOrders() {
     orders.forEach((order) => {
       const tr = document.createElement('tr');
       const date = new Date(order.created_at).toLocaleString('uk-UA');
+      const totalPrice = Number(order.total_price) || 0;
+      const totalPurchase = Number(order.total_purchase_cost) || 0;
+      const hasPurchase = totalPurchase > 0;
+      const netProfit = totalPrice - totalPurchase;
+      const share25 = netProfit * 0.25;
+      const share75 = netProfit * 0.75;
+
+      const splitHtml = hasPurchase
+        ? `<br><small style="color: #666; font-size: 12px; white-space: nowrap;">${share25.toFixed(2)} / ${share75.toFixed(2)}</small>`
+        : '';
 
       let statusClass = 'status-new';
       if (order.status === 'В обробці') statusClass = 'status-process';
       if (order.status === 'Відправлено') statusClass = 'status-sent';
-      if (order.status === 'Виконано') statusClass = 'status-done';
       if (order.status === 'Виконано' || order.status === 'Виконано 💰') {
         statusClass = 'status-done';
       }
@@ -464,7 +556,7 @@ async function loadOrders() {
             ${order.ttn ? `<button type="button" class="copy-ttn-btn" data-id="${order.id}" title="Скопіювати ТТН">📋</button>` : ''}
           </div>
         </td>
-        <td><strong>${order.total_price} грн</strong></td>
+        <td><strong>${Number(order.total_price).toFixed(2)} грн</strong>${splitHtml}</td>
         <td>
           <select class="status-select ${statusClass}" data-id="${order.id}">
             <option value="Нове" ${order.status === 'Нове' ? 'selected' : ''}>Нове</option>
@@ -508,27 +600,38 @@ tbody.addEventListener('click', async (e) => {
     document.getElementById('modal-order-id').innerText = id;
     document.getElementById('modal-comment').innerText = comment;
 
-    // Завантажуємо товари цього замовлення
     const res = await fetch(`/admin/orders/${id}/items`);
     const items = await res.json();
+
+    currentOrderItems = items.map((item) => ({
+      ...item,
+      cut_fee: Number(item.cut_fee) || 0,
+      purchase_price: Number(item.purchase_price) || 0,
+    }));
 
     const itemsBody = document.getElementById('modal-items-body');
     itemsBody.innerHTML = '';
 
     items.forEach((item) => {
       const cutFee = Number(item.cut_fee) || 0;
+      const purchasePrice = Number(item.purchase_price) || 0;
+      const itemCostSum = purchasePrice * (Number(item.quantity) || 0);
       const cutText = cutFee > 0 ? ` <small>(+ порізка ${cutFee.toFixed(2)} грн)</small>` : '';
       const itemSum = (Number(item.price) || 0) * (Number(item.quantity) || 0) + cutFee;
+
       itemsBody.innerHTML += `
         <tr>
           <td><strong>${item.product_name}</strong></td>
           <td>${item.product_manufacturer} / ${item.diameter} / ${item.weight}</td>
           <td>${formatType(item.selected_type)}</td>
           <td>${item.price} x ${item.quantity} шт ${cutText}</td>
+          <td>${purchasePrice.toFixed(2)} (разом: ${itemCostSum.toFixed(2)})</td>
           <td><strong>${itemSum.toFixed(2)}</strong></td>
         </tr>
       `;
     });
+
+    updateProfitSummary();
     setModalMode(false);
     modal.classList.add('active');
   }
@@ -560,7 +663,7 @@ tbody.addEventListener('click', async (e) => {
         return;
       }
 
-      await loadOrders(); // Перезагрузит таблицу, покажет ТТН и сменит статус на "Відправлено"
+      await loadOrders();
     } catch (err) {
       console.error(err);
       alert('Помилка збереження ТТН');

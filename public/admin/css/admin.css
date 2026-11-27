@@ -587,6 +587,59 @@ textarea:focus {
   background: #0b5ed7;
 }
 
+.customer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  margin-bottom: 12px;
+}
+
+.customer-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-field--full {
+  grid-column: 1 / -1;
+}
+
+#items-modal #modal-edit-fields h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+}
+
+#items-modal #modal-edit-fields .customer-field label {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+}
+
+#items-modal #modal-edit-fields .customer-field input,
+#items-modal #modal-edit-fields .customer-field textarea {
+  padding: 6px 10px;
+  font-size: 14px;
+  margin: 0 !important;
+}
+
+#items-modal #modal-edit-fields .customer-field textarea {
+  min-height: 46px;
+  height: 46px;
+  line-height: 1.35;
+}
+
+#items-modal #modal-edit-fields .add-product-section {
+  margin-top: 12px;
+  padding: 12px;
+}
+
+@media (max-width: 700px) {
+  .customer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 600px) {
   .product-search-result {
     align-items: flex-start;

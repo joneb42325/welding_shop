@@ -1,112 +1,133 @@
 <!doctype html>
 <html lang="uk">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin — Замовлення</title>
-    <link rel="icon" type="image/png" href="/images/logo.webp" />
-    <link rel="stylesheet" href="css/admin.css" />
-    <style></style>
-  </head>
-  <body>
-    <div class="admin-container">
-      <h2>Замовлення</h2>
-      <div class="admin-actions">
-        <a href="index.html"><button class="secondary-btn">На головну</button></a>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Замовлення</title>
+  <link rel="icon" type="image/png" href="/images/logo.webp" />
+  <link rel="stylesheet" href="css/admin.css" />
+<body>
+<div class="admin-container">
+  <h2>Замовлення</h2>
+  <div class="admin-actions">
+    <a href="index.html"><button class="secondary-btn">На головну</button></a>
+  </div>
 
-      <table id="orders-table">
-        <thead>
-          <tr>
-            <th>№</th>
-            <th>Клієнт</th>
-            <th>Контакти</th>
-            <th>Доставка</th>
-            <th>ТТН</th>
-            <th>Сума</th>
-            <th>Статус</th>
-            <th>Дії</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+  <div id="payout-summary" style="margin: 10px 0; padding: 10px 14px; background: #f4f6f8; border-radius: 6px; display: flex; align-items: center; gap: 8px;">
+    <strong>До розрахунку (25%):</strong>
+    <span id="payout-due-amount" style="font-weight: 700;">0.00</span> грн
+    <small id="payout-orders-count" style="color: #666;">(замовлень: 0)</small>
+  </div>
 
-    <div id="items-modal" class="modal">
-      <div class="modal-content modal-large">
-        <span class="close-modal">&times;</span>
-        <h3>Товари замовлення №<span id="modal-order-id"></span></h3>
-        <p id="modal-comment-view">
-          <strong>Коментар клієнта:</strong>
-          <span id="modal-comment"></span>
-        </p>
+  <table id="orders-table">
+    <thead>
+    <tr>
+      <th>№</th>
+      <th>Клієнт</th>
+      <th>Контакти</th>
+      <th>Доставка</th>
+      <th>ТТН</th>
+      <th>Сума</th>
+      <th>Статус</th>
+      <th>Дії</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
 
-        <!-- Поля редактирования заказа -->
-        <div id="modal-edit-fields" hidden>
-          <h3>Дані замовлення</h3>
+<div id="items-modal" class="modal">
+  <div class="modal-content modal-large">
+    <span class="close-modal">&times;</span>
+    <h3>Товари замовлення №<span id="modal-order-id"></span></h3>
+    <p id="modal-comment-view">
+      <strong>Коментар клієнта:</strong>
+      <span id="modal-comment"></span>
+    </p>
 
+    <!-- Компактные поля редактирования заказа -->
+    <div id="modal-edit-fields" hidden>
+      <h3>Дані замовлення</h3>
+
+      <div class="customer-grid">
+        <div class="customer-field">
           <label for="edit-customer-name">Ім'я клієнта</label>
           <input id="edit-customer-name" type="text" required>
+        </div>
 
+        <div class="customer-field">
           <label for="edit-customer-phone">Телефон</label>
           <input id="edit-customer-phone" type="text" required>
+        </div>
 
+        <div class="customer-field">
           <label for="edit-customer-email">Email</label>
           <input id="edit-customer-email" type="email">
+        </div>
 
+        <div class="customer-field">
           <label for="edit-delivery-address">Адреса доставки</label>
           <input id="edit-delivery-address" type="text">
+        </div>
 
+        <div class="customer-field customer-field--full">
           <label for="edit-comment">Коментар</label>
           <textarea id="edit-comment"></textarea>
-
-
-          <div class="add-product-section">
-            <h3>Додати товар до замовлення</h3>
-
-            <label for="product-search">Пошук товару</label>
-            <input
-              type="search"
-              id="product-search"
-              placeholder="Назва, діаметр або виробник..."
-              autocomplete="off"
-            >
-
-            <div
-              id="product-search-results"
-              class="product-search-results"
-              aria-live="polite"
-            ></div>
-          </div>
-
         </div>
+      </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Назва</th>
-              <th>Опції</th>
-              <th>Тип ціни</th>
-              <th>Ціна х Кіл-ть</th>
-              <th>Сума</th>
-            </tr>
-          </thead>
-          <tbody id="modal-items-body"></tbody>
-        </table>
+      <div class="add-product-section">
+        <h3>Додати товар до замовлення</h3>
 
-        <div id="modal-edit-actions" hidden>
-          <button type="button" id="save-order-btn">
-            Зберегти зміни
-          </button>
+        <label for="product-search">Пошук товару</label>
+        <input
+          type="search"
+          id="product-search"
+          placeholder="Назва, діаметр або виробник..."
+          autocomplete="off"
+        >
 
-          <button type="button" id="cancel-edit-btn">
-            Скасувати
-          </button>
-        </div>
-
+        <div
+          id="product-search-results"
+          class="product-search-results"
+          aria-live="polite"
+        ></div>
       </div>
     </div>
 
-    <script src="js/orders.js"></script>
-  </body>
+    <table>
+      <thead>
+      <tr>
+        <th>Назва</th>
+        <th>Опції</th>
+        <th>Тип ціни</th>
+        <th>Ціна х Кіл-ть</th>
+        <th>Закупка</th>
+        <th>Сума</th>
+      </tr>
+      </thead>
+      <tbody id="modal-items-body"></tbody>
+    </table>
+
+    <div id="order-profit-summary" style="margin-top: 12px; padding: 10px; background: #f5f5f5; border-radius: 6px;">
+      <div><strong>Сума замовлення:</strong> <span id="profit-total-sale">0.00</span> грн</div>
+      <div><strong>Закупка разом:</strong> <span id="profit-total-cost">0.00</span> грн</div>
+      <div><strong>Чистий прибуток:</strong> <span id="profit-net">0.00</span> грн</div>
+      <div><strong>25%:</strong> <span id="profit-share-25">0.00</span> грн</div>
+    </div>
+
+    <div id="modal-edit-actions" hidden>
+      <button type="button" id="save-order-btn">
+        Зберегти зміни
+      </button>
+
+      <button type="button" id="cancel-edit-btn">
+        Скасувати
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/orders.js"></script>
+</body>
 </html>
