@@ -119,36 +119,25 @@ function initLayoutEvents() {
 
   // 1.1 Акордеон груп категорій у мобільному меню
   const mobileCatGroups = document.querySelectorAll('.mobile-cat-group');
-  const mobileCategoriesList = document.getElementById('mobile-categories-list');
 
   mobileCatGroups.forEach((group) => {
     group.addEventListener('toggle', () => {
-      if (!group.open) return;
+      if (!group.open || !menu) return;
 
-      // Закриваємо інші відкриті групи
+      const topBefore = group.getBoundingClientRect().top;
+
       mobileCatGroups.forEach((otherGroup) => {
         if (otherGroup !== group && otherGroup.open) {
           otherGroup.open = false;
         }
       });
 
-      // Плавно підкручуємо до відкритої групи
-      requestAnimationFrame(() => {
-        if (
-          mobileCategoriesList &&
-          mobileCategoriesList.scrollHeight > mobileCategoriesList.clientHeight
-        ) {
-          mobileCategoriesList.scrollTo({
-            top: Math.max(0, group.offsetTop - mobileCategoriesList.offsetTop),
-            behavior: 'smooth',
-          });
-        } else if (menu) {
-          menu.scrollTo({
-            top: Math.max(0, group.offsetTop - 16),
-            behavior: 'smooth',
-          });
-        }
-      });
+      const topAfter = group.getBoundingClientRect().top;
+      const diff = topAfter - topBefore;
+
+      if (diff !== 0) {
+        menu.scrollTop += diff;
+      }
     });
   });
 
