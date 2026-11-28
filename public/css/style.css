@@ -2447,8 +2447,8 @@ textarea:-webkit-autofill:focus {
 }
 
 .products-counter {
-  display: inline-block;
-  margin-top: 12px;
+  width: fit-content;
+  margin: 12px auto 0 auto;
   padding: 6px 16px;
   background: rgba(24, 28, 36, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.15);
